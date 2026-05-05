@@ -23,4 +23,10 @@ bool     temp_init();
 TempData temp_read();
 bool     temp_available();  // true если датчик найден при init
 
+// Force-read с блокировкой до завершения конверсии (~750мс на 12-bit).
+// Используется перед отправкой Telegram-отчёта, чтобы гарантировать актуальное
+// значение даже если регулярное process_temperature() ещё не успел сделать
+// второе чтение после wake-up (первое всегда пропускается из-за power-on 85°C).
+TempData temp_force_read();
+
 #endif

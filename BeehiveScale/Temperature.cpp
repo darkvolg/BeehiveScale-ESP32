@@ -74,3 +74,35 @@ TempData temp_read() {
 
   return td;
 }
+
+TempData temp_force_read() {
+  TempData td;
+#ifdef TEMP_SENSOR_DS18B20
+  if (!_tempFound) return td;
+
+  // Блокирующее чтение: setWaitForConversion(true) → requestTemperatures() ждёт
+  // ~750мс (для 12-bit) пока датчик закончит измерение, и только потом возвращает.
+  _ds.setWaitForConversion(true);
+  _ds.requestTemperatures();
+  float t = DEVICE_DISCONNECTED_C;
+  for (int attempt = 0; attempt < 3; attempt++) {
+    t = _ds.getTempCByIndex(0);
+    if (t != DEVICE_DISCONNECTED_C && t != 85.0f) break;
+    if (attempt < 2) {
+      _ds.requestTemperatures();  // повторный запрос с ожиданием
+    }
+  }
+  _ds.setWaitForConversion(false);  // возврат в async режим для process_temperature()
+  _firstRead = false;  // первое чтение прошло, дальше обычный async подойдёт
+
+  if (t == DEVICE_DISCONNECTED_C || t < -55.0f || t > 125.0f || t == 85.0f) {
+    td.valid = false;
+    td.temperature = TEMP_ERROR_VALUE;
+  } else {
+    td.temperature = t;
+    td.valid = true;
+  }
+  td.humidity = TEMP_ERROR_VALUE;
+#endif
+  return td;
+}

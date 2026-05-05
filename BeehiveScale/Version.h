@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 4
-#define FW_VERSION_SUFFIX ""  // 5.0.4 — lastReportWeight теперь в EEPROM (переживает reset/прошивку): дельта "С прошлого замера" больше не пропадает в первом отчёте после перезагрузки
+#define FW_VERSION_PATCH 5
+#define FW_VERSION_SUFFIX ""  // 5.0.5 — fix: температура в TG-отчёте больше не пропадает после wake-up (force-read DS18B20 + fallback на persist.lastTempC + EEPROM-сохранение)
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

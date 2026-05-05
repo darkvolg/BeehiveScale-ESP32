@@ -205,6 +205,15 @@ void setup() {
     }
   }
 
+  // v5.0.5: восстанавливаем lastTempC из EEPROM (fallback для отчётов когда
+  // DS18B20 не успел прочитаться к моменту отправки после wake-up).
+  {
+    float savedTempC = 0.0f;
+    if (load_last_temp(savedTempC)) {
+      persist.lastTempC = savedTempC;
+    }
+  }
+
   lcd_init(lcd);
 
 #ifdef LEGACY_HX711_PINS
@@ -526,7 +535,25 @@ void loop() {
     if (doTgReport) {
       TimeStamp ts = rtc_now();
       String dt = rtc_format_datetime(ts);
-      if (tg_send_report(sys.smoothedWeight, sys.tempData.temperature,
+
+      // v5.0.5: гарантируем актуальную температуру перед отправкой отчёта.
+      // После deep-sleep wake-up DS18B20 часто не успевает прочитаться через async
+      // process_temperature() — первое чтение всегда пропускается (power-on 85°C),
+      // а отчёт уходит в первые 5-10 сек. Делаем синхронный force-read (~750мс).
+      // Если всё равно невалидно — fallback на persist.lastTempC (последняя сохранённая).
+      float reportTempC = sys.tempData.temperature;
+      if (reportTempC <= -90.0f && temp_available()) {
+        TempData fresh = temp_force_read();
+        if (fresh.valid) {
+          sys.tempData = fresh;
+          reportTempC = fresh.temperature;
+        }
+      }
+      if (reportTempC <= -90.0f && persist.lastTempC > -90.0f) {
+        reportTempC = persist.lastTempC;  // fallback на старое валидное значение
+      }
+
+      if (tg_send_report(sys.smoothedWeight, reportTempC,
                          sys.tempData.humidity, dt,
                          sys.prevWeight, load_prev_weight_date(),
                          persist.lastReportWeight, persist.hasLastReport)) {
@@ -535,9 +562,12 @@ void loop() {
         // После успешной отправки: текущий вес становится "вчерашним" для следующего отчёта.
         persist.lastReportWeight = sys.smoothedWeight;
         persist.hasLastReport = true;
+        if (reportTempC > -90.0f) persist.lastTempC = reportTempC;
         sleep_save_persistent(persist);
-        // v5.0.4: дублируем в EEPROM, чтобы дельта не пропадала после reset/прошивки.
+        // v5.0.4: дублируем reportWeight в EEPROM, чтобы дельта не пропадала после reset/прошивки.
         save_last_report(sys.smoothedWeight, true);
+        // v5.0.5: то же для температуры — fallback после reset.
+        if (reportTempC > -90.0f) save_last_temp(reportTempC);
       }
       // если не отправилось (нет WiFi, нет токена) — флаг остаётся, попробуем позже
     }

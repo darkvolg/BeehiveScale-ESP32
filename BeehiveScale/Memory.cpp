@@ -631,3 +631,21 @@ bool load_last_report(float &weight) {
   if (isnan(weight) || weight < 0.0f || weight > 200.0f) return false;
   return true;
 }
+
+// ─── Last temperature (v5.0.5) ─────────────────────────────────────────
+void save_last_temp(float tempC) {
+  if (isnan(tempC) || tempC < -55.0f || tempC > 125.0f) return;  // не пишем мусор
+  byte magic = EEPROM_MAGIC_TEMP_VALUE;
+  EEPROM.put(EEPROM_ADDR_TEMP_MAGIC,  magic);
+  EEPROM.put(EEPROM_ADDR_LAST_TEMP_C, tempC);
+  EEPROM.commit();
+}
+
+bool load_last_temp(float &tempC) {
+  byte magic = 0;
+  EEPROM.get(EEPROM_ADDR_TEMP_MAGIC, magic);
+  if (magic != EEPROM_MAGIC_TEMP_VALUE) return false;
+  EEPROM.get(EEPROM_ADDR_LAST_TEMP_C, tempC);
+  if (isnan(tempC) || tempC < -55.0f || tempC > 125.0f) return false;
+  return true;
+}

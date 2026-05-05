@@ -59,7 +59,11 @@
 #define EEPROM_MAGIC_REPORT_VALUE     0xA9
 #define EEPROM_ADDR_LAST_REPORT_W     321  // float, 4 байта — вес на момент прошлого TG-отчёта
 #define EEPROM_ADDR_HAS_LAST_REPORT   325  // bool, 1 байт
-// 326..383 reserved for future fields
+// ─── Last temperature (v5.0.5) — fallback для отчётов когда DS18B20 не успел прочитаться после wake
+#define EEPROM_ADDR_TEMP_MAGIC        326  // 1 байт magic
+#define EEPROM_MAGIC_TEMP_VALUE       0xAA
+#define EEPROM_ADDR_LAST_TEMP_C       327  // float, 4 байта
+// 331..383 reserved for future fields
 #define EEPROM_SIZE              384  // расширено под credentials-блок
 
 // Веб-настройки (alertDelta, calibWeight, emaAlpha)
@@ -154,5 +158,10 @@ void     set_autosleep_sec(uint16_t sec);
 // load_last_report() возвращает true и заполняет weight, если в EEPROM есть валидная запись.
 void save_last_report(float weight, bool hasReport);
 bool load_last_report(float &weight);
+
+// Last valid temperature — fallback если DS18B20 не успел прочитаться к моменту
+// отправки TG-отчёта. Сохраняется после каждого валидного чтения, читается в setup().
+void save_last_temp(float tempC);
+bool load_last_temp(float &tempC);
 
 #endif
