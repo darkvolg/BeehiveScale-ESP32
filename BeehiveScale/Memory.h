@@ -54,7 +54,12 @@
 #define EEPROM_ADDR_AUTOSLEEP    317  // uint16_t — секунд бездействия до deep sleep (0=отключено)
 #define EEPROM_ADDR_AUTOSLEEP_MAGIC 319  // 1 байт magic
 #define EEPROM_MAGIC_AUTOSLEEP_VALUE 0xA8
-// 320..383 reserved for future fields
+// ─── Last TG report (v5.0.4) — переживает reset/прошивку, чтобы дельта "С прошлого замера" не пропадала
+#define EEPROM_ADDR_REPORT_MAGIC      320  // 1 байт magic
+#define EEPROM_MAGIC_REPORT_VALUE     0xA9
+#define EEPROM_ADDR_LAST_REPORT_W     321  // float, 4 байта — вес на момент прошлого TG-отчёта
+#define EEPROM_ADDR_HAS_LAST_REPORT   325  // bool, 1 байт
+// 326..383 reserved for future fields
 #define EEPROM_SIZE              384  // расширено под credentials-блок
 
 // Веб-настройки (alertDelta, calibWeight, emaAlpha)
@@ -143,5 +148,11 @@ uint32_t load_prev_weight_date();
 // 0 = не засыпать никогда (для отладки). Дефолт 180 сек (3 минуты).
 uint16_t get_autosleep_sec();
 void     set_autosleep_sec(uint16_t sec);
+
+// Last TG report — переживает reset, чтобы дельта "С прошлого замера" не пропадала
+// после прошивки/перезагрузки. save_last_report() вызывать после успешного tg_send_report().
+// load_last_report() возвращает true и заполняет weight, если в EEPROM есть валидная запись.
+void save_last_report(float weight, bool hasReport);
+bool load_last_report(float &weight);
 
 #endif

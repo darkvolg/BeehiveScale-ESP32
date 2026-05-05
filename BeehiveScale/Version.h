@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 3
-#define FW_VERSION_SUFFIX ""  // 5.0.3 — раздельные пороги MAIN/MENU (MAIN 3.0/6.0 сек, MENU 2.5 сек); визуальная подсказка "Otpust = TARA!" / "Otpust = KALIBR" при удержании MAIN
+#define FW_VERSION_PATCH 4
+#define FW_VERSION_SUFFIX ""  // 5.0.4 — lastReportWeight теперь в EEPROM (переживает reset/прошивку): дельта "С прошлого замера" больше не пропадает в первом отчёте после перезагрузки
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

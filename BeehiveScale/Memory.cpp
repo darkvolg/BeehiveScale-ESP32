@@ -609,3 +609,25 @@ void set_ota_pass(const char *pass) {
   EEPROM.commit();
   _credDefault = false;
 }
+
+// ─── Last TG report (v5.0.4) ─────────────────────────────────────────────
+void save_last_report(float weight, bool hasReport) {
+  byte magic = EEPROM_MAGIC_REPORT_VALUE;
+  EEPROM.put(EEPROM_ADDR_REPORT_MAGIC,    magic);
+  EEPROM.put(EEPROM_ADDR_LAST_REPORT_W,   weight);
+  byte flag = hasReport ? 1 : 0;
+  EEPROM.put(EEPROM_ADDR_HAS_LAST_REPORT, flag);
+  EEPROM.commit();
+}
+
+bool load_last_report(float &weight) {
+  byte magic = 0;
+  EEPROM.get(EEPROM_ADDR_REPORT_MAGIC, magic);
+  if (magic != EEPROM_MAGIC_REPORT_VALUE) return false;
+  byte flag = 0;
+  EEPROM.get(EEPROM_ADDR_HAS_LAST_REPORT, flag);
+  if (!flag) return false;
+  EEPROM.get(EEPROM_ADDR_LAST_REPORT_W, weight);
+  if (isnan(weight) || weight < 0.0f || weight > 200.0f) return false;
+  return true;
+}

@@ -195,6 +195,16 @@ void setup() {
   sleep_save_persistent(persist);
 #endif
 
+  // v5.0.4: восстанавливаем lastReportWeight из EEPROM (RTC RAM теряется при reset/прошивке).
+  // Без этого после каждой перезагрузки первый отчёт шёл без дельты "С прошлого замера".
+  {
+    float savedReportW = 0.0f;
+    if (load_last_report(savedReportW)) {
+      persist.lastReportWeight = savedReportW;
+      persist.hasLastReport = true;
+    }
+  }
+
   lcd_init(lcd);
 
 #ifdef LEGACY_HX711_PINS
@@ -526,6 +536,8 @@ void loop() {
         persist.lastReportWeight = sys.smoothedWeight;
         persist.hasLastReport = true;
         sleep_save_persistent(persist);
+        // v5.0.4: дублируем в EEPROM, чтобы дельта не пропадала после reset/прошивки.
+        save_last_report(sys.smoothedWeight, true);
       }
       // если не отправилось (нет WiFi, нет токена) — флаг остаётся, попробуем позже
     }
