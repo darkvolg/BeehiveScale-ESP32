@@ -571,20 +571,33 @@ void handle_buttons() {
     return;
   }
 
-  // Wake-grace через "sticky" флаг.
-  // Раньше проверка `wasBacklightOff` срабатывала только в момент release, а к этому моменту
-  // подсветка уже была включена через lcd_backlight_activity на ранее итерации. Получалось
-  // что wake-grace не всегда срабатывал — иногда первое нажатие после сна засчитывалось как тара.
-  // Теперь: пока кнопка нажата ИЛИ прошло < 1.5 сек после погашенной подсветки — считаем wake-event.
-  static bool wakeEventPending = false;
-  bool curBacklightOff = !lcd_backlight_is_on();
-  bool curMainPressed = (digitalRead(BUTTON_PIN) == LOW);
-  if (curBacklightOff && curMainPressed) {
-    wakeEventPending = true;  // зафиксировали "нажатие при погашенном экране"
+  // Wake-press guard: после boot / deep-sleep-wake кнопка часто ещё физически удерживается
+  // (пользователь только что её нажал, чтобы разбудить). Если начать считать удержание прямо
+  // отсюда, через ~3.5 сек реального удержания сработает MEDIUM_PRESS → выскочит диалог тары
+  // сам по себе. Поэтому игнорируем MAIN-кнопку до её первого release. Pressing-цикл начнёт
+  // считаться только со следующего, "осознанного" нажатия.
+  static bool waitFirstReleaseMain = true;
+  if (waitFirstReleaseMain) {
+    if (digitalRead(BUTTON_PIN) == HIGH) {
+      waitFirstReleaseMain = false;
+      noInterrupts();
+      btnMain.irqFell = false;
+      interrupts();
+      btnMain.lastRaw = false;
+      btnMain.isPressed = false;
+      btnMain.longFired = false;
+    } else {
+      // Кнопка ещё держится с момента wake — поддерживаем подсветку и выходим.
+      lastActivityTime = millis();
+      lcd_backlight_activity(lcd);
+      return;
+    }
   }
 
-  ButtonAction actMain = read_button(BUTTON_PIN, btnMain);
-  ButtonAction actMenu = read_button(MENU_BTN_PIN, btnMenu);
+  // v5.0.3: раздельные пороги по кнопкам.
+  // MAIN: тара 3.0 сек, калибровка 6.0 сек. MENU: на 1/8 за 2.5 сек, без MEDIUM.
+  ButtonAction actMain = read_button(BUTTON_PIN,    btnMain, 3000UL, 6000UL);
+  ButtonAction actMenu = read_button(MENU_BTN_PIN,  btnMenu,    0UL, 2500UL);
 
   // Подсветка: реагировать на физическое нажатие сразу, не ждать debounce/release
   bool anyPressed = (digitalRead(BUTTON_PIN) == LOW || digitalRead(MENU_BTN_PIN) == LOW);
@@ -593,60 +606,77 @@ void handle_buttons() {
     lcd_backlight_activity(lcd);
   }
 
-  // Логика MAIN-кнопки (v5.0.1):
-  //   1× SHORT  — запрос подтверждения "Tara? esche raz/4sek"
-  //   2× SHORT за 4 сек — выполнить тарирование
-  //   LONG (5 сек) — калибровка
-  //   На экранах 6/7 — SHORT входит в режим (calib menu / diag)
-  // Wake-grace: если кнопка нажата при погашенной подсветке — это "будящее" нажатие.
-  static int pressCount = 0;
-  static unsigned long lastPressTime = 0;
+  // Визуальная подсказка во время удержания MAIN — пользователь сразу видит, когда отпускать.
+  // Показываем только на главных экранах (не 6/7, там SHORT работает иначе).
+  static int mainHintLevel = 0;
+  if (sys.menuScreen != 6 && sys.menuScreen != 7) {
+    unsigned long mainHeld = button_hold_ms(btnMain);
+    int level = 0;
+    if (mainHeld >= 6000UL) level = 2;
+    else if (mainHeld >= 3000UL) level = 1;
+    if (level != mainHintLevel) {
+      if (level == 1) {
+        lcd.setCursor(0, 1); lcd_print_padded(lcd, "Otpust = TARA!  ");
+      } else if (level == 2) {
+        lcd.setCursor(0, 1); lcd_print_padded(lcd, "Otpust = KALIBR ");
+      }
+      // level == 0 (release) — обработчики MEDIUM/LONG ниже сами перерисуют LCD.
+      mainHintLevel = level;
+    }
+  }
+
+  // Логика MAIN-кнопки (v5.0.2 — возврат к v5.0.0 схеме):
+  //   SHORT (быстрое нажатие, < 3.5 сек)         — на экранах 6/7 спец-режимы; иначе ничего
+  //                                                 (просто будит экран / лечит подсветку,
+  //                                                  случайных тарирований больше нет)
+  //   MEDIUM (отпустил после ≥ 3.5 сек, < 6.5 c) — запрос подтверждения "Tara? MENU=OK".
+  //                                                 Тара выполняется при нажатии MENU SHORT
+  //                                                 в окне 4 сек, иначе — отмена.
+  //   LONG (≥ 6.5 сек удержания, auto-fire)      — старт калибровочного мастера.
+  static bool tareConfirmPending = false;
+  static unsigned long tareConfirmStartMs = 0;
 
   if (actMain == SHORT_PRESS) {
     if (sys.menuScreen == 6) {
       adjust_calibration();
-      pressCount = 0;
       sys.needsRedraw = true;
     } else if (sys.menuScreen == 7) {
       diagRunRequested = true;
-      pressCount = 0;
       sys.needsRedraw = true;
-    } else if (wakeEventPending && pressCount == 0) {
-      // Wake-grace: первое нажатие после "тёмного" экрана — НЕ диалог тары, только будит.
-      wakeEventPending = false;
-    } else {
-      pressCount++;
-      lastPressTime = millis();
-      if (pressCount >= 2) {
-        perform_taring();
-        pressCount = 0;
-      } else {
-        // Первое нажатие — показываем запрос подтверждения
-        lcd.clear();
-        lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara? Nazhmite ");
-        lcd.setCursor(0, 1); lcd_print_padded(lcd, "esche 1 raz/4sek");
-      }
     }
+    // На остальных экранах MAIN SHORT — ничего: просто разбудили дисплей.
   }
+
+  if (actMain == MEDIUM_PRESS && sys.menuScreen != 6 && sys.menuScreen != 7) {
+    tareConfirmPending = true;
+    tareConfirmStartMs = millis();
+    lcd.clear();
+    lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara? MENU=OK   ");
+    lcd.setCursor(0, 1); lcd_print_padded(lcd, "Otmena cherez 4s");
+  }
+
   if (actMain == LONG_PRESS && sys.menuScreen != 6 && sys.menuScreen != 7) {
+    tareConfirmPending = false;
     perform_calibration();
-    pressCount = 0;
     sys.needsRedraw = true;
-    wakeEventPending = false;
   }
-  if (pressCount > 0 && millis() - lastPressTime > 4000UL) {
-    // Таймаут окна подтверждения (4 сек)
-    pressCount = 0;
+
+  // Перехватываем MENU SHORT в режиме подтверждения тары — иначе он бы переключил меню.
+  if (tareConfirmPending && actMenu == SHORT_PRESS) {
+    tareConfirmPending = false;
+    perform_taring();
+    sys.needsRedraw = true;
+    return;
+  }
+
+  // Таймаут окна подтверждения (4 сек) — тихая отмена с сообщением.
+  if (tareConfirmPending && (millis() - tareConfirmStartMs > 4000UL)) {
+    tareConfirmPending = false;
     lcd.clear();
     lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara: otmena    ");
     lcd.setCursor(0, 1); lcd_print_padded(lcd, "                ");
     { unsigned long _t=millis(); while(millis()-_t<800UL){app_wdt_reset();yield();} }
     sys.needsRedraw = true;
-  }
-  // Сбрасываем wake-флаг если он "повис" (например, после release без detect или таймаута)
-  if (wakeEventPending && !curMainPressed && pressCount == 0
-      && (millis() - lastActivityTime > 1500UL)) {
-    wakeEventPending = false;
   }
   static int menuPressCount = 0;
   static unsigned long lastMenuPressTime = 0;
@@ -1146,9 +1176,10 @@ void adjust_calibration() {
       lcd_print_padded(lcd, buf);
     }
 
-    // Чтение кнопок
-    ButtonAction actMain = read_button(BUTTON_PIN, btnMain);
-    ButtonAction actMenu = read_button(MENU_BTN_PIN, btnMenu);
+    // Чтение кнопок (мастер adjust_calibration: внутри своего таймминга,
+    // MEDIUM не используем; LONG для MAIN=сохранить, MENU=минус-шаг)
+    ButtonAction actMain = read_button(BUTTON_PIN,   btnMain, 0UL, 2000UL);
+    ButtonAction actMenu = read_button(MENU_BTN_PIN, btnMenu, 0UL, 1000UL);
 
     if (actMain == SHORT_PRESS) {
       // Переключить шаг: 10 → 1 → 0.1 → 10 ...
@@ -1470,16 +1501,17 @@ void check_auto_sleep() {
   lcd.noBacklight();
   lcd.noDisplay();  // ESP32-bonus: ещё снижает потребление PCF8574
 
-  // Отключаем WiFi
-#if defined(ESP32)
-  WiFi.disconnect(true);
-  WiFi.mode(WIFI_OFF);
-#elif defined(ESP8266)
+  // ВАЖНО: WebServer закрываем ПЕРЕД деактивацией WiFi, иначе TCP-сокет _srv висит на уже
+  // выключенном netif и при последующем _srv.stop()/деструкторе вызывает NULL-pointer panic
+  // (PC=0x00000000, EXCCAUSE=0x14, сразу после "wifi:NAN WiFi stop") → SW reset вместо deep sleep.
+  // На ESP32 ручной WiFi.disconnect()/WiFi.mode(WIFI_OFF) не вызываем — esp_deep_sleep_start()
+  // корректно отключит WiFi сам. Тот же принцип — в SleepManager.cpp:84-87.
+  if (webServerStarted) webserver_stop();
+  webServerStarted = false;
+#if defined(ESP8266)
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
 #endif
-  if (webServerStarted) webserver_stop();
-  webServerStarted = false;
 
   // Записываем лог перед сном
   {

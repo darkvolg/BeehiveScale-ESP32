@@ -1,7 +1,9 @@
 #include "Button.h"
 
 static const unsigned long DEBOUNCE_MS = 50;
-static const unsigned long LONG_PRESS_MS   = 5000; // 5 сек — калибровка (как раньше)
+// v5.0.3: пороги удержания теперь параметры read_button() — у MAIN и MENU свои значения.
+//   MAIN:  mediumMs=3000 (тара), longMs=6000 (калибровка)
+//   MENU:  mediumMs=0 (отключён), longMs=1500 (возврат на 1/8)
 
 // ISR хранилище — максимум 2 кнопки
 static ButtonState* _isrState[2] = {nullptr, nullptr};
@@ -27,7 +29,16 @@ void button_attach_interrupt(int pin, ButtonState &state) {
   isrIdx++;
 }
 
-ButtonAction read_button(int pin, ButtonState &state) {
+unsigned long button_hold_ms(const ButtonState &state) {
+  if (!state.isPressed) return 0;
+  unsigned long now = millis();
+  if (now < state.pressStart) return 0;
+  return now - state.pressStart;
+}
+
+ButtonAction read_button(int pin, ButtonState &state,
+                         unsigned long mediumMs,
+                         unsigned long longMs) {
   bool raw = (digitalRead(pin) == LOW);
   unsigned long now = millis();
 
@@ -72,14 +83,19 @@ ButtonAction read_button(int pin, ButtonState &state) {
     state.longFired = false;
     state.irqFell = false; // сбросить — мы уже обрабатываем
   } else if (stable && state.isPressed && !state.longFired &&
-             (now - state.pressStart >= LONG_PRESS_MS)) {
+             (now - state.pressStart >= longMs)) {
     state.longFired = true;
     return LONG_PRESS;
   } else if (!stable && state.isPressed) {
     state.isPressed = false;
-    if (!state.longFired) {
-      return SHORT_PRESS;
+    if (state.longFired) {
+      return NO_ACTION;  // LONG уже отстрелил — release ничего не делает
     }
+    unsigned long heldMs = now - state.pressStart;
+    if (mediumMs > 0 && heldMs >= mediumMs) {
+      return MEDIUM_PRESS;
+    }
+    return SHORT_PRESS;
   }
   return NO_ACTION;
 }
