@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌐 Веб-интерфейс — BeehiveScale v4.1</title>
+    <style>
+        :root {
+            --primary: #f5a623;
+            --primary-dark: #d48900;
+            --success: #6fcf97;
+            --danger: #eb5757;
+            --info: #56ccf2;
+            --dark: #0d0f0b;
+            --card-bg: #141710;
+            --card-light: #1c2018;
+            --border: #2e3829;
+            --text: #c8d4b8;
+            --text-muted: #8a9e78;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, #0a0c0a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        header {
+            text-align: center; padding: 40px 20px;
+            background: linear-gradient(135deg, var(--card-bg) 0%, var(--dark) 100%);
+            border-radius: 20px; margin-bottom: 30px; border: 2px solid var(--primary);
+        }
+
+        header h1 { font-size: 2.5em; color: var(--primary); margin-bottom: 10px; }
+        header p { font-size: 1.1em; color: var(--text-muted); }
+
+        .nav-tabs {
+            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; justify-content: center;
+        }
+
+        .nav-tab {
+            padding: 15px 25px; background: var(--card-bg); border: 2px solid var(--border);
+            border-radius: 10px; cursor: pointer; transition: all 0.3s ease;
+            font-size: 1em; color: var(--text); text-decoration: none;
+        }
+
+        .nav-tab:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .nav-tab.active { background: var(--primary); border-color: var(--primary); color: #000; }
+
+        .card {
+            background: var(--card-bg); border-radius: 15px; padding: 25px;
+            margin-bottom: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.6em; }
+        .card h3 { color: var(--info); margin: 20px 0 10px; }
+
+        .card.green { border-color: var(--success); }
+        .card.green h2 { color: var(--success); }
+        .card.blue { border-color: var(--info); }
+        .card.blue h2 { color: var(--info); }
+
+        .table {
+            width: 100%; border-collapse: collapse; margin: 15px 0;
+            background: var(--card-light); border-radius: 10px; overflow: hidden;
+        }
+        .table th {
+            background: var(--card-bg); padding: 12px; text-align: left;
+            color: var(--primary); border-bottom: 2px solid var(--primary);
+        }
+        .table td { padding: 12px; border-bottom: 1px solid var(--border); }
+        .table tr:hover { background: rgba(245, 166, 35, 0.05); }
+
+        .code-block {
+            background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px;
+            padding: 20px; overflow-x: auto; margin: 15px 0;
+        }
+
+        .code-block code {
+            font-family: 'Courier New', monospace; color: var(--primary);
+            font-size: 0.9em; white-space: pre; display: block;
+        }
+
+        .feature-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px; margin: 20px 0;
+        }
+
+        .feature {
+            background: var(--card-light); padding: 20px; border-radius: 10px;
+            border: 1px solid var(--border); text-align: center;
+        }
+
+        .feature-icon { font-size: 3em; margin-bottom: 10px; }
+        .feature h4 { color: var(--primary); margin-bottom: 10px; }
+        .feature p { color: var(--text-muted); font-size: 0.95em; }
+
+        .tip {
+            background: rgba(111, 207, 151, 0.1); border-left: 4px solid var(--success);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
+        .warning {
+            background: rgba(245, 166, 35, 0.1); border-left: 4px solid var(--primary);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
+        .info-box {
+            background: rgba(86, 204, 242, 0.1); border-left: 4px solid var(--info);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
+        .breadcrumb { margin-bottom: 20px; padding: 10px 0; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; }
+        .breadcrumb span { color: var(--text-muted); margin: 0 10px; }
+
+        .api-endpoint {
+            background: var(--card-light); border-left: 4px solid var(--primary);
+            padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;
+        }
+
+        .api-method {
+            display: inline-block; padding: 4px 12px; border-radius: 5px;
+            font-weight: bold; font-size: 0.85em; margin-right: 10px;
+        }
+
+        .api-method.get { background: var(--info); color: #000; }
+        .api-method.post { background: var(--primary); color: #000; }
+
+        .api-url {
+            font-family: 'Courier New', monospace; color: var(--text);
+        }
+
+        footer {
+            text-align: center; padding: 30px; color: var(--text-muted);
+            border-top: 1px solid var(--border); margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            .nav-tab { padding: 10px 15px; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">🏠 Главная</a>
+            <span>→</span>
+            <a href="../User_Guide.html">📖 Руководство</a>
+            <span>→</span>
+            <span>🌐 Веб-интерфейс</span>
+        </div>
+
+        <header>
+            <h1>🌐 Веб-интерфейс</h1>
+            <p>Управление и мониторинг через браузер</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <a href="01_components.html" class="nav-tab">📦 Компоненты</a>
+            <a href="02_connection.html" class="nav-tab">🔌 Подключение</a>
+            <a href="03_settings.html" class="nav-tab">⚙️ Настройка</a>
+            <a href="04_operation.html" class="nav-tab">⚙️ Эксплуатация</a>
+            <a href="05_web.html" class="nav-tab active">🌐 Веб-интерфейс</a>
+            <a href="06_telegram.html" class="nav-tab">📱 Telegram</a>
+            <a href="07_troubleshooting.html" class="nav-tab">🔍 Неисправности</a>
+        </nav>
+
+        <section class="card">
+            <h2>🔌 Доступ к веб-интерфейсу</h2>
+            
+            <h3>Шаг 1: Подключитесь к WiFi</h3>
+            <div class="info-box">
+                <strong>AP режим (точка доступа):</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Найдите сеть <strong><code>BeehiveScale</code></strong></li>
+                    <li>Пароль: <strong><code>12345678</code></strong></li>
+                </ul>
+            </div>
+            <div class="info-box">
+                <strong>STA режим (роутер):</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Устройство подключится к вашему роутеру</li>
+                    <li>IP адрес можно узнать из Serial монитора или роутера</li>
+                </ul>
+            </div>
+
+            <h3>Шаг 2: Откройте браузер</h3>
+            <div class="api-endpoint" style="border-color: var(--success);">
+                <p style="color: var(--text); margin-bottom: 10px;">
+                    <strong>AP режим:</strong> <code style="color: var(--success);">http://192.168.4.1</code>
+                </p>
+                <p style="color: var(--text);">
+                    <strong>STA режим:</strong> <code style="color: var(--success);">http://[IP_устройства]</code>
+                </p>
+            </div>
+
+            <h3>Шаг 3: Авторизация</h3>
+            <div class="table" style="max-width: 500px;">
+                <table>
+                    <tr><th>Логин</th><td><code>admin</code></td></tr>
+                    <tr><th>Пароль</th><td><code>beehive</code></td></tr>
+                </table>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📊 Главная панель</h2>
+            <p>Веб-интерфейс автоматически обновляется каждые 5 секунд.</p>
+            
+            <div class="feature-grid">
+                <div class="feature">
+                    <div class="feature-icon">⚖️</div>
+                    <h4>Текущий вес</h4>
+                    <p>Вес в реальном времени, предыдущее значение, разница (привес)</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🌡️</div>
+                    <h4>Температура</h4>
+                    <p>Температура улья, влажность, температура RTC</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📡</div>
+                    <h4>Статус системы</h4>
+                    <p>Датчик, WiFi, калибровка, батарея, пробуждения</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🕐</div>
+                    <h4>Дата и время</h4>
+                    <p>Время RTC модуля и uptime устройства</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="card green">
+            <h2>🔧 Доступные действия</h2>
+            
+            <table class="table">
+                <tr>
+                    <th>Кнопка</th>
+                    <th>Действие</th>
+                    <th>Описание</th>
+                </tr>
+                <tr>
+                    <td style="color: var(--primary);">⚖ Тарировка</td>
+                    <td>Обнуление веса</td>
+                    <td>Сбрасывает текущий вес в ноль (уберите груз перед нажатием!)</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--success);">💾 Сохранить эталон</td>
+                    <td>Фиксация веса</td>
+                    <td>Запоминает текущий вес как базовый для расчёта привеса</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--info);">🕐 NTP Время</td>
+                    <td>Синхронизация</td>
+                    <td>Синхронизирует время через интернет (только STA режим)</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--danger);">↺ Перезагрузить</td>
+                    <td>Рестарт ESP32</td>
+                    <td>Перезагружает устройство</td>
+                </tr>
+            </table>
+        </section>
+
+        <section class="card blue">
+            <h2>⚙️ Быстрые настройки</h2>
+            <p>Изменяйте параметры без перепрошивки:</p>
+            
+            <table class="table">
+                <tr>
+                    <th>Параметр</th>
+                    <th>Диапазон</th>
+                    <th>Описание</th>
+                </tr>
+                <tr>
+                    <td><strong>Порог тревоги Telegram</strong></td>
+                    <td>0.1 — 10.0 кг</td>
+                    <td>Изменение веса для отправки уведомления</td>
+                </tr>
+                <tr>
+                    <td><strong>Эталонный груз</strong></td>
+                    <td>100 — 5000 г</td>
+                    <td>Вес груза для автоматической калибровки</td>
+                </tr>
+                <tr>
+                    <td><strong>EMA сглаживание</strong></td>
+                    <td>0.05 — 0.9</td>
+                    <td>Коэффициент фильтра показаний веса</td>
+                </tr>
+            </table>
+
+            <div class="tip" style="margin-top: 20px;">
+                <strong>💡 Совет:</strong> Нажмите «Сохранить» после изменения настроек. 
+                Значения сохраняются в EEPROM и сохраняются после перезагрузки.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🔌 REST API</h2>
+            <p>Для интеграции с внешними системами:</p>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span>
+                <span class="api-url">/api/data</span>
+                <p style="margin-top: 10px; color: var(--text-muted);">
+                    Возвращает все показания в формате JSON
+                </p>
+            </div>
+
+            <div class="code-block">
+                <code>{
+  "weight": 45.67,
+  "ref": 44.50,
+  "prev": 45.20,
+  "temp": 25.3,
+  "hum": 65.2,
+  "rtcT": 24.8,
+  "sensor": true,
+  "wifi": true,
+  "datetime": "21.02.26 14:30",
+  "uptime": "0d 02:15:30",
+  "wakeups": 15,
+  "cf": 2280.00,
+  "offset": -12345,
+  "batV": 3.85,
+  "batPct": 75,
+  "heap": 150000
+}</code>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span>
+                <span class="api-url">/api/tare</span>
+                <p style="margin-top: 10px; color: var(--text-muted);">
+                    Выполнить тарировку (обнуление веса)
+                </p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span>
+                <span class="api-url">/api/save</span>
+                <p style="margin-top: 10px; color: var(--text-muted);">
+                    Сохранить текущий вес как эталон
+                </p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span>
+                <span class="api-url">/api/settings</span>
+                <p style="margin-top: 10px; color: var(--text-muted);">
+                    Изменить настройки (JSON body)
+                </p>
+                <div class="code-block" style="margin-top: 10px;">
+                    <code>{
+  "alertDelta": 0.5,
+  "calibWeight": 1000,
+  "emaAlpha": 0.2
+}</code>
+                </div>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span>
+                <span class="api-url">/api/ntp</span>
+                <p style="margin-top: 10px; color: var(--text-muted);">
+                    Синхронизировать время NTP (только STA)
+                </p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span>
+                <span class="api-url">/api/reboot</span>
+                <p style="margin-top: 10px; color: var(--text-muted);">
+                    Перезагрузить устройство
+                </p>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📱 Примеры использования API</h2>
+            
+            <h3>JavaScript (fetch)</h3>
+            <div class="code-block">
+                <code><span class="code-comment">// Получить данные</span>
+fetch(<span class="code-string">'/api/data'</span>)
+  .then(r => r.json())
+  .then(d => console.log(<span class="code-string">'Weight:'</span>, d.weight));
+
+<span class="code-comment">// Тарировка</span>
+fetch(<span class="code-string">'/api/tare'</span>, {method: <span class="code-string">'POST'</span>})
+  .then(r => r.json())
+  .then(d => console.log(d.msg));
+
+<span class="code-comment">// Изменить настройки</span>
+fetch(<span class="code-string">'/api/settings'</span>, {
+  method: <span class="code-string">'POST'</span>,
+  headers: {<span class="code-string">'Content-Type'</span>: <span class="code-string">'application/json'</span>},
+  body: JSON.stringify({alertDelta: 0.3})
+});</code>
+            </div>
+
+            <h3>Python (requests)</h3>
+            <div class="code-block">
+                <code><span class="code-keyword">import</span> requests
+
+<span class="code-comment"># Получить данные</span>
+r = requests.get(<span class="code-string">'http://192.168.4.1/api/data'</span>, 
+                 auth=(<span class="code-string">'admin'</span>, <span class="code-string">'beehive'</span>))
+data = r.json()
+print(<span class="code-string">f"Weight: {data['weight']} kg"</span>)
+
+<span class="code-comment"># Тарировка</span>
+requests.post(<span class="code-string">'http://192.168.4.1/api/tare'</span>,
+              auth=(<span class="code-string">'admin'</span>, <span class="code-string">'beehive'</span>))
+
+<span class="code-comment"># Настройки</span>
+requests.post(<span class="code-string">'http://192.168.4.1/api/settings'</span>,
+              json={<span class="code-string">"alertDelta"</span>: 0.3},
+              auth=(<span class="code-string">'admin'</span>, <span class="code-string">'beehive'</span>))</code>
+            </div>
+
+            <h3>cURL</h3>
+            <div class="code-block">
+                <code><span class="code-comment"># Получить данные</span>
+curl -u admin:beehive http://192.168.4.1/api/data
+
+<span class="code-comment"># Тарировка</span>
+curl -u admin:beehive -X POST http://192.168.4.1/api/tare
+
+<span class="code-comment"># Настройки</span>
+curl -u admin:beehive -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"alertDelta":0.3}' \
+  http://192.168.4.1/api/settings</code>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🔐 Безопасность</h2>
+            <div class="warning">
+                <strong>⚠️ Важно:</strong> Веб-интерфейс использует Basic Auth авторизацию. 
+                Данные передаются в открытом виде (без HTTPS). Не используйте сложные пароли.
+            </div>
+            
+            <p style="margin-top: 15px;">
+                Для изменения логина/пароля отредактируйте <code>WebServerModule.h</code>:
+            </p>
+            <div class="code-block">
+                <code><span class="code-keyword">#define</span> WEB_ADMIN_USER    <span class="code-string">"admin"</span>
+<span class="code-keyword">#define</span> WEB_ADMIN_PASS    <span class="code-string">"beehive"</span></code>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
+        </p>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            if (tab.getAttribute('href') === window.location.pathname.split('/').pop()) {
+                tab.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

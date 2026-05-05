@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📦 Компоненты — BeehiveScale v4.1</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        :root {
+            --primary: #f5a623;
+            --primary-dark: #d48900;
+            --success: #6fcf97;
+            --danger: #eb5757;
+            --info: #56ccf2;
+            --dark: #0d0f0b;
+            --card-bg: #141710;
+            --card-light: #1c2018;
+            --border: #2e3829;
+            --text: #c8d4b8;
+            --text-muted: #8a9e78;
+            --text-dim: #506040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, #0a0c0a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--card-bg) 0%, var(--dark) 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 10px 40px rgba(245, 166, 35, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(245, 166, 35, 0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            color: var(--text-muted);
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .nav-tab {
+            padding: 15px 25px;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .nav-tab:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            background: var(--card-light);
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #000;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.6em;
+        }
+
+        .card h3 {
+            color: var(--info);
+            margin: 20px 0 10px;
+        }
+
+        .icon {
+            width: 30px;
+            height: 30px;
+            fill: currentColor;
+        }
+
+        /* Components Grid */
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .component-card {
+            background: var(--card-light);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .component-card:hover {
+            transform: scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(245, 166, 35, 0.2);
+        }
+
+        .component-card svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 15px;
+        }
+
+        .component-card h4 {
+            color: var(--text);
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .component-card p {
+            font-size: 0.9em;
+            color: var(--text-muted);
+        }
+
+        .component-card .specs {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+            font-size: 0.85em;
+            color: var(--primary);
+        }
+
+        /* Connection Table */
+        .connection-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: var(--card-light);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .connection-table th {
+            background: var(--card-bg);
+            padding: 15px;
+            text-align: left;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .connection-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .connection-table tr:hover {
+            background: rgba(245, 166, 35, 0.05);
+        }
+
+        .connection-table .pin {
+            font-family: 'Courier New', monospace;
+            background: var(--primary);
+            color: #000;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        /* Tips and Warnings */
+        .tip {
+            background: rgba(111, 207, 151, 0.1);
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
+        }
+
+        .warning {
+            background: rgba(245, 166, 35, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
+        }
+
+        .danger {
+            background: rgba(235, 87, 87, 0.1);
+            border-left: 4px solid var(--danger);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            margin-bottom: 20px;
+            padding: 10px 0;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb span {
+            color: var(--text-muted);
+            margin: 0 10px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            .nav-tab { padding: 10px 15px; font-size: 0.9em; }
+            .components-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">🏠 Главная</a>
+            <span>→</span>
+            <a href="../User_Guide.html">📖 Руководство</a>
+            <span>→</span>
+            <span>📦 Компоненты</span>
+        </div>
+
+        <header>
+            <h1>📦 Необходимые компоненты</h1>
+            <p>Полный список деталей для сборки BeehiveScale v4.1</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <a href="01_components.html" class="nav-tab active">📦 Компоненты</a>
+            <a href="02_connection.html" class="nav-tab">🔌 Подключение</a>
+            <a href="03_settings.html" class="nav-tab">⚙️ Настройка</a>
+            <a href="04_operation.html" class="nav-tab">⚙️ Эксплуатация</a>
+            <a href="05_web.html" class="nav-tab">🌐 Веб-интерфейс</a>
+            <a href="06_telegram.html" class="nav-tab">📱 Telegram</a>
+            <a href="07_troubleshooting.html" class="nav-tab">🔍 Неисправности</a>
+        </nav>
+
+        <section class="card">
+            <h2>
+                <svg class="icon" viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+                Список компонентов
+            </h2>
+            <p>Для сборки системы мониторинга улья вам понадобятся следующие компоненты:</p>
+
+            <div class="components-grid">
+                <!-- ESP32 -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="20" y="10" width="60" height="80" rx="5" fill="#0066cc"/>
+                        <rect x="25" y="15" width="50" height="50" rx="3" fill="#1a1a2e"/>
+                        <circle cx="35" cy="25" r="3" fill="#gold"/>
+                        <circle cx="45" cy="25" r="3" fill="#gold"/>
+                        <circle cx="55" cy="25" r="3" fill="#gold"/>
+                        <circle cx="65" cy="25" r="3" fill="#gold"/>
+                        <rect x="35" y="40" width="30" height="20" fill="#333"/>
+                        <text x="50" y="85" text-anchor="middle" fill="white" font-size="8">ESP32</text>
+                    </svg>
+                    <h4>ESP32 DevKit v1</h4>
+                    <p>Микроконтроллер с WiFi/Bluetooth</p>
+                    <div class="specs">
+                        GPIO: 34 пина<br>
+                        Flash: 4MB<br>
+                        WiFi: 2.4GHz
+                    </div>
+                </div>
+
+                <!-- HX711 -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="15" y="30" width="70" height="50" rx="3" fill="#2d5016"/>
+                        <rect x="20" y="35" width="60" height="20" fill="#1a1a2e"/>
+                        <circle cx="30" cy="45" r="5" fill="#gold"/>
+                        <circle cx="70" cy="45" r="5" fill="#gold"/>
+                        <rect x="25" y="60" width="50" height="15" fill="#4a4a4a"/>
+                        <text x="50" y="90" text-anchor="middle" fill="white" font-size="8">HX711</text>
+                    </svg>
+                    <h4>Модуль HX711</h4>
+                    <p>АЦП для тензодатчиков</p>
+                    <div class="specs">
+                        24-bit АЦП<br>
+                        2 канала<br>
+                        Программируемое усиление
+                    </div>
+                </div>
+
+                <!-- Тензодатчик -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="10" y="40" width="80" height="40" rx="2" fill="#silver"/>
+                        <rect x="15" y="45" width="70" height="30" fill="#666"/>
+                        <line x1="20" y1="55" x2="80" y2="55" stroke="#999" stroke-width="2"/>
+                        <line x1="50" y1="45" x2="50" y2="75" stroke="#999" stroke-width="2"/>
+                        <text x="50" y="95" text-anchor="middle" fill="white" font-size="8">Тензодатчик</text>
+                    </svg>
+                    <h4>Тензодатчик</h4>
+                    <p>На нагрузку 50-100 кг</p>
+                    <div class="specs">
+                        Тип: S-образный<br>
+                        Класс точности: C3<br>
+                        4 провода
+                    </div>
+                </div>
+
+                <!-- LCD 1602 -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="15" y="25" width="70" height="50" rx="3" fill="#1a1a2e"/>
+                        <rect x="20" y="30" width="60" height="30" fill="#0d1b2a"/>
+                        <rect x="25" y="35" width="25" height="8" fill="#6fcf97"/>
+                        <rect x="25" y="48" width="35" height="8" fill="#6fcf97"/>
+                        <rect x="20" y="65" width="60" height="5" fill="#333"/>
+                        <text x="50" y="90" text-anchor="middle" fill="white" font-size="7">LCD 1602 I2C</text>
+                    </svg>
+                    <h4>LCD 1602 I2C</h4>
+                    <p>Дисплей 16 символов × 2 строки</p>
+                    <div class="specs">
+                        Интерфейс: I2C<br>
+                        Адрес: 0x27<br>
+                        Подсветка: зелёная
+                    </div>
+                </div>
+
+                <!-- RTC DS3231 -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="25" y="30" width="50" height="40" rx="3" fill="#1a1a2e"/>
+                        <circle cx="50" cy="45" r="12" fill="#333"/>
+                        <circle cx="50" cy="45" r="8" fill="#0d1b2a"/>
+                        <line x1="50" y1="45" x2="50" y2="40" stroke="#f5a623" stroke-width="2"/>
+                        <line x1="50" y1="45" x2="55" y2="45" stroke="#f5a623" stroke-width="2"/>
+                        <rect x="30" y="60" width="40" height="8" fill="#gold"/>
+                        <text x="50" y="90" text-anchor="middle" fill="white" font-size="8">RTC DS3231</text>
+                    </svg>
+                    <h4>RTC DS3231</h4>
+                    <p>Модуль реального времени</p>
+                    <div class="specs">
+                        Точность: ±2ppm<br>
+                        Батарейка: CR2032<br>
+                        I2C интерфейс
+                    </div>
+                </div>
+
+                <!-- DHT22/DS18B20 -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="35" y="30" width="30" height="40" rx="5" fill="#333"/>
+                        <circle cx="50" cy="45" r="8" fill="#555"/>
+                        <rect x="40" y="60" width="20" height="5" fill="#gold"/>
+                        <rect x="40" y="70" width="20" height="5" fill="#gold"/>
+                        <rect x="40" y="80" width="20" height="5" fill="#gold"/>
+                        <text x="50" y="95" text-anchor="middle" fill="white" font-size="8">DHT22</text>
+                    </svg>
+                    <h4>DHT22 / DS18B20</h4>
+                    <p>Датчик температуры/влажности</p>
+                    <div class="specs">
+                        DHT22: T+H<br>
+                        DS18B20: T<br>
+                        Цифровой выход
+                    </div>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <circle cx="50" cy="40" r="20" fill="#333"/>
+                        <circle cx="50" cy="40" r="15" fill="#444"/>
+                        <circle cx="50" cy="40" r="10" fill="#555"/>
+                        <rect x="40" y="70" width="20" height="5" fill="#gold"/>
+                        <rect x="40" y="80" width="20" height="5" fill="#gold"/>
+                        <text x="50" y="95" text-anchor="middle" fill="white" font-size="8">Кнопки</text>
+                    </svg>
+                    <h4>Кнопки тактовые</h4>
+                    <p>2 штуки для управления</p>
+                    <div class="specs">
+                        Тип: NO (нормально-открытые)<br>
+                        Размер: 12×12мм<br>
+                        4 контакта
+                    </div>
+                </div>
+
+                <!-- Аккумулятор -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="25" y="25" width="50" height="50" rx="5" fill="#333"/>
+                        <rect x="65" y="35" width="10" height="30" rx="2" fill="#555"/>
+                        <text x="50" y="55" text-anchor="middle" fill="white" font-size="10">Li-Ion</text>
+                        <text x="50" y="70" text-anchor="middle" fill="white" font-size="8">18650 3.7V</text>
+                        <rect x="30" y="85" width="40" height="5" fill="#gold"/>
+                    </svg>
+                    <h4>Li-Ion 18650</h4>
+                    <p>Аккумулятор 3.7V</p>
+                    <div class="specs">
+                        Ёмкость: 2000-3500mAh<br>
+                        Напряжение: 3.7V<br>
+                        Макс: 4.2V
+                    </div>
+                </div>
+
+                <!-- Резисторы -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="20" y="45" width="60" height="10" fill="#d4a574"/>
+                        <line x1="10" y1="50" x2="20" y2="50" stroke="#gold" stroke-width="3"/>
+                        <line x1="80" y1="50" x2="90" y2="50" stroke="#gold" stroke-width="3"/>
+                        <line x1="30" y1="45" x2="30" y2="55" stroke="#8b4513" stroke-width="2"/>
+                        <line x1="50" y1="45" x2="50" y2="55" stroke="#8b4513" stroke-width="2"/>
+                        <line x1="70" y1="45" x2="70" y2="55" stroke="#8b4513" stroke-width="2"/>
+                        <text x="50" y="85" text-anchor="middle" fill="white" font-size="8">100кОм ×2</text>
+                    </svg>
+                    <h4>Резисторы 100кОм</h4>
+                    <p>Делитель напряжения для батареи</p>
+                    <div class="specs">
+                        Мощность: 0.25W<br>
+                        Точность: 5%<br>
+                        Тип: углеродные
+                    </div>
+                </div>
+
+                <!-- Провода -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <path d="M20 30 Q50 20 80 30" stroke="#ef5350" stroke-width="4" fill="none"/>
+                        <path d="M20 50 Q50 40 80 50" stroke="#4caf50" stroke-width="4" fill="none"/>
+                        <path d="M20 70 Q50 60 80 70" stroke="#2196f3" stroke-width="4" fill="none"/>
+                        <path d="M20 90 Q50 80 80 90" stroke="#666" stroke-width="4" fill="none"/>
+                        <text x="50" y="20" text-anchor="middle" fill="white" font-size="8">Провода</text>
+                    </svg>
+                    <h4>Провода соединительные</h4>
+                    <p>Дюпон провода папа-папа</p>
+                    <div class="specs">
+                        Длина: 10-20см<br>
+                        Тип: дюпон<br>
+                        Комплект: 40+ шт
+                    </div>
+                </div>
+
+                <!-- Макетная плата -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="15" y="35" width="70" height="30" rx="3" fill="#1a1a2e"/>
+                        <line x1="20" y1="45" x2="80" y2="45" stroke="#333" stroke-width="1"/>
+                        <line x1="20" y1="55" x2="80" y2="55" stroke="#333" stroke-width="1"/>
+                        <circle cx="25" cy="42" r="2" fill="#gold"/>
+                        <circle cx="35" cy="42" r="2" fill="#gold"/>
+                        <circle cx="45" cy="42" r="2" fill="#gold"/>
+                        <circle cx="25" cy="52" r="2" fill="#gold"/>
+                        <circle cx="35" cy="52" r="2" fill="#gold"/>
+                        <circle cx="45" cy="52" r="2" fill="#gold"/>
+                        <text x="50" y="85" text-anchor="middle" fill="white" font-size="8">Макетная плата</text>
+                    </svg>
+                    <h4>Макетная плата</h4>
+                    <p>Для прототипирования</p>
+                    <div class="specs">
+                        Размер: 8.5×5.5см<br>
+                        Точек: 400+<br>
+                        Самоклеящаяся
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip">
+                <strong>💡 Совет:</strong> Все компоненты можно приобрести на AliExpress, Ozon или в местных магазинах электроники (Чип и Дип, Амперка). 
+                Рекомендуется покупать готовые наборы — это дешевле.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📋 Таблица подключений</h2>
+            <p>Краткая справка по подключениям компонентов к ESP32:</p>
+            
+            <table class="connection-table">
+                <thead>
+                    <tr>
+                        <th>Компонент</th>
+                        <th>Пин ESP32</th>
+                        <th>Назначение</th>
+                        <th>Примечание</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>HX711 DT</strong></td>
+                        <td><span class="pin">GPIO 14</span></td>
+                        <td>Данные</td>
+                        <td>Подтяжка не требуется</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HX711 SCK</strong></td>
+                        <td><span class="pin">GPIO 12</span></td>
+                        <td>Тактовый сигнал</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HX711 VCC</strong></td>
+                        <td><span class="pin">5V / 3.3V</span></td>
+                        <td>Питание</td>
+                        <td>Можно от 3.3V или 5V</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HX711 GND</strong></td>
+                        <td><span class="pin">GND</span></td>
+                        <td>Земля</td>
+                        <td>Общая с ESP32</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LCD SDA</strong></td>
+                        <td><span class="pin">GPIO 21</span></td>
+                        <td>I2C данные</td>
+                        <td>Подтяжка на плате</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LCD SCL</strong></td>
+                        <td><span class="pin">GPIO 22</span></td>
+                        <td>I2C тактовая</td>
+                        <td>Подтяжка на плате</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LCD VCC</strong></td>
+                        <td><span class="pin">5V</span></td>
+                        <td>Питание LCD</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RTC SDA</strong></td>
+                        <td><span class="pin">GPIO 21</span></td>
+                        <td>I2C данные</td>
+                        <td>Параллельно LCD</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RTC SCL</strong></td>
+                        <td><span class="pin">GPIO 22</span></td>
+                        <td>I2C тактовая</td>
+                        <td>Параллельно LCD</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DHT22 DATA</strong></td>
+                        <td><span class="pin">GPIO 4</span></td>
+                        <td>Данные</td>
+                        <td>Резистор 10кОм к VCC</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Кнопка 1</strong></td>
+                        <td><span class="pin">GPIO 0</span></td>
+                        <td>Тарировка/Калибровка</td>
+                        <td>INPUT_PULLUP</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Кнопка 2</strong></td>
+                        <td><span class="pin">GPIO 2</span></td>
+                        <td>Меню</td>
+                        <td>INPUT_PULLUP</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Батарея (+)</strong></td>
+                        <td><span class="pin">GPIO 34</span></td>
+                        <td>ADC чтение</td>
+                        <td>Через делитель 2:1!</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="warning">
+                <strong>⚠️ Внимание:</strong> GPIO 34 — это входной пин ADC только для чтения. 
+                Для подключения батареи обязательно используйте делитель напряжения 
+                (два резистора 100кОм), чтобы разделить напряжение батареи пополам.
+            </div>
+        </section>
+
+        <section class="card green">
+            <h2>🛒 Где купить компоненты</h2>
+            <table class="connection-table">
+                <thead>
+                    <tr>
+                        <th>Компонент</th>
+                        <th>AliExpress</th>
+                        <th>Россия</th>
+                        <th>Цена (примерно)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ESP32 DevKit</td>
+                        <td>✅ Есть</td>
+                        <td>✅ Чип и Дип, Амперка</td>
+                        <td>300-500 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>HX711 + тензодатчик 50кг</td>
+                        <td>✅ Есть набор</td>
+                        <td>✅ Чип и Дип</td>
+                        <td>400-700 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>LCD 1602 I2C</td>
+                        <td>✅ Есть</td>
+                        <td>✅ Амперка</td>
+                        <td>250-400 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>RTC DS3231</td>
+                        <td>✅ Есть</td>
+                        <td>✅ Чип и Дип</td>
+                        <td>150-250 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>DHT22 / DS18B20</td>
+                        <td>✅ Есть</td>
+                        <td>✅ Есть</td>
+                        <td>100-200 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>Li-Ion 18650</td>
+                        <td>✅ Есть</td>
+                        <td>✅ Есть</td>
+                        <td>200-500 ₽</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <footer>
+        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
+        </p>
+    </footer>
+
+    <script>
+        // Подсветка активной вкладки
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            if (tab.getAttribute('href') === window.location.pathname.split('/').pop()) {
+                tab.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Настройка — BeehiveScale v4.1</title>
+    <style>
+        :root {
+            --primary: #f5a623;
+            --primary-dark: #d48900;
+            --success: #6fcf97;
+            --danger: #eb5757;
+            --info: #56ccf2;
+            --dark: #0d0f0b;
+            --card-bg: #141710;
+            --card-light: #1c2018;
+            --border: #2e3829;
+            --text: #c8d4b8;
+            --text-muted: #8a9e78;
+            --text-dim: #506040;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, #0a0c0a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--card-bg) 0%, var(--dark) 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 2px solid var(--primary);
+        }
+
+        header h1 { font-size: 2.5em; color: var(--primary); margin-bottom: 10px; }
+        header p { font-size: 1.1em; color: var(--text-muted); }
+
+        .nav-tabs {
+            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; justify-content: center;
+        }
+
+        .nav-tab {
+            padding: 15px 25px; background: var(--card-bg); border: 2px solid var(--border);
+            border-radius: 10px; cursor: pointer; transition: all 0.3s ease;
+            font-size: 1em; color: var(--text); text-decoration: none;
+        }
+
+        .nav-tab:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .nav-tab.active { background: var(--primary); border-color: var(--primary); color: #000; }
+
+        .card {
+            background: var(--card-bg); border-radius: 15px; padding: 25px;
+            margin-bottom: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.6em; }
+        .card h3 { color: var(--info); margin: 20px 0 10px; }
+        .card h4 { color: var(--text); margin: 15px 0 10px; }
+
+        .code-block {
+            background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px;
+            padding: 20px; overflow-x: auto; margin: 15px 0;
+        }
+
+        .code-block code {
+            font-family: 'Courier New', monospace; color: var(--primary); font-size: 0.9em;
+            white-space: pre; display: block;
+        }
+
+        .code-comment { color: #666; }
+        .code-string { color: var(--success); }
+        .code-number { color: var(--info); }
+        .code-keyword { color: var(--danger); }
+
+        .tip {
+            background: rgba(111, 207, 151, 0.1); border-left: 4px solid var(--success);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
+        .warning {
+            background: rgba(245, 166, 35, 0.1); border-left: 4px solid var(--primary);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
+        .info-box {
+            background: rgba(86, 204, 242, 0.1); border-left: 4px solid var(--info);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
+        .breadcrumb { margin-bottom: 20px; padding: 10px 0; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; }
+        .breadcrumb span { color: var(--text-muted); margin: 0 10px; }
+
+        footer {
+            text-align: center; padding: 30px; color: var(--text-muted);
+            border-top: 1px solid var(--border); margin-top: 40px;
+        }
+
+        .steps { counter-reset: step; }
+        .step {
+            display: flex; gap: 20px; margin-bottom: 25px; padding: 20px;
+            background: rgba(255,255,255,0.03); border-radius: 15px;
+        }
+        .step::before {
+            counter-increment: step; content: counter(step);
+            width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary) 0%, var(--info) 100%);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.3em; color: #000; flex-shrink: 0;
+        }
+        .step h4 { color: var(--text); margin-bottom: 10px; font-size: 1.2em; }
+        .step p { color: var(--text-muted); }
+
+        .config-table {
+            width: 100%; border-collapse: collapse; margin: 15px 0;
+            background: var(--card-light); border-radius: 10px; overflow: hidden;
+        }
+        .config-table th {
+            background: var(--card-bg); padding: 12px; text-align: left;
+            color: var(--primary); border-bottom: 2px solid var(--primary);
+        }
+        .config-table td { padding: 12px; border-bottom: 1px solid var(--border); }
+        .config-table tr:hover { background: rgba(245, 166, 35, 0.05); }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            .nav-tab { padding: 10px 15px; font-size: 0.9em; }
+            .step { flex-direction: column; }
+            .step::before { width: 40px; height: 40px; font-size: 1.1em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">🏠 Главная</a>
+            <span>→</span>
+            <a href="../User_Guide.html">📖 Руководство</a>
+            <span>→</span>
+            <span>⚙️ Настройка</span>
+        </div>
+
+        <header>
+            <h1>⚙️ Настройка системы</h1>
+            <p>Конфигурация WiFi, Telegram, NTP и других параметров</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <a href="01_components.html" class="nav-tab">📦 Компоненты</a>
+            <a href="02_connection.html" class="nav-tab">🔌 Подключение</a>
+            <a href="03_settings.html" class="nav-tab active">⚙️ Настройка</a>
+            <a href="04_operation.html" class="nav-tab">⚙️ Эксплуатация</a>
+            <a href="05_web.html" class="nav-tab">🌐 Веб-интерфейс</a>
+            <a href="06_telegram.html" class="nav-tab">📱 Telegram</a>
+            <a href="07_troubleshooting.html" class="nav-tab">🔍 Неисправности</a>
+        </nav>
+
+        <section class="card">
+            <h2>📋 Файлы конфигурации</h2>
+            <p>Основные настройки находятся в файле <code>Connectivity.h</code>. Откройте его в Arduino IDE перед загрузкой прошивки.</p>
+        </section>
+
+        <section class="card">
+            <h2>📶 Настройка WiFi</h2>
+            
+            <h3>Режим 1: Подключение к роутеру (STA)</h3>
+            <p>Устройство подключается к вашей домашней сети WiFi:</p>
+            <div class="code-block">
+                <code><span class="code-comment">// Раскомментируйте для режима станции (STA)</span>
+<span class="code-comment">// #define WIFI_MODE_AP</span>
+
+<span class="code-comment">// Настройки вашего роутера</span>
+<span class="code-keyword">#define</span> WIFI_SSID        <span class="code-string">"Beeline"</span>
+<span class="code-keyword">#define</span> WIFI_PASSWORD    <span class="code-string">"9044355157"</span>
+<span class="code-keyword">#define</span> WIFI_TIMEOUT_MS  <span class="code-number">10000UL</span></code>
+            </div>
+
+            <h3>Режим 2: Точка доступа (AP)</h3>
+            <p>Устройство создаёт собственную WiFi сеть (работает без роутера):</p>
+            <div class="code-block">
+                <code><span class="code-comment">// Режим точки доступа</span>
+<span class="code-keyword">#define</span> WIFI_MODE_AP
+
+<span class="code-comment">// Настройки точки доступа</span>
+<span class="code-keyword">#define</span> AP_SSID          <span class="code-string">"BeehiveScale"</span>
+<span class="code-keyword">#define</span> AP_PASSWORD      <span class="code-string">"12345678"</span>
+<span class="code-keyword">#define</span> AP_CHANNEL       <span class="code-number">1</span>
+<span class="code-keyword">#define</span> AP_MAX_CLIENTS   <span class="code-number">4</span></code>
+            </div>
+
+            <div class="info-box">
+                <strong>ℹ️ Какой режим выбрать?</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>STA режим:</strong> Если улей рядом с домом и есть WiFi</li>
+                    <li><strong>AP режим:</strong> Если улей далеко от роутера, подключайтесь с телефона</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🕐 Настройка NTP (синхронизация времени)</h2>
+            <p>NTP серверы используются для автоматической установки точного времени:</p>
+            <div class="code-block">
+                <code><span class="code-comment">// Часовой пояс (Москва = 3)</span>
+<span class="code-keyword">#define</span> NTP_TIMEZONE         <span class="code-number">3</span>
+
+<span class="code-comment">// NTP серверы</span>
+<span class="code-keyword">#define</span> NTP_SERVER_1         <span class="code-string">"pool.ntp.org"</span>
+<span class="code-keyword">#define</span> NTP_SERVER_2         <span class="code-string">"time.nist.gov"</span>
+
+<span class="code-comment">// Интервал синхронизации (1 час = 3600000 мс)</span>
+<span class="code-keyword">#define</span> NTP_SYNC_INTERVAL    <span class="code-number">3600000UL</span></code>
+            </div>
+
+            <div class="tip">
+                <strong>💡 Совет:</strong> В режиме AP синхронизация NTP недоступна (нет интернета). 
+                Время устанавливается вручную через веб-интерфейс или Serial команды.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📱 Настройка Telegram уведомлений</h2>
+            <p>Для получения уведомлений в Telegram создайте бота и узнайте Chat ID:</p>
+            <div class="code-block">
+                <code><span class="code-comment">// Токен бота от @BotFather</span>
+<span class="code-keyword">#define</span> TG_BOT_TOKEN     <span class="code-string">"1234567890:AABcDeFgHiJkLmNoPqRsTuVwXyZ"</span>
+
+<span class="code-comment">// ID чата для отправки</span>
+<span class="code-keyword">#define</span> TG_CHAT_ID       <span class="code-string">"-1001234567890"</span>
+
+<span class="code-comment">// Порог изменения веса для тревоги (кг)</span>
+<span class="code-keyword">#define</span> TG_ALERT_DELTA_KG   <span class="code-number">1.0f</span>
+
+<span class="code-comment">// Интервал отчётов (6 часов = 21600000 мс)</span>
+<span class="code-keyword">#define</span> TG_REPORT_INTERVAL  <span class="code-number">21600000UL</span></code>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ Важно:</strong> Замените <code>YOUR_BOT_TOKEN</code> и <code>YOUR_CHAT_ID</code> 
+                на реальные значения, иначе Telegram не будет работать!
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📊 Настройка ThingSpeak</h2>
+            <p>ThingSpeak — платформа для сбора и визуализации данных:</p>
+            <div class="code-block">
+                <code><span class="code-comment">// API ключ канала ThingSpeak</span>
+<span class="code-keyword">#define</span> TS_API_KEY       <span class="code-string">"XXXXXXXXXXXXXXXX"</span>
+
+<span class="code-comment">// ID канала (опционально)</span>
+<span class="code-keyword">#define</span> TS_CHANNEL_ID    <span class="code-number">0</span>
+
+<span class="code-comment">// Интервал отправки (60 сек = 60000 мс)</span>
+<span class="code-keyword">#define</span> TS_UPDATE_INTERVAL_MS  <span class="code-number">60000UL</span></code>
+            </div>
+
+            <div class="info-box">
+                <strong>ℹ️ ThingSpeak:</strong> Бесплатный аккаунт позволяет отправлять данные 
+                не чаще чем раз в 15 секунд. Для hourly отчётов достаточно.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>⚙️ Быстрые настройки (через веб-интерфейс)</h2>
+            <p>Эти параметры можно менять без перепрошивки через веб-интерфейс:</p>
+            
+            <table class="config-table">
+                <tr>
+                    <th>Параметр</th>
+                    <th>Диапазон</th>
+                    <th>По умолчанию</th>
+                    <th>Описание</th>
+                </tr>
+                <tr>
+                    <td><strong>Порог тревоги</strong></td>
+                    <td>0.1 — 10.0 кг</td>
+                    <td>0.5 кг</td>
+                    <td>Изменение веса для Telegram уведомления</td>
+                </tr>
+                <tr>
+                    <td><strong>Эталонный груз</strong></td>
+                    <td>100 — 5000 г</td>
+                    <td>1000 г</td>
+                    <td>Вес для калибровки</td>
+                </tr>
+                <tr>
+                    <td><strong>EMA сглаживание</strong></td>
+                    <td>0.05 — 0.9</td>
+                    <td>0.2</td>
+                    <td>Фильтр показаний веса</td>
+                </tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 EMA сглаживание:</strong> 
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>0.05-0.2:</strong> Сильное сглаживание, плавные но запаздывающие показания</li>
+                    <li><strong>0.3-0.5:</strong> Баланс между плавностью и отзывчивостью</li>
+                    <li><strong>0.6-0.9:</strong> Минимальное сглаживание, быстрые но шумные показания</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🔋 Настройка сна (Power Management)</h2>
+            <p>Для экономии энергии можно включить режим глубокого сна:</p>
+            <div class="code-block">
+                <code><span class="code-comment">// В файле SleepManager.h</span>
+
+<span class="code-comment">// Раскомментируйте для deep sleep</span>
+<span class="code-comment">// #define SLEEP_MODE_DEEP_SLEEP</span>
+
+<span class="code-comment">// Интервал сна (900 сек = 15 мин)</span>
+<span class="code-keyword">#define</span> SLEEP_INTERVAL_SEC   <span class="code-number">900UL</span>
+
+<span class="code-comment">// Пин пробуждения по кнопке</span>
+<span class="code-keyword">#define</span> SLEEP_WAKEUP_PIN     <span class="code-number">0</span></code>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ Deep Sleep:</strong> В режиме глубокого сна WiFi отключается между пробуждениями. 
+                Данные отправляются только при активном WiFi соединении.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📝 Пошаговая настройка</h2>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Откройте Connectivity.h</h4>
+                        <p>Найдите файл в папке проекта и откройте в Arduino IDE.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Настройте WiFi</h4>
+                        <p>Введите SSID и пароль вашего роутера ИЛИ включите режим AP.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Настройте часовой пояс</h4>
+                        <p>Укажите ваш часовой пояс (Москва = 3, Екатеринбург = 5, и т.д.)</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Настройте Telegram (опционально)</h4>
+                        <p>Создайте бота через @BotFather и вставьте токен и Chat ID.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Настройте ThingSpeak (опционально)</h4>
+                        <p>Создайте канал на thingspeak.com и получите API ключ.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Сохраните и загрузите</h4>
+                        <p>Сохраните файл и загрузите прошивку на ESP32.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🔧 Serial команды для настройки</h2>
+            <p>Отправьте через Serial монитор (115200 бод):</p>
+            
+            <table class="config-table">
+                <tr>
+                    <th>Команда</th>
+                    <th>Описание</th>
+                    <th>Пример</th>
+                </tr>
+                <tr>
+                    <td><code>NTP</code></td>
+                    <td>Синхронизация времени</td>
+                    <td><code>NTP</code></td>
+                </tr>
+                <tr>
+                    <td><code>TIME</code></td>
+                    <td>Показать текущее время</td>
+                    <td><code>TIME</code></td>
+                </tr>
+                <tr>
+                    <td><code>SETTIME</code></td>
+                    <td>Установить время</td>
+                    <td><code>SETTIME 2026 02 21 14 30 00</code></td>
+                </tr>
+                <tr>
+                    <td><code>STATUS</code></td>
+                    <td>Информация о системе</td>
+                    <td><code>STATUS</code></td>
+                </tr>
+                <tr>
+                    <td><code>REBOOT</code></td>
+                    <td>Перезагрузка</td>
+                    <td><code>REBOOT</code></td>
+                </tr>
+            </table>
+        </section>
+    </div>
+
+    <footer>
+        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
+        </p>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            if (tab.getAttribute('href') === window.location.pathname.split('/').pop()) {
+                tab.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

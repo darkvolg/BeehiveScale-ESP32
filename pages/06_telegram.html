@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Telegram — BeehiveScale v4.1</title>
+    <style>
+        :root {
+            --primary: #f5a623;
+            --primary-dark: #d48900;
+            --success: #6fcf97;
+            --danger: #eb5757;
+            --info: #56ccf2;
+            --telegram: #0088cc;
+            --dark: #0d0f0b;
+            --card-bg: #141710;
+            --card-light: #1c2018;
+            --border: #2e3829;
+            --text: #c8d4b8;
+            --text-muted: #8a9e78;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, #0a0c0a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        header {
+            text-align: center; padding: 40px 20px;
+            background: linear-gradient(135deg, var(--card-bg) 0%, var(--dark) 100%);
+            border-radius: 20px; margin-bottom: 30px; border: 2px solid var(--telegram);
+        }
+
+        header h1 { font-size: 2.5em; color: var(--telegram); margin-bottom: 10px; }
+        header p { font-size: 1.1em; color: var(--text-muted); }
+
+        .nav-tabs {
+            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; justify-content: center;
+        }
+
+        .nav-tab {
+            padding: 15px 25px; background: var(--card-bg); border: 2px solid var(--border);
+            border-radius: 10px; cursor: pointer; transition: all 0.3s ease;
+            font-size: 1em; color: var(--text); text-decoration: none;
+        }
+
+        .nav-tab:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .nav-tab.active { background: var(--primary); border-color: var(--primary); color: #000; }
+
+        .card {
+            background: var(--card-bg); border-radius: 15px; padding: 25px;
+            margin-bottom: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.6em; }
+        .card h3 { color: var(--info); margin: 20px 0 10px; }
+
+        .steps { counter-reset: step; }
+        .step {
+            display: flex; gap: 20px; margin-bottom: 25px; padding: 20px;
+            background: rgba(255,255,255,0.03); border-radius: 15px;
+        }
+        .step::before {
+            counter-increment: step; content: counter(step);
+            width: 50px; height: 50px; background: linear-gradient(135deg, var(--telegram) 0%, var(--info) 100%);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.3em; color: #000; flex-shrink: 0;
+        }
+        .step h4 { color: var(--text); margin-bottom: 10px; font-size: 1.2em; }
+        .step p { color: var(--text-muted); }
+
+        .code-block {
+            background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px;
+            padding: 20px; overflow-x: auto; margin: 15px 0;
+        }
+
+        .code-block code {
+            font-family: 'Courier New', monospace; color: var(--primary);
+            font-size: 0.9em; white-space: pre; display: block;
+        }
+
+        .tip {
+            background: rgba(111, 207, 151, 0.1); border-left: 4px solid var(--success);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
+        .warning {
+            background: rgba(245, 166, 35, 0.1); border-left: 4px solid var(--primary);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
+        .info-box {
+            background: rgba(86, 204, 242, 0.1); border-left: 4px solid var(--info);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
+        .breadcrumb { margin-bottom: 20px; padding: 10px 0; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; }
+        .breadcrumb span { color: var(--text-muted); margin: 0 10px; }
+
+        .table {
+            width: 100%; border-collapse: collapse; margin: 15px 0;
+            background: var(--card-light); border-radius: 10px; overflow: hidden;
+        }
+        .table th {
+            background: var(--card-bg); padding: 12px; text-align: left;
+            color: var(--primary); border-bottom: 2px solid var(--primary);
+        }
+        .table td { padding: 12px; border-bottom: 1px solid var(--border); }
+        .table tr:hover { background: rgba(245, 166, 35, 0.05); }
+
+        .tg-message {
+            background: rgba(0, 136, 204, 0.1); border: 1px solid var(--telegram);
+            border-radius: 10px; padding: 15px; margin: 15px 0;
+            font-family: monospace; font-size: 0.9em;
+        }
+
+        .tg-message strong { color: var(--telegram); }
+
+        footer {
+            text-align: center; padding: 30px; color: var(--text-muted);
+            border-top: 1px solid var(--border); margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            .nav-tab { padding: 10px 15px; font-size: 0.9em; }
+            .step { flex-direction: column; }
+            .step::before { width: 40px; height: 40px; font-size: 1.1em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">🏠 Главная</a>
+            <span>→</span>
+            <a href="../User_Guide.html">📖 Руководство</a>
+            <span>→</span>
+            <span>📱 Telegram</span>
+        </div>
+
+        <header>
+            <h1>📱 Telegram уведомления</h1>
+            <p>Настройка бота для получения уведомлений о состоянии улья</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <a href="01_components.html" class="nav-tab">📦 Компоненты</a>
+            <a href="02_connection.html" class="nav-tab">🔌 Подключение</a>
+            <a href="03_settings.html" class="nav-tab">⚙️ Настройка</a>
+            <a href="04_operation.html" class="nav-tab">⚙️ Эксплуатация</a>
+            <a href="05_web.html" class="nav-tab">🌐 Веб-интерфейс</a>
+            <a href="06_telegram.html" class="nav-tab active">📱 Telegram</a>
+            <a href="07_troubleshooting.html" class="nav-tab">🔍 Неисправности</a>
+        </nav>
+
+        <section class="card">
+            <h2>🤖 Создание бота</h2>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Откройте @BotFather</h4>
+                        <p>В Telegram найдите официального бота <strong>@BotFather</strong> (синяя галочка).</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Отправьте /newbot</h4>
+                        <p>BotFather попросит придумать имя и username для бота.</p>
+                        <div class="tg-message">
+                            <strong>BotFather:</strong> Choose a name for your bot<br>
+                            <strong>Вы:</strong> Beehive Monitor Bot
+                        </div>
+                        <div class="tg-message">
+                            <strong>BotFather:</strong> Choose a username for your bot<br>
+                            <strong>Вы:</strong> beehive_monitor_bot
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Сохраните токен</h4>
+                        <p>BotFather выдаст токен бота:</p>
+                        <div class="tg-message">
+                            <strong>BotFather:</strong> Done! Congratulations on your new bot.<br>
+                            You can find it at t.me/beehive_monitor_bot<br><br>
+                            Use this token to access the HTTP API:<br>
+                            <code>1234567890:AABcDeFgHiJkLmNoPqRsTuVwXyZ123456</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ Важно:</strong> Никогда не передавайте токен бота третьим лицам! 
+                Токен даёт полный контроль над ботом.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📍 Получение Chat ID</h2>
+            
+            <h3>Способ 1: Личный чат</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Найдите своего бота</h4>
+                        <p>В Telegram найдите бота по username (например, @beehive_monitor_bot).</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Нажмите Start</h4>
+                        <p>Начните диалог с ботом, нажав кнопку <strong>«Запустить»</strong> или отправьте <code>/start</code>.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Откройте URL в браузере</h4>
+                        <p>Подставьте ваш токен в URL:</p>
+                        <div class="code-block">
+                            <code>https://api.telegram.org/bot&lt;YOUR_TOKEN&gt;/getUpdates</code>
+                        </div>
+                        <p>Пример:</p>
+                        <div class="code-block">
+                            <code>https://api.telegram.org/bot1234567890:AABcDeFgHiJkLmNoPqRsTuVwXyZ123456/getUpdates</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Найдите Chat ID в ответе</h4>
+                        <p>В JSON ответе найдите поле <code>"chat":{"id":...}</code>:</p>
+                        <div class="code-block">
+                            <code>{
+  "ok": true,
+  "result": [{
+    "message": {
+      "chat": {
+        "id": <strong>123456789</strong>,
+        "first_name": "John",
+        "type": "private"
+      }
+    }
+  }]
+}</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Способ 2: Канал или группа</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Создайте канал/группу</h4>
+                        <p>Создайте канал или группу в Telegram.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Добавьте бота</h4>
+                        <p>Добавьте бота в канал/группу как участника.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Сделайте бота администратором</h4>
+                        <p>Для отправки сообщений бот должен быть администратором.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Перешлите сообщение из канала</h4>
+                        <p>Отправьте любое сообщение в канал, затем перешлите его боту @userinfobot или используйте @getmyid_bot.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Получите ID канала</h4>
+                        <p>ID канала обычно начинается с <code>-100</code>:</p>
+                        <div class="tg-message">
+                            <strong>ID:</strong> -1001234567890
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>⚙️ Настройка в коде</h2>
+            <p>Откройте файл <code>Connectivity.h</code> и вставьте полученные значения:</p>
+            
+            <div class="code-block">
+                <code><span class="code-comment">// Токен бота от @BotFather</span>
+<span class="code-keyword">#define</span> TG_BOT_TOKEN     <span class="code-string">"1234567890:AABcDeFgHiJkLmNoPqRsTuVwXyZ"</span>
+
+<span class="code-comment">// ID чата (личный или канал)</span>
+<span class="code-keyword">#define</span> TG_CHAT_ID       <span class="code-string">"-1001234567890"</span>
+
+<span class="code-comment">// Порог изменения веса для тревоги (кг)</span>
+<span class="code-keyword">#define</span> TG_ALERT_DELTA_KG   <span class="code-number">1.0f</span>
+
+<span class="code-comment">// Интервал отчётов (6 часов = 21600000 мс)</span>
+<span class="code-keyword">#define</span> TG_REPORT_INTERVAL  <span class="code-number">21600000UL</span></code>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ Важно:</strong> После изменения файла загрузите новую прошивку на ESP32.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📨 Типы уведомлений</h2>
+            
+            <table class="table">
+                <tr>
+                    <th>Тип</th>
+                    <th>Триггер</th>
+                    <th>Интервал</th>
+                    <th>Пример</th>
+                </tr>
+                <tr>
+                    <td style="color: var(--danger);"><strong>🚨 Тревога</strong></td>
+                    <td>Изменение веса ≥ TG_ALERT_DELTA</td>
+                    <td>Однократно</td>
+                    <td>Кража улья, падение</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--info);"><strong>📊 Отчёт</strong></td>
+                    <td>По таймеру</td>
+                    <td>TG_REPORT_INTERVAL</td>
+                    <td>Регулярный мониторинг</td>
+                </tr>
+            </table>
+
+            <h3 style="margin-top: 20px;">Пример сообщения тревоги</h3>
+            <div class="tg-message">
+                <strong>⚠️ TREVOGA: uley</strong><br>
+                Vremya: 21.02.26 14:30<br>
+                Ves: <strong>45.32 kg</strong><br>
+                Temp: 25.3 C
+            </div>
+
+            <h3>Пример отчёта</h3>
+            <div class="tg-message">
+                <strong>📊 Otchet: uley</strong><br>
+                Vremya: 21.02.26 14:30<br>
+                Ves: 45.32 kg<br>
+                Temp: 25.3 C<br>
+                Vlazhn: 65.2 %
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🔧 Настройка порога тревоги</h2>
+            
+            <p>Порог срабатывания тревоги можно настроить двумя способами:</p>
+            
+            <h3>1. В коде (Connectivity.h)</h3>
+            <div class="code-block">
+                <code><span class="code-keyword">#define</span> TG_ALERT_DELTA_KG   <span class="code-number">1.0f</span>  <span class="code-comment">// 1 кг</span></code>
+            </div>
+
+            <h3>2. Через веб-интерфейс</h3>
+            <p>Откройте веб-интерфейс → раздел «Быстрые настройки» → «Порог тревоги Telegram»:</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li><strong>0.1-0.3 кг:</strong> Высокая чувствительность (частые уведомления)</li>
+                <li><strong>0.5-1.0 кг:</strong> Средняя чувствительность (рекомендуется)</li>
+                <li><strong>1.5-3.0 кг:</strong> Низкая чувствительность (только значительные изменения)</li>
+            </ul>
+
+            <div class="tip">
+                <strong>💡 Совет:</strong> Для мониторинга взятка (когда пчёлы приносят нектар) 
+                установите порог 0.3-0.5 кг. Для охраны от кражи — 1-2 кг.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>⏱ Интервал отчётов</h2>
+            <p>Регулярные отчёты отправляются с заданным интервалом:</p>
+            
+            <div class="code-block">
+                <code><span class="code-comment">// В Connectivity.h</span>
+<span class="code-keyword">#define</span> TG_REPORT_INTERVAL  <span class="code-number">21600000UL</span>  <span class="code-comment">// 6 часов</span></code>
+            </div>
+
+            <table class="table" style="max-width: 500px;">
+                <tr><th>Значение (мс)</th><th>Интервал</th></tr>
+                <tr><td>3600000</td><td>1 час</td></tr>
+                <tr><td>7200000</td><td>2 часа</td></tr>
+                <tr><td>21600000</td><td>6 часов</td></tr>
+                <tr><td>43200000</td><td>12 часов</td></tr>
+                <tr><td>86400000</td><td>24 часа</td></tr>
+            </table>
+
+            <div class="info-box">
+                <strong>ℹ️ Примечание:</strong> Отчёты отправляются только при наличии WiFi соединения. 
+                В режиме deep sleep отчёты отправляются после пробуждения.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🔍 Проверка работы</h2>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Загрузите прошивку</h4>
+                        <p>Убедитесь, что токен и Chat ID введены правильно.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Откройте Serial монитор</h4>
+                        <p>Установите скорость 115200 бод.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Проверьте подключение WiFi</h4>
+                        <p>В логе должно быть: <code>[WiFi] Connected</code></p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Проверьте отправку Telegram</h4>
+                        <p>При изменении веса или по таймеру в логе появится: <code>[TG] Message sent OK</code></p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Проверьте Telegram</h4>
+                        <p>Сообщение должно прийти в чат или канал.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>❓ Частые проблемы</h2>
+            
+            <table class="table">
+                <tr>
+                    <th>Проблема</th>
+                    <th>Причина</th>
+                    <th>Решение</th>
+                </tr>
+                <tr>
+                    <td>«[TG] Error code: 401»</td>
+                    <td>Неверный токен</td>
+                    <td>Проверьте токен от @BotFather</td>
+                </tr>
+                <tr>
+                    <td>«[TG] Error code: 400»</td>
+                    <td>Неверный Chat ID</td>
+                    <td>Проверьте Chat ID (для каналов -100...)</td>
+                </tr>
+                <tr>
+                    <td>«[TG] Error code: 403»</td>
+                    <td>Бот не администратор</td>
+                    <td>Добавьте бота как админа в канал</td>
+                </tr>
+                <tr>
+                    <td>Нет уведомлений</td>
+                    <td>Нет WiFi</td>
+                    <td>Проверьте подключение к интернету</td>
+                </tr>
+            </table>
+        </section>
+    </div>
+
+    <footer>
+        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
+        </p>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            if (tab.getAttribute('href') === window.location.pathname.split('/').pop()) {
+                tab.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

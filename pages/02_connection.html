@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔌 Подключение — BeehiveScale v4.1</title>
+    <style>
+        :root {
+            --primary: #f5a623;
+            --primary-dark: #d48900;
+            --success: #6fcf97;
+            --danger: #eb5757;
+            --info: #56ccf2;
+            --dark: #0d0f0b;
+            --card-bg: #141710;
+            --card-light: #1c2018;
+            --border: #2e3829;
+            --text: #c8d4b8;
+            --text-muted: #8a9e78;
+            --text-dim: #506040;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, #0a0c0a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--card-bg) 0%, var(--dark) 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 10px 40px rgba(245, 166, 35, 0.1);
+        }
+
+        header h1 { font-size: 2.5em; color: var(--primary); margin-bottom: 10px; }
+        header p { font-size: 1.1em; color: var(--text-muted); }
+
+        .nav-tabs {
+            display: flex; flex-wrap: wrap; gap: 10px;
+            margin-bottom: 30px; justify-content: center;
+        }
+
+        .nav-tab {
+            padding: 15px 25px;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .nav-tab:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .nav-tab.active { background: var(--primary); border-color: var(--primary); color: #000; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.6em; }
+        .card h3 { color: var(--info); margin: 20px 0 10px; }
+
+        .diagram-container {
+            background: #0a0a0a;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+        }
+
+        .diagram-container svg { max-width: 100%; height: auto; }
+
+        .connection-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: var(--card-light);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .connection-table th {
+            background: var(--card-bg);
+            padding: 15px;
+            text-align: left;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .connection-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .connection-table tr:hover { background: rgba(245, 166, 35, 0.05); }
+        .connection-table .pin {
+            font-family: 'Courier New', monospace;
+            background: var(--primary);
+            color: #000;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .tip {
+            background: rgba(111, 207, 151, 0.1);
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
+        }
+
+        .warning {
+            background: rgba(245, 166, 35, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
+        }
+
+        .wire { stroke-width: 2; fill: none; }
+        .wire-animation { stroke-dasharray: 10; animation: flow 1s linear infinite; }
+        @keyframes flow { to { stroke-dashoffset: -20; } }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🔌 Схема подключения</h1>
+        <p>Подключение компонентов к <strong>NodeMCU ESP8266</strong></p>
+    </header>
+
+    <nav class="nav-tabs">
+        <a href="01_components.html" class="nav-tab">📦 Компоненты</a>
+        <a href="02_connection.html" class="nav-tab active">🔌 Подключение</a>
+        <a href="03_settings.html" class="nav-tab">⚙️ Настройка</a>
+        <a href="04_operation.html" class="nav-tab">⚙️ Эксплуатация</a>
+        <a href="05_web.html" class="nav-tab">🌐 Веб-интерфейс</a>
+        <a href="06_telegram.html" class="nav-tab">📱 Telegram</a>
+        <a href="07_troubleshooting.html" class="nav-tab">🔍 Неисправности</a>
+    </nav>
+
+    <section class="card">
+        <h2>📊 Общая схема подключения</h2>
+        <p>NodeMCU ESP8266 — основной контроллер. Все подключения показаны на схеме:</p>
+
+        <div class="diagram-container">
+            <svg viewBox="0 0 950 650" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="nodemcuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#2d5a27"/>
+                        <stop offset="100%" style="stop-color:#1a3a17"/>
+                    </linearGradient>
+                    <linearGradient id="hx711Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#2d5016"/>
+                        <stop offset="100%" style="stop-color:#1a3009"/>
+                    </linearGradient>
+                    <linearGradient id="lcdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#1a1a2e"/>
+                        <stop offset="100%" style="stop-color:#0d1b2a"/>
+                    </linearGradient>
+                    <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                </defs>
+
+                <!-- NodeMCU ESP8266 -->
+                <g id="nodemcu" transform="translate(475, 325)">
+                    <rect x="-70" y="-110" width="140" height="220" rx="10" fill="url(#nodemcuGrad)" stroke="#3a6a3a" stroke-width="2"/>
+                    <rect x="-60" y="-100" width="120" height="130" rx="5" fill="#0f1f0f"/>
+                    <text x="0" y="-70" text-anchor="middle" fill="#4a8a4a" font-size="14" font-weight="bold">NodeMCU</text>
+                    <text x="0" y="-50" text-anchor="middle" fill="#2a5a2a" font-size="10">ESP8266MOD</text>
+
+                    <!-- Pins left -->
+                    <g id="nodemcu-left">
+                        <circle cx="-70" cy="-70" r="5" fill="#f5a623"/><text x="-85" y="-65" text-anchor="end" fill="#f5a623" font-size="9" font-family="monospace">A0</text>
+                        <circle cx="-70" cy="-50" r="5" fill="#7fff7f"/><text x="-85" y="-45" text-anchor="end" fill="#7fff7f" font-size="9" font-family="monospace">D0(16)</text>
+                        <circle cx="-70" cy="-30" r="5" fill="#7ec8e3"/><text x="-85" y="-25" text-anchor="end" fill="#7ec8e3" font-size="9" font-family="monospace">D1(5)</text>
+                        <circle cx="-70" cy="-10" r="5" fill="#7ec8e3"/><text x="-85" y="-5" text-anchor="end" fill="#7ec8e3" font-size="9" font-family="monospace">D2(4)</text>
+                        <circle cx="-70" cy="10" r="5" fill="#ff9988"/><text x="-85" y="15" text-anchor="end" fill="#ff9988" font-size="9" font-family="monospace">D3(0)</text>
+                        <circle cx="-70" cy="30" r="5" fill="#ff9988"/><text x="-85" y="35" text-anchor="end" fill="#ff9988" font-size="9" font-family="monospace">D4(2)</text>
+                        <circle cx="-70" cy="50" r="5" fill="#ffaa55"/><text x="-85" y="55" text-anchor="end" fill="#ffaa55" font-size="9" font-family="monospace">3V3</text>
+                        <circle cx="-70" cy="70" r="5" fill="#888"/><text x="-85" y="75" text-anchor="end" fill="#888" font-size="9" font-family="monospace">GND</text>
+                        <circle cx="-70" cy="90" r="5" fill="#4a8f4a"/><text x="-85" y="95" text-anchor="end" fill="#4a8f4a" font-size="9" font-family="monospace">VIN</text>
+                    </g>
+
+                    <!-- Pins right -->
+                    <g id="nodemcu-right">
+                        <circle cx="70" cy="-70" r="5" fill="#55cc55"/><text x="85" y="-65" text-anchor="start" fill="#55cc55" font-size="9" font-family="monospace">D5(14)</text>
+                        <circle cx="70" cy="-50" r="5" fill="#55cc55"/><text x="85" y="-45" text-anchor="start" fill="#55cc55" font-size="9" font-family="monospace">D6(12)</text>
+                        <circle cx="70" cy="-30" r="5" fill="#aa88ff"/><text x="85" y="-25" text-anchor="start" fill="#aa88ff" font-size="9" font-family="monospace">D7(13)</text>
+                        <circle cx="70" cy="-10" r="5" fill="#55cc55"/><text x="85" y="-5" text-anchor="start" fill="#55cc55" font-size="9" font-family="monospace">D8(15)</text>
+                        <circle cx="70" cy="10" r="5" fill="#e8e8e8"/><text x="85" y="15" text-anchor="start" fill="#e8e8e8" font-size="9" font-family="monospace">TX(1)</text>
+                        <circle cx="70" cy="30" r="5" fill="#888"/><text x="85" y="35" text-anchor="start" fill="#888" font-size="9" font-family="monospace">GND</text>
+                    </g>
+                </g>
+
+                <!-- HX711 -->
+                <g id="hx711" transform="translate(100, 150)">
+                    <rect x="-55" y="-60" width="110" height="120" rx="5" fill="url(#hx711Grad)" stroke="#4a7023" stroke-width="2"/>
+                    <text x="0" y="-35" text-anchor="middle" fill="white" font-size="13" font-weight="bold">HX711</text>
+                    <text x="0" y="-15" text-anchor="middle" fill="#aaa" font-size="9">АЦП Модуль</text>
+                    <circle cx="-55" cy="0" r="4" fill="#ffaa55"/><text x="-65" y="5" text-anchor="end" fill="#ffaa55" font-size="8" font-family="monospace">VCC</text>
+                    <circle cx="-55" cy="20" r="4" fill="#7fff7f"/><text x="-65" y="25" text-anchor="end" fill="#7fff7f" font-size="8" font-family="monospace">DT</text>
+                    <circle cx="-55" cy="40" r="4" fill="#e8e8e8"/><text x="-65" y="45" text-anchor="end" fill="#e8e8e8" font-size="8" font-family="monospace">SCK</text>
+                    <circle cx="-55" cy="60" r="4" fill="#888"/><text x="-65" y="65" text-anchor="end" fill="#888" font-size="8" font-family="monospace">GND</text>
+                    <rect x="55" y="-40" width="40" height="80" rx="3" fill="#666"/>
+                    <text x="75" y="5" text-anchor="middle" fill="white" font-size="8">Тензо-</text>
+                    <text x="75" y="18" text-anchor="middle" fill="white" font-size="8">датчик</text>
+                </g>
+
+                <!-- LCD 1602 -->
+                <g id="lcd" transform="translate(800, 100)">
+                    <rect x="-60" y="-50" width="120" height="80" rx="5" fill="url(#lcdGrad)" stroke="#333" stroke-width="2"/>
+                    <rect x="-50" y="-40" width="100" height="45" fill="#0d1b2a"/>
+                    <rect x="-45" y="-32" width="35" height="7" fill="#6fcf97"/>
+                    <rect x="-45" y="-18" width="45" height="7" fill="#6fcf97"/>
+                    <text x="0" y="22" text-anchor="middle" fill="white" font-size="9">LCD 1602</text>
+                    <text x="0" y="35" text-anchor="middle" fill="#aaa" font-size="7">I2C 0x27</text>
+                    <circle cx="-60" cy="-20" r="4" fill="#ffaa55"/><text x="-70" y="-15" text-anchor="end" fill="#ffaa55" font-size="7" font-family="monospace">VCC</text>
+                    <circle cx="-60" cy="0" r="4" fill="#888"/><text x="-70" y="5" text-anchor="end" fill="#888" font-size="7" font-family="monospace">GND</text>
+                    <circle cx="-60" cy="20" r="4" fill="#7ec8e3"/><text x="-70" y="25" text-anchor="end" fill="#7ec8e3" font-size="7" font-family="monospace">SDA</text>
+                    <circle cx="-60" cy="40" r="4" fill="#7ec8e3"/><text x="-70" y="45" text-anchor="end" fill="#7ec8e3" font-size="7" font-family="monospace">SCL</text>
+                </g>
+
+                <!-- RTC DS3231 -->
+                <g id="rtc" transform="translate(800, 230)">
+                    <rect x="-50" y="-45" width="100" height="70" rx="5" fill="url(#lcdGrad)" stroke="#333" stroke-width="2"/>
+                    <circle cx="0" cy="-12" r="18" fill="#1a1a2e" stroke="#f5a623" stroke-width="2"/>
+                    <line x1="0" y1="-12" x2="0" y2="-20" stroke="#f5a623" stroke-width="2"/>
+                    <line x1="0" y1="-12" x2="12" y2="-12" stroke="#f5a623" stroke-width="2"/>
+                    <text x="0" y="18" text-anchor="middle" fill="white" font-size="8">RTC DS3231</text>
+                    <circle cx="-50" cy="-15" r="4" fill="#ffaa55"/><text x="-60" y="-10" text-anchor="end" fill="#ffaa55" font-size="7" font-family="monospace">VCC</text>
+                    <circle cx="-50" cy="5" r="4" fill="#888"/><text x="-60" y="10" text-anchor="end" fill="#888" font-size="7" font-family="monospace">GND</text>
+                    <circle cx="-50" cy="25" r="4" fill="#7ec8e3"/><text x="-60" y="30" text-anchor="end" fill="#7ec8e3" font-size="7" font-family="monospace">SDA</text>
+                    <circle cx="-50" cy="45" r="4" fill="#7ec8e3"/><text x="-60" y="50" text-anchor="end" fill="#7ec8e3" font-size="7" font-family="monospace">SCL</text>
+                </g>
+
+                <!-- SD Card -->
+                <g id="sdcard" transform="translate(100, 380)">
+                    <rect x="-55" y="-50" width="110" height="100" rx="5" fill="#1a2a2a" stroke="#3a6a5a" stroke-width="2"/>
+                    <text x="0" y="-25" text-anchor="middle" fill="#55cc55" font-size="12" font-weight="bold">SD Card</text>
+                    <text x="0" y="-8" text-anchor="middle" fill="#2a5a4a" font-size="8">SPI Module</text>
+                    <circle cx="-55" cy="-5" r="4" fill="#55cc55"/><text x="-65" y="0" text-anchor="end" fill="#55cc55" font-size="7" font-family="monospace">CS</text>
+                    <circle cx="-55" cy="15" r="4" fill="#55cc55"/><text x="-65" y="20" text-anchor="end" fill="#55cc55" font-size="7" font-family="monospace">SCK</text>
+                    <circle cx="-55" cy="35" r="4" fill="#55cc55"/><text x="-65" y="40" text-anchor="end" fill="#55cc55" font-size="7" font-family="monospace">MISO</text>
+                    <circle cx="-55" cy="55" r="4" fill="#aa88ff"/><text x="-65" y="60" text-anchor="end" fill="#aa88ff" font-size="7" font-family="monospace">MOSI</text>
+                    <circle cx="55" cy="-5" r="4" fill="#ffaa55"/><text x="65" y="0" text-anchor="start" fill="#ffaa55" font-size="7" font-family="monospace">VCC</text>
+                    <circle cx="55" cy="15" r="4" fill="#888"/><text x="65" y="20" text-anchor="start" fill="#888" font-size="7" font-family="monospace">GND</text>
+                </g>
+
+                <!-- DS18B20 -->
+                <g id="ds18b20" transform="translate(800, 380)">
+                    <rect x="-50" y="-35" width="100" height="70" rx="5" fill="#1a1a2a" stroke="#4a4a6a" stroke-width="2"/>
+                    <text x="0" y="-12" text-anchor="middle" fill="#aa88ff" font-size="11" font-weight="bold">DS18B20</text>
+                    <text x="0" y="8" text-anchor="middle" fill="#5a5a8a" font-size="7">OneWire D7(13)</text>
+                    <circle cx="-50" cy="0" r="4" fill="#aa88ff"/><text x="-60" y="5" text-anchor="end" fill="#aa88ff" font-size="7" font-family="monospace">DATA</text>
+                    <circle cx="-50" cy="20" r="4" fill="#ffaa55"/><text x="-60" y="25" text-anchor="end" fill="#ffaa55" font-size="7" font-family="monospace">VCC</text>
+                    <rect x="-20" y="-10" width="30" height="14" rx="3" fill="#0f1f0f" stroke="#3a6a3a" stroke-width="1"/>
+                    <text x="-5" y="0" text-anchor="middle" fill="#7fff7f" font-size="6" font-family="monospace">4.7k</text>
+                </g>
+
+                <!-- Buttons -->
+                <g id="btn1" transform="translate(280, 520)">
+                    <circle cx="0" cy="0" r="22" fill="#333" stroke="#ff9988" stroke-width="2"/>
+                    <circle cx="0" cy="0" r="12" fill="#444"/>
+                    <text x="0" y="35" text-anchor="middle" fill="white" font-size="9">MAIN</text>
+                    <text x="0" y="48" text-anchor="middle" fill="#aaa" font-size="7">D3/GPIO0</text>
+                </g>
+                <g id="btn2" transform="translate(400, 520)">
+                    <circle cx="0" cy="0" r="22" fill="#333" stroke="#ff9988" stroke-width="2"/>
+                    <circle cx="0" cy="0" r="12" fill="#444"/>
+                    <text x="0" y="35" text-anchor="middle" fill="white" font-size="9">MENU</text>
+                    <text x="0" y="48" text-anchor="middle" fill="#aaa" font-size="7">D4/GPIO2</text>
+                </g>
+
+                <!-- Battery -->
+                <g id="battery" transform="translate(100, 550)">
+                    <rect x="-40" y="-30" width="80" height="60" rx="5" fill="#2a2a1a" stroke="#6a6a3a" stroke-width="2"/>
+                    <text x="0" y="-10" text-anchor="middle" fill="#f5a623" font-size="10" font-weight="bold">Батарея 3.7V</text>
+                    <text x="0" y="8" text-anchor="middle" fill="#888" font-size="7">Делитель 2:1</text>
+                    <text x="0" y="22" text-anchor="middle" fill="#f5a623" font-size="7">R1=R2=100k</text>
+                    <circle cx="40" cy="0" r="4" fill="#f5a623"/>
+                </g>
+
+                <!-- Wires HX711 -->
+                <path class="wire wire-animation" d="M-55 150 Q-100 150 -100 255 Q-100 255 -70 255" stroke="#ffaa55" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M-55 170 Q-120 170 -120 275 Q-120 275 -70 275" stroke="#7fff7f" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M-55 190 Q-140 190 -140 335 Q-140 335 -70 335" stroke="#e8e8e8" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M-55 210 Q-160 210 -160 395 Q-160 395 -70 395" stroke="#888" filter="url(#glow)"/>
+
+                <!-- Wires LCD -->
+                <path class="wire wire-animation" d="M740 50 Q650 30 545 30 Q545 30 545 215" stroke="#ffaa55" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M740 70 Q680 70 680 395 Q680 395 545 395" stroke="#888" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M740 90 Q690 90 690 315 Q690 315 545 315" stroke="#7ec8e3" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M740 110 Q700 110 700 295 Q700 295 545 295" stroke="#7ec8e3" filter="url(#glow)"/>
+
+                <!-- Wires RTC -->
+                <path class="wire wire-animation" d="M750 215 Q710 215 710 315 Q710 315 545 315" stroke="#ffaa55" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M750 235 Q720 235 720 395 Q720 395 545 395" stroke="#888" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M750 255 Q730 255 730 315 Q730 315 545 315" stroke="#7ec8e3" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M750 275 Q740 275 740 295 Q740 295 545 295" stroke="#7ec8e3" filter="url(#glow)"/>
+
+                <!-- Wires SD -->
+                <path class="wire wire-animation" d="M-55 375 Q-60 375 -60 315 Q-60 315 -70 315" stroke="#55cc55" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M-55 395 Q-65 395 -65 255 Q-65 255 -70 255" stroke="#55cc55" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M-55 415 Q-70 415 -70 275 Q-70 275 -70 275" stroke="#55cc55" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M-55 435 Q-75 435 -75 295 Q-75 295 -70 295" stroke="#aa88ff" filter="url(#glow)"/>
+
+                <!-- Wires DS18B20 -->
+                <path class="wire wire-animation" d="M750 380 Q650 380 650 295 Q650 295 545 295" stroke="#aa88ff" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M750 400 Q680 400 680 375 Q680 375 545 375" stroke="#ffaa55" filter="url(#glow)"/>
+
+                <!-- Wires Buttons -->
+                <path class="wire wire-animation" d="M280 520 Q280 450 405 335" stroke="#ff9988" filter="url(#glow)"/>
+                <path class="wire wire-animation" d="M400 520 Q400 470 425 355 Q425 355 545 355" stroke="#ff9988" filter="url(#glow)"/>
+
+                <!-- Wire Battery -->
+                <path class="wire wire-animation" d="M140 550 Q200 550 200 450 Q200 450 405 255" stroke="#f5a623" filter="url(#glow)"/>
+
+                <!-- Labels -->
+                <text x="180" y="265" fill="#7fff7f" font-size="8" font-family="monospace">DT→D0(16)</text>
+                <text x="180" y="305" fill="#e8e8e8" font-size="8" font-family="monospace">SCK→TX(1)</text>
+                <text x="600" y="285" fill="#7ec8e3" font-size="8" font-family="monospace">I2C SDA→D2</text>
+                <text x="600" y="305" fill="#7ec8e3" font-size="8" font-family="monospace">I2C SCL→D1</text>
+                <text x="200" y="400" fill="#55cc55" font-size="8" font-family="monospace">SD SPI</text>
+                <text x="450" y="480" fill="#ff9988" font-size="8" font-family="monospace">Кнопки</text>
+                <text x="220" y="530" fill="#f5a623" font-size="8" font-family="monospace">BAT→A0</text>
+            </svg>
+        </div>
+
+        <div class="tip">
+            <strong>💡 Совет:</strong> Цвета проводов на схеме соответствуют рекомендациям. Используйте аналогичные цвета для удобства отладки.
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>📋 Таблица подключений</h2>
+        <table class="connection-table">
+            <thead>
+                <tr><th>Компонент</th><th>Пин NodeMCU</th><th>GPIO</th><th>Назначение</th><th>Примечание</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>HX711 DT</strong></td><td><span class="pin">D0</span></td><td>GPIO16</td><td>Данные</td><td>Перенесено с D5</td></tr>
+                <tr><td><strong>HX711 SCK</strong></td><td><span class="pin">TX</span></td><td>GPIO1</td><td>Тактирование</td><td>Serial отключён!</td></tr>
+                <tr><td><strong>HX711 VCC</strong></td><td><span class="pin">3V3</span></td><td>—</td><td>Питание 3.3В</td><td>—</td></tr>
+                <tr><td><strong>HX711 GND</strong></td><td><span class="pin">GND</span></td><td>—</td><td>Земля</td><td>Общая</td></tr>
+                <tr><td><strong>LCD SDA</strong></td><td><span class="pin">D2</span></td><td>GPIO4</td><td>I2C данные</td><td>—</td></tr>
+                <tr><td><strong>LCD SCL</strong></td><td><span class="pin">D1</span></td><td>GPIO5</td><td>I2C тактовая</td><td>—</td></tr>
+                <tr><td><strong>LCD VCC</strong></td><td><span class="pin">VIN</span></td><td>—</td><td>Питание 5В</td><td>От USB</td></tr>
+                <tr><td><strong>RTC SDA</strong></td><td><span class="pin">D2</span></td><td>GPIO4</td><td>I2C данные</td><td>Параллельно LCD</td></tr>
+                <tr><td><strong>RTC SCL</strong></td><td><span class="pin">D1</span></td><td>GPIO5</td><td>I2C тактовая</td><td>Параллельно LCD</td></tr>
+                <tr><td><strong>DS18B20 DATA</strong></td><td><span class="pin">D7</span></td><td>GPIO13</td><td>1-Wire данные</td><td>Общий с SD MOSI!</td></tr>
+                <tr><td><strong>SD CS</strong></td><td><span class="pin">D8</span></td><td>GPIO15</td><td>SPI Chip Select</td><td>—</td></tr>
+                <tr><td><strong>SD SCK</strong></td><td><span class="pin">D5</span></td><td>GPIO14</td><td>SPI Clock</td><td>—</td></tr>
+                <tr><td><strong>SD MISO</strong></td><td><span class="pin">D6</span></td><td>GPIO12</td><td>SPI MISO</td><td>—</td></tr>
+                <tr><td><strong>SD MOSI</strong></td><td><span class="pin">D7</span></td><td>GPIO13</td><td>SPI MOSI</td><td>Общий с DS18B20</td></tr>
+                <tr><td><strong>Кнопка MAIN</strong></td><td><span class="pin">D3</span></td><td>GPIO0</td><td>Тарировка</td><td>INPUT_PULLUP</td></tr>
+                <tr><td><strong>Кнопка MENU</strong></td><td><span class="pin">D4</span></td><td>GPIO2</td><td>Меню</td><td>INPUT_PULLUP</td></tr>
+                <tr><td><strong>Батарея</strong></td><td><span class="pin">A0</span></td><td>A0</td><td>ADC</td><td>Делитель 2:1!</td></tr>
+            </tbody>
+        </table>
+
+        <div class="warning">
+            <strong>⚠️ Внимание:</strong> 
+            <ul>
+                <li><strong>HX711 SCK на GPIO1 (TX)</strong> — Serial Monitor не работает через USB. GPIO1 освобождается вызовом <code>Serial.end()</code> в setup.</li>
+                <li><strong>DS18B20 и SD MOSI на одном пине D7</strong> — работает корректно, конфликтов нет. Требуется pull-up резистор 4.7кОм для DS18B20.</li>
+                <li><strong>Делитель батареи 2:1</strong> — два резистора 100кОм. На A0 не должно быть > 3.3В (батарея 4.2В → 2.1В на A0).</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>🔍 Проверка подключения</h2>
+        <ol class="steps">
+            <li class="step"><div><h4>Визуальный осмотр</h4><p>Проверьте все подключения по схеме. Убедитесь что цвета проводов соответствуют назначению.</p></div></li>
+            <li class="step"><div><h4>Проверка питания</h4><p>Подключите USB. Проверьте мультиметром: 3.3В на пине 3V3, 5В на VIN.</p></div></li>
+            <li class="step"><div><h4>I2C сканер</h4><p>Загрузите I2C Scanner. Должны найтись: LCD (0x27), RTC (0x68).</p></div></li>
+            <li class="step"><div><h4>Проверка HX711</h4><p>Загрузите тест HX711. Должны читаться показания с тензодатчика.</p></div></li>
+            <li class="step"><div><h4>Проверка SD</h4><p>Форматируйте карту в FAT32. Загрузите тест SD. Должна читаться/записываться.</p></div></li>
+            <li class="step"><div><h4>Проверка кнопок</h4><p>Загрузите тест кнопок. Нажатия должны корректно определяться.</p></div></li>
+        </ol>
+    </section>
+</div>
+
+<footer>
+    <p>BeehiveScale v4.1 — Руководство пользователя</p>
+</footer>
+</body>
+</html>

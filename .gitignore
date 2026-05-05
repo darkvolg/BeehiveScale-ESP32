@@ -1,0 +1,36 @@
+# IDE
+.vscode/
+*.code-workspace
+.idea/
+
+# Claude Code (локальные настройки агента — не коммитим)
+.claude/
+.serena/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temp
+*.tmp
+*.bak
+
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# Build artefacts
+*.bin
+*.elf
+*.hex
+*.map
+
+# Sensitive — секреты только в локальных файлах
+secrets.h
+*.secret
+.env
+.env.local
+
+# Misc
+zai-provider-extension/

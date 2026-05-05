@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Неисправности — BeehiveScale v4.1</title>
+    <style>
+        :root {
+            --primary: #f5a623;
+            --primary-dark: #d48900;
+            --success: #6fcf97;
+            --danger: #eb5757;
+            --info: #56ccf2;
+            --dark: #0d0f0b;
+            --card-bg: #141710;
+            --card-light: #1c2018;
+            --border: #2e3829;
+            --text: #c8d4b8;
+            --text-muted: #8a9e78;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, #0a0c0a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        header {
+            text-align: center; padding: 40px 20px;
+            background: linear-gradient(135deg, var(--card-bg) 0%, var(--dark) 100%);
+            border-radius: 20px; margin-bottom: 30px; border: 2px solid var(--danger);
+        }
+
+        header h1 { font-size: 2.5em; color: var(--danger); margin-bottom: 10px; }
+        header p { font-size: 1.1em; color: var(--text-muted); }
+
+        .nav-tabs {
+            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; justify-content: center;
+        }
+
+        .nav-tab {
+            padding: 15px 25px; background: var(--card-bg); border: 2px solid var(--border);
+            border-radius: 10px; cursor: pointer; transition: all 0.3s ease;
+            font-size: 1em; color: var(--text); text-decoration: none;
+        }
+
+        .nav-tab:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .nav-tab.active { background: var(--primary); border-color: var(--primary); color: #000; }
+
+        .card {
+            background: var(--card-bg); border-radius: 15px; padding: 25px;
+            margin-bottom: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.6em; }
+        .card h3 { color: var(--info); margin: 20px 0 10px; }
+
+        .card.red { border-color: var(--danger); }
+        .card.red h2 { color: var(--danger); }
+        .card.green { border-color: var(--success); }
+        .card.green h2 { color: var(--success); }
+        .card.yellow { border-color: var(--primary); }
+        .card.yellow h2 { color: var(--primary); }
+
+        .table {
+            width: 100%; border-collapse: collapse; margin: 15px 0;
+            background: var(--card-light); border-radius: 10px; overflow: hidden;
+        }
+        .table th {
+            background: var(--card-bg); padding: 12px; text-align: left;
+            color: var(--primary); border-bottom: 2px solid var(--primary);
+        }
+        .table td { padding: 12px; border-bottom: 1px solid var(--border); }
+        .table tr:hover { background: rgba(245, 166, 35, 0.05); }
+
+        .problem-box {
+            background: rgba(235, 87, 87, 0.1);
+            border-left: 4px solid var(--danger);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .problem-box h4 {
+            color: var(--danger);
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .problem-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .problem-box li {
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+
+        .tip {
+            background: rgba(111, 207, 151, 0.1);
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
+        }
+
+        .warning {
+            background: rgba(245, 166, 35, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background: rgba(86, 204, 242, 0.1);
+            border-left: 4px solid var(--info);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
+        }
+
+        .breadcrumb { margin-bottom: 20px; padding: 10px 0; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; }
+        .breadcrumb span { color: var(--text-muted); margin: 0 10px; }
+
+        .code-block {
+            background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px;
+            padding: 20px; overflow-x: auto; margin: 15px 0;
+        }
+
+        .code-block code {
+            font-family: 'Courier New', monospace; color: var(--primary);
+            font-size: 0.9em; white-space: pre; display: block;
+        }
+
+        .display-example {
+            background: #000; border: 3px solid #333; border-radius: 10px;
+            padding: 15px; font-family: 'Courier New', monospace;
+            text-align: center; margin: 15px 0;
+        }
+        .display-example .line1 { color: var(--danger); font-size: 1.2em; }
+        .display-example .line2 { color: var(--text-muted); font-size: 1em; }
+
+        .led {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .led.ok { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .led.err { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+        .led.warn { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+
+        footer {
+            text-align: center; padding: 30px; color: var(--text-muted);
+            border-top: 1px solid var(--border); margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            .nav-tab { padding: 10px 15px; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">🏠 Главная</a>
+            <span>→</span>
+            <a href="../User_Guide.html">📖 Руководство</a>
+            <span>→</span>
+            <span>🔍 Неисправности</span>
+        </div>
+
+        <header>
+            <h1>🔍 Устранение неисправностей</h1>
+            <p>Диагностика и решение распространённых проблем</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <a href="01_components.html" class="nav-tab">📦 Компоненты</a>
+            <a href="02_connection.html" class="nav-tab">🔌 Подключение</a>
+            <a href="03_settings.html" class="nav-tab">⚙️ Настройка</a>
+            <a href="04_operation.html" class="nav-tab">⚙️ Эксплуатация</a>
+            <a href="05_web.html" class="nav-tab">🌐 Веб-интерфейс</a>
+            <a href="06_telegram.html" class="nav-tab">📱 Telegram</a>
+            <a href="07_troubleshooting.html" class="nav-tab active">🔍 Неисправности</a>
+        </nav>
+
+        <section class="card red">
+            <h2>❌ Ошибка датчика HX711</h2>
+            
+            <div class="display-example">
+                <div class="line1">*** OSHIBKA! ***</div>
+                <div class="line2">Check HX711 wire</div>
+            </div>
+
+            <h3>Симптомы</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>На дисплее мигает ошибка</li>
+                <li>Вес не отображается или показывает 0</li>
+                <li>В Serial: <code>[HX711] Sensor timeout!</code></li>
+            </ul>
+
+            <h3>Причины и решения</h3>
+            <div class="problem-box">
+                <h4>🔌 Неправильное подключение</h4>
+                <ul>
+                    <li>Проверьте DT → GPIO 14</li>
+                    <li>Проверьте SCK → GPIO 12</li>
+                    <li>Проверьте питание VCC (3.3V или 5V)</li>
+                    <li>Проверьте общую землю GND</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>⚡ Отсутствие питания</h4>
+                <ul>
+                    <li>Измерьте напряжение на VCC HX711</li>
+                    <li>Должно быть 3.3V или 5V</li>
+                    <li>Проверьте подключение USB/батареи</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>🔧 Неисправный модуль</h4>
+                <ul>
+                    <li>Попробуйте заменить HX711</li>
+                    <li>Проверьте другой модуль</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4> Плохой контакт тензодатчика</h4>
+                <ul>
+                    <li>Перепаяйте соединения с тензодатчиком</li>
+                    <li>Проверьте цветовую маркировку проводов</li>
+                    <li>Красный→E+, Чёрный→E-, Зелёный→A+, Белый→A-</li>
+                </ul>
+            </div>
+
+            <div class="tip">
+                <strong>💡 Совет:</strong> Если показания отрицательные или не меняются, 
+                попробуйте поменять местами зелёный и белый провода (A+ и A-).
+            </div>
+        </section>
+
+        <section class="card yellow">
+            <h2>❌ Ошибка RTC</h2>
+            
+            <div class="display-example">
+                <div class="line1">No RTC      W</div>
+                <div class="line2">RTC ERROR!</div>
+            </div>
+
+            <h3>Симптомы</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>На экране <code>No RTC</code> или <code>RTC ERROR!</code></li>
+                <li>Время не отображается</li>
+                <li>В Serial: <code>[RTC] DS3231 not found!</code></li>
+            </ul>
+
+            <h3>Причины и решения</h3>
+            <div class="problem-box">
+                <h4>🔌 Не подключена шина I2C</h4>
+                <ul>
+                    <li>Проверьте SDA → GPIO 21</li>
+                    <li>Проверьте SCL → GPIO 22</li>
+                    <li>Проверьте питание VCC (3.3V)</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>🔋 Села батарейка CR2032</h4>
+                <ul>
+                    <li>Замените элемент питания</li>
+                    <li>Напряжение CR2032 должно быть ~3V</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>📍 Неверный адрес I2C</h4>
+                <ul>
+                    <li>DS3231 имеет адрес <code>0x68</code></li>
+                    <li>Используйте I2C сканер для проверки</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <strong>ℹ️ I2C сканер:</strong> Загрузите скетч I2C Scanner для поиска устройств на шине I2C.
+            </div>
+        </section>
+
+        <section class="card yellow">
+            <h2>❌ Нет WiFi подключения</h2>
+            
+            <div class="display-example">
+                <div class="line1">W:-- N:15</div>
+                <div class="line2">No WiFi</div>
+            </div>
+
+            <h3>Симптомы</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Статус <code>WiFi: --</code> или <code>Нет связи</code></li>
+                <li>Невозможно подключиться к веб-интерфейсу</li>
+                <li>В Serial: <code>[WiFi] Timeout!</code></li>
+            </ul>
+
+            <h3>Причины и решения</h3>
+            <div class="problem-box">
+                <h4>📡 Неверный SSID/пароль</h4>
+                <ul>
+                    <li>Проверьте настройки в <code>Connectivity.h</code></li>
+                    <li>SSID чувствителен к регистру</li>
+                    <li>Перезагрузите устройство</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>📶 Слабый сигнал</h4>
+                <ul>
+                    <li>Переместите устройство ближе к роутеру</li>
+                    <li>Используйте внешнюю антенну</li>
+                    <li>Проверьте уровень сигнала в роутере</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>🔀 Режим AP</h4>
+                <ul>
+                    <li>В режиме AP подключитесь к сети <code>BeehiveScale</code></li>
+                    <li>Пароль: <code>12345678</code></li>
+                    <li>Адрес: <code>192.168.4.1</code></li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>🔄 Роутер перезагружен</h4>
+                <ul>
+                    <li>Устройство попытается переподключиться автоматически</li>
+                    <li>Интервал переподключения: 10 секунд</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>❌ Нестабильные показания веса</h2>
+            
+            <h3>Симптомы</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Вес «прыгает» на 0.1-0.5 кг</li>
+                <li>Нет звёздочки стабильности <code>*</code></li>
+                <li>Привес/убыль показываются неверно</li>
+            </ul>
+
+            <h3>Причины и решения</h3>
+            <div class="problem-box">
+                <h4>🌬 Вибрации</h4>
+                <ul>
+                    <li>Установите устройство на стабильную поверхность</li>
+                    <li>Защитите от ветра</li>
+                    <li>Используйте антивибрационную платформу</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>🌡️ Нагрев</h4>
+                <ul>
+                    <li>Дайте HX711 прогреться 10 минут</li>
+                    <li>Тензодатчики чувствительны к температуре</li>
+                    <li>Установите защиту от солнца</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>⚡ Помехи питания</h4>
+                <ul>
+                    <li>Используйте стабильный источник питания</li>
+                    <li>Добавьте конденсатор 100мкФ параллельно питанию</li>
+                    <li>Проверьте батарею</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>📊 Настройки EMA</h4>
+                <ul>
+                    <li>Увеличьте EMA сглаживание (0.3-0.5)</li>
+                    <li>Меньше alpha = более плавные показания</li>
+                </ul>
+            </div>
+
+            <div class="tip">
+                <strong>💡 Совет:</strong> Для уличной установки используйте герметичный корпус 
+                и защитите тензодатчик от прямого попадания воды.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>❌ Быстрый разряд батареи</h2>
+            
+            <h3>Симптомы</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Устройство работает несколько часов вместо дней</li>
+                <li>На экране <code>!! LOW BATTERY !!</code></li>
+                <li>Процент батареи быстро уменьшается</li>
+            </ul>
+
+            <h3>Причины и решения</h3>
+            <div class="problem-box">
+                <h4>📶 Постоянная работа WiFi</h4>
+                <ul>
+                    <li>WiFi потребляет 100-200мА</li>
+                    <li>Включите режим deep sleep</li>
+                    <li>Увеличьте интервал отчётов</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>💡 Яркая подсветка LCD</h4>
+                <ul>
+                    <li>LCD с подсветкой потребляет 20-50мА</li>
+                    <li>Отключите backlight в коде</li>
+                    <li>Используйте OLED вместо LCD</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>🔋 Старая батарея</h4>
+                <ul>
+                    <li>Замените на новую 18650</li>
+                    <li>Ёмкость должна быть 2000mAh+</li>
+                    <li>Проверьте напряжение заряда</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <strong>ℹ️ Deep Sleep:</strong> В режиме глубокого сна ESP32 потребляет ~10мкА. 
+                Устройство просыпается по таймеру или кнопке.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>❌ Telegram не работает</h2>
+            
+            <h3>Симптомы</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Сообщения не приходят</li>
+                <li>В Serial: <code>[TG] Error code: XXX</code></li>
+            </ul>
+
+            <h3>Коды ошибок</h3>
+            <table class="table">
+                <tr>
+                    <th>Код</th>
+                    <th>Причина</th>
+                    <th>Решение</th>
+                </tr>
+                <tr>
+                    <td style="color: var(--danger);">401</td>
+                    <td>Неверный токен</td>
+                    <td>Проверьте токен от @BotFather</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--danger);">400</td>
+                    <td>Неверный Chat ID</td>
+                    <td>Проверьте Chat ID</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--danger);">403</td>
+                    <td>Бот не админ</td>
+                    <td>Добавьте бота как админа</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--primary);">429</td>
+                    <td>Слишком много запросов</td>
+                    <td>Подождите, увеличьте интервал</td>
+                </tr>
+            </table>
+        </section>
+
+        <section class="card">
+            <h2>❌ LCD дисплей не работает</h2>
+            
+            <h3>Симптомы</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Дисплей не светится</li>
+                <li>Только подсветка, нет символов</li>
+                <li>Кракозябры вместо текста</li>
+            </ul>
+
+            <h3>Причины и решения</h3>
+            <div class="problem-box">
+                <h4>🔌 Нет питания</h4>
+                <ul>
+                    <li>Проверьте VCC → 5V</li>
+                    <li>Проверьте GND</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>📍 Неверный I2C адрес</h4>
+                <ul>
+                    <li>Адрес LCD: <code>0x27</code> или <code>0x3F</code></li>
+                    <li>Измените в <code>BeehiveScale.ino</code></li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>🔧 Плохой контакт I2C</h4>
+                <ul>
+                    <li>Проверьте SDA → GPIO 21</li>
+                    <li>Проверьте SCL → GPIO 22</li>
+                    <li>Подтяжка уже на плате LCD</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>🔘 Контрастность</h4>
+                <ul>
+                    <li>Отрегулируйте потенциометр на I2C плате</li>
+                    <li>Поворачивайте маленькой отвёрткой</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🔧 Serial команды для отладки</h2>
+            <p>Отправьте через Serial монитор (115200 бод):</p>
+            
+            <table class="table">
+                <tr>
+                    <th>Команда</th>
+                    <th>Описание</th>
+                    <th>Пример</th>
+                </tr>
+                <tr>
+                    <td><code>HELP</code></td>
+                    <td>Список всех команд</td>
+                    <td><code>HELP</code></td>
+                </tr>
+                <tr>
+                    <td><code>STATUS</code></td>
+                    <td>Полная информация о системе</td>
+                    <td><code>STATUS</code></td>
+                </tr>
+                <tr>
+                    <td><code>NTP</code></td>
+                    <td>Принудительная синхронизация времени</td>
+                    <td><code>NTP</code></td>
+                </tr>
+                <tr>
+                    <td><code>TIME</code></td>
+                    <td>Показать текущее время RTC</td>
+                    <td><code>TIME</code></td>
+                </tr>
+                <tr>
+                    <td><code>SETTIME</code></td>
+                    <td>Установить время вручную</td>
+                    <td><code>SETTIME 2026 02 21 14 30 00</code></td>
+                </tr>
+                <tr>
+                    <td><code>REBOOT</code></td>
+                    <td>Перезагрузка устройства</td>
+                    <td><code>REBOOT</code></td>
+                </tr>
+            </table>
+
+            <div class="code-block">
+                <code>=== STATUS ===
+Weight: 45.67
+Temp: 25.3
+WiFi: OK
+Sensor: OK
+Heap: 150000 b
+=============</code>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📊 Индикаторы состояния</h2>
+            
+            <table class="table">
+                <tr>
+                    <th>Индикатор</th>
+                    <th>Значение</th>
+                    <th>Норма</th>
+                </tr>
+                <tr>
+                    <td><span class="led ok"></span> Sensor OK</td>
+                    <td>HX711 подключён</td>
+                    <td>✅</td>
+                </tr>
+                <tr>
+                    <td><span class="led err"></span> Sensor ERROR</td>
+                    <td>HX711 не найден</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td><span class="led ok"></span> WiFi OK</td>
+                    <td>WiFi подключён</td>
+                    <td>✅</td>
+                </tr>
+                <tr>
+                    <td><span class="led warn"></span> WiFi --</td>
+                    <td>Нет подключения</td>
+                    <td>⚠️</td>
+                </tr>
+                <tr>
+                    <td><span class="led ok"></span> RTC OK</td>
+                    <td>RTC работает</td>
+                    <td>✅</td>
+                </tr>
+                <tr>
+                    <td><span class="led err"></span> RTC ERROR</td>
+                    <td>RTC не найден</td>
+                    <td>❌</td>
+                </tr>
+                <tr>
+                    <td><span class="led warn"></span> LOW BATTERY</td>
+                    <td>&lt;10% заряда</td>
+                    <td>⚠️</td>
+                </tr>
+            </table>
+        </section>
+    </div>
+
+    <footer>
+        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
+        </p>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            if (tab.getAttribute('href') === window.location.pathname.split('/').pop()) {
+                tab.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
