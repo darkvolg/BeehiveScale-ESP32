@@ -33,6 +33,8 @@ void sleep_load_persistent(SleepPersistData &data) {
     data.wakeupCount = 0;
     data.alertSent = false;
     data.lastAlertWeight = 0.0f;
+    data.lastReportWeight = 0.0f;
+    data.hasLastReport = false;
     _persist = data;
     return;
   }
@@ -48,6 +50,8 @@ void sleep_load_persistent(SleepPersistData &data) {
     data.wakeupCount = 0;
     data.alertSent = false;
     data.lastAlertWeight = 0.0f;
+    data.lastReportWeight = 0.0f;
+    data.hasLastReport = false;
     _persist = data;
     Serial.println(F("[Sleep] First boot."));
   }
@@ -77,6 +81,10 @@ void sleep_enter(uint64_t seconds) {
 #endif
 
 #if defined(ESP32)
+  // ВАЖНО: НЕ вызывать esp_sleep_pd_config(RTC_PERIPH OFF) — конфликтует с EXT0 wake.
+  // НЕ вызывать Wire.end()/esp_wifi_deinit() — они вызывают NULL-pointer panic при deep sleep.
+  // ESP32 deep sleep сам автоматически отключает все peripherals и WiFi/BT.
+  // Реальный путь к низкому потреблению — P-MOSFET для отключения питания периферии (LCD, HX711).
   if (seconds > 0) {
     esp_sleep_enable_timer_wakeup(seconds * 1000000ULL);
   }

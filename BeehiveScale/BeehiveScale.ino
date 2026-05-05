@@ -71,7 +71,7 @@
 #define ZERO_DEADBAND_KG     0.05f   // Auto-zero: всё что |вес| < 50г → показываем 0
 #define SCALE_READ_INTERVAL_MS  600UL // Период чтения HX711 (v5.0.0: 600мс — быстрый отклик)
 #define WDT_TIMEOUT_SEC       30
-#define AUTO_SLEEP_MS     180000UL  // 3 минуты бездействия → deep sleep
+// AUTO_SLEEP — настраивается через сайт (get_autosleep_sec()), значение в секундах. 0 = не засыпать.
 
 static inline void app_wdt_init() {
 #if defined(ESP32)
@@ -298,6 +298,8 @@ void start_webserver() {
   wd.batVoltage      = &sys.batVoltage;
   wd.batPercent      = &sys.batPercent;
   wd.prevWeight      = &sys.prevWeight;
+  wd.lastReportWeight = &persist.lastReportWeight;
+  wd.hasLastReport    = &persist.hasLastReport;
 
   WebActions wa;
   wa.doTare = perform_taring;
@@ -305,6 +307,12 @@ void start_webserver() {
     sys.prevWeight = sys.smoothedWeight;
     save_weight(sys.lastSavedWeight, sys.smoothedWeight);
     save_prev_weight(sys.prevWeight);
+    // Сохраняем дату фиксации (для UI "зафикс. от ДД.ММ.ГГГГ")
+    TimeStamp ts = rtc_now();
+    if (ts.valid) {
+      DateTime dt(ts.year, ts.month, ts.day, ts.hour, ts.minute, ts.second);
+      save_prev_weight_date(dt.unixtime());
+    }
   };
   wa.onActivity = []() { lcd_backlight_activity(lcd); };
   wa.doSetCalibFactor = [](float cf) {
@@ -370,6 +378,16 @@ void loop() {
 
   handle_buttons();
   process_weight();
+
+  // Auto-return на главный экран (1/8) если 20 сек никто не трогал кнопки.
+  // Не применяется на экранах 6 (calib menu) и 7 (diag) — там пользователь работает с интерфейсом.
+  static const unsigned long AUTO_HOME_MS = 20000UL;
+  if (sys.menuScreen != 0 && sys.menuScreen != 6 && sys.menuScreen != 7
+      && (millis() - lastActivityTime) > AUTO_HOME_MS) {
+    sys.menuScreen = 0;
+    sys.needsRedraw = true;
+  }
+
   update_interface();
 
   // ── Фича 14: Watchdog HX711 — авто-перезапуск датчика при зависании ──
@@ -499,9 +517,15 @@ void loop() {
       TimeStamp ts = rtc_now();
       String dt = rtc_format_datetime(ts);
       if (tg_send_report(sys.smoothedWeight, sys.tempData.temperature,
-                         sys.tempData.humidity, dt, sys.prevWeight)) {
-        tgReportPending = false;  // успешно отправлено — снимаем флаг
+                         sys.tempData.humidity, dt,
+                         sys.prevWeight, load_prev_weight_date(),
+                         persist.lastReportWeight, persist.hasLastReport)) {
+        tgReportPending = false;
         lastTgReport = now;
+        // После успешной отправки: текущий вес становится "вчерашним" для следующего отчёта.
+        persist.lastReportWeight = sys.smoothedWeight;
+        persist.hasLastReport = true;
+        sleep_save_persistent(persist);
       }
       // если не отправилось (нет WiFi, нет токена) — флаг остаётся, попробуем позже
     }
@@ -547,13 +571,20 @@ void handle_buttons() {
     return;
   }
 
+  // Wake-grace через "sticky" флаг.
+  // Раньше проверка `wasBacklightOff` срабатывала только в момент release, а к этому моменту
+  // подсветка уже была включена через lcd_backlight_activity на ранее итерации. Получалось
+  // что wake-grace не всегда срабатывал — иногда первое нажатие после сна засчитывалось как тара.
+  // Теперь: пока кнопка нажата ИЛИ прошло < 1.5 сек после погашенной подсветки — считаем wake-event.
+  static bool wakeEventPending = false;
+  bool curBacklightOff = !lcd_backlight_is_on();
+  bool curMainPressed = (digitalRead(BUTTON_PIN) == LOW);
+  if (curBacklightOff && curMainPressed) {
+    wakeEventPending = true;  // зафиксировали "нажатие при погашенном экране"
+  }
+
   ButtonAction actMain = read_button(BUTTON_PIN, btnMain);
   ButtonAction actMenu = read_button(MENU_BTN_PIN, btnMenu);
-
-  // Запоминаем состояние подсветки ДО обновления — для wake-grace.
-  // Если экран был погашен, и пользователь нажал MAIN — это "будящее" нажатие,
-  // тарирование не запускаем (иначе при каждом приходе пчеловода случайная тара).
-  bool wasBacklightOff = !lcd_backlight_is_on();
 
   // Подсветка: реагировать на физическое нажатие сразу, не ждать debounce/release
   bool anyPressed = (digitalRead(BUTTON_PIN) == LOW || digitalRead(MENU_BTN_PIN) == LOW);
@@ -562,12 +593,12 @@ void handle_buttons() {
     lcd_backlight_activity(lcd);
   }
 
-  // Логика MAIN-кнопки (v5.0.1, возвращена старая):
-  //   1× SHORT  — запрос подтверждения "Tara? esche raz/3sek"
-  //   2× SHORT за 3 сек — выполнить тарирование
+  // Логика MAIN-кнопки (v5.0.1):
+  //   1× SHORT  — запрос подтверждения "Tara? esche raz/4sek"
+  //   2× SHORT за 4 сек — выполнить тарирование
   //   LONG (5 сек) — калибровка
   //   На экранах 6/7 — SHORT входит в режим (calib menu / diag)
-  // Wake-grace: если экран был погашен — первое нажатие просто будит, не считается тарой.
+  // Wake-grace: если кнопка нажата при погашенной подсветке — это "будящее" нажатие.
   static int pressCount = 0;
   static unsigned long lastPressTime = 0;
 
@@ -580,10 +611,9 @@ void handle_buttons() {
       diagRunRequested = true;
       pressCount = 0;
       sys.needsRedraw = true;
-    } else if (wasBacklightOff && pressCount == 0) {
-      // Wake-grace: подсветка была погашена → нажатие "будящее" → НЕ открываем диалог тары.
-      // Геннадий пришёл к улью, нажал, увидел вес — этого достаточно.
-      // Чтобы тарировать — после пробуждения нажать MAIN ещё раз (диалог откроется).
+    } else if (wakeEventPending && pressCount == 0) {
+      // Wake-grace: первое нажатие после "тёмного" экрана — НЕ диалог тары, только будит.
+      wakeEventPending = false;
     } else {
       pressCount++;
       lastPressTime = millis();
@@ -594,7 +624,7 @@ void handle_buttons() {
         // Первое нажатие — показываем запрос подтверждения
         lcd.clear();
         lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara? Nazhmite ");
-        lcd.setCursor(0, 1); lcd_print_padded(lcd, "esche 1 raz/3sek");
+        lcd.setCursor(0, 1); lcd_print_padded(lcd, "esche 1 raz/4sek");
       }
     }
   }
@@ -602,15 +632,21 @@ void handle_buttons() {
     perform_calibration();
     pressCount = 0;
     sys.needsRedraw = true;
+    wakeEventPending = false;
   }
-  if (pressCount > 0 && millis() - lastPressTime > 3000UL) {
-    // Таймаут окна подтверждения
+  if (pressCount > 0 && millis() - lastPressTime > 4000UL) {
+    // Таймаут окна подтверждения (4 сек)
     pressCount = 0;
     lcd.clear();
     lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara: otmena    ");
     lcd.setCursor(0, 1); lcd_print_padded(lcd, "                ");
     { unsigned long _t=millis(); while(millis()-_t<800UL){app_wdt_reset();yield();} }
     sys.needsRedraw = true;
+  }
+  // Сбрасываем wake-флаг если он "повис" (например, после release без detect или таймаута)
+  if (wakeEventPending && !curMainPressed && pressCount == 0
+      && (millis() - lastActivityTime > 1500UL)) {
+    wakeEventPending = false;
   }
   static int menuPressCount = 0;
   static unsigned long lastMenuPressTime = 0;
@@ -1413,9 +1449,14 @@ void perform_calibration() {
 }
 
 void check_auto_sleep() {
-  if (millis() - lastActivityTime < AUTO_SLEEP_MS) return;
+  uint16_t autoSec = get_autosleep_sec();
+  if (autoSec == 0) return;  // 0 = не засыпать (отладка / постоянное питание)
+  unsigned long autoMs = (unsigned long)autoSec * 1000UL;
+  if (millis() - lastActivityTime < autoMs) return;
 
-  Serial.println(F("[AutoSleep] 3 min idle — shutting down..."));
+  Serial.print(F("[AutoSleep] "));
+  Serial.print(autoSec);
+  Serial.println(F(" sec idle — shutting down..."));
 
   // Показываем сообщение на LCD (включаем подсветку — она могла быть выключена по таймауту)
   lcd.backlight();
@@ -1424,9 +1465,10 @@ void check_auto_sleep() {
   lcd.setCursor(0, 1); lcd_print_padded(lcd, "Btn to wake up  ");
   { unsigned long _t0=millis(); while(millis()-_t0<3000UL){app_wdt_reset();yield();} }
 
-  // Гасим подсветку LCD
-  lcd.noBacklight();
+  // Гасим подсветку LCD и очищаем DDRAM (иначе остаются "квадратики" от старых символов)
   lcd.clear();
+  lcd.noBacklight();
+  lcd.noDisplay();  // ESP32-bonus: ещё снижает потребление PCF8574
 
   // Отключаем WiFi
 #if defined(ESP32)
@@ -1452,6 +1494,9 @@ void check_auto_sleep() {
   persist.lastTempC = sys.tempData.temperature;
   persist.wakeupCount++;
   sleep_save_persistent(persist);
+
+  // HX711 → power_down: standby ~1.5 мА → ~1 мкА. Просыпается scale.power_up() в setup().
+  scale.power_down();
 
   // Уходим в deep sleep (пробуждение по кнопке GPIO 0)
 #if defined(ESP32)

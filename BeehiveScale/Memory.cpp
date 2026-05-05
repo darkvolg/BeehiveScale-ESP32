@@ -150,6 +150,37 @@ float load_prev_weight(float fallback) {
   return w;
 }
 
+void save_prev_weight_date(uint32_t unixtime) {
+  EEPROM.put(EEPROM_ADDR_PREV_DATE, unixtime);
+  EEPROM.commit();
+}
+
+uint32_t load_prev_weight_date() {
+  uint32_t ts = 0;
+  EEPROM.get(EEPROM_ADDR_PREV_DATE, ts);
+  // 1546300800 = 2019-01-01, до этого даты невалидны (RTC не настроен)
+  if (ts < 1546300800UL) return 0;
+  return ts;
+}
+
+uint16_t get_autosleep_sec() {
+  byte magic = 0;
+  EEPROM.get(EEPROM_ADDR_AUTOSLEEP_MAGIC, magic);
+  if (magic != EEPROM_MAGIC_AUTOSLEEP_VALUE) return 180;  // дефолт 3 минуты
+  uint16_t sec = 180;
+  EEPROM.get(EEPROM_ADDR_AUTOSLEEP, sec);
+  if (sec > 86400) return 180;  // защита от мусора (>24ч = странно)
+  return sec;
+}
+
+void set_autosleep_sec(uint16_t sec) {
+  if (sec > 86400) sec = 86400;
+  byte magic = EEPROM_MAGIC_AUTOSLEEP_VALUE;
+  EEPROM.put(EEPROM_ADDR_AUTOSLEEP, sec);
+  EEPROM.put(EEPROM_ADDR_AUTOSLEEP_MAGIC, magic);
+  EEPROM.commit();
+}
+
 void save_web_settings(float alertDelta, float calibWeight, float emaAlpha) {
   EEPROM.put(EEPROM_ADDR_ALERT_DELTA, alertDelta);
   EEPROM.put(EEPROM_ADDR_CALIB_WEIGHT, calibWeight);

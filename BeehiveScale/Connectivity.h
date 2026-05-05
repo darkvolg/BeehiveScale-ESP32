@@ -74,8 +74,13 @@ void       ntp_loop();
 
 bool tg_send_message(const String &text);
 bool tg_send_alert(float weight, float tempC, const String &datetime);
+// prevWeight — пользовательский опорный вес (для долгосрочной дельты, "от эталона")
+// prevWeightDate — Unix timestamp когда зафиксирован prevWeight (0 = не задано)
+// lastReportWeight — вес на момент прошлого TG-отчёта (для дельты "за сутки")
+// hasLastReport — false при самом первом отчёте, тогда "за сутки" не показываем
 bool tg_send_report(float weight, float tempC, float humidity, const String &datetime,
-                    float prevWeight);
+                    float prevWeight, uint32_t prevWeightDate,
+                    float lastReportWeight, bool hasLastReport);
 bool ts_send(float weight, float tempC, float humidity, float rtcTempC);
 
 #endif

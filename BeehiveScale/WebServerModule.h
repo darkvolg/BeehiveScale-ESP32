@@ -22,7 +22,9 @@ struct WebData {
   uint32_t* wakeupCount;
   float*  batVoltage;
   int*    batPercent;
-  float*  prevWeight;
+  float*  prevWeight;          // Опорный вес (ручной эталон, через "Сохранить эталон")
+  float*  lastReportWeight;    // Вес на момент прошлого TG-отчёта (для дельты "за период")
+  bool*   hasLastReport;       // true после первого отчёта
 };
 
 struct WebActions {

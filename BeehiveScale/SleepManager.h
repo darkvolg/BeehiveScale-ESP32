@@ -26,7 +26,9 @@ struct SleepPersistData {
   float    lastTempC;
   uint32_t wakeupCount;
   bool     alertSent;
-  float    lastAlertWeight;  // вес на момент последнего алерта (для повторных срабатываний)
+  float    lastAlertWeight;     // вес на момент последнего алерта (для повторных срабатываний)
+  float    lastReportWeight;    // вес на момент прошлого TG-отчёта (для дельты "за сутки")
+  bool     hasLastReport;       // true после первого отправленного отчёта (иначе дельта = 0)
 };
 // RTC user memory: max 512 bytes (128 uint32_t words). Assert size fits.
 static_assert(sizeof(SleepPersistData) <= 64, "SleepPersistData too large for RTC user memory");

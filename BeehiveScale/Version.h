@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 0
-#define FW_VERSION_SUFFIX ""  // 5.0.0 — полное железо ESP32 работает (HX711, RTC, DS18B20, кнопки, web, deep sleep, Telegram через CF Worker)
+#define FW_VERSION_PATCH 1
+#define FW_VERSION_SUFFIX ""  // 5.0.1 — UX и поведение: двойная дельта, дата фиксации, auto-sleep timeout, auto-home, wake-grace
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

@@ -316,7 +316,8 @@ input[type=checkbox]{width:auto}
     <div class="card">
       <div class="card-title">⚖ Текущий вес</div>
       <div class="val-big" id="w-val">--<span class="val-unit">кг</span></div>
-      <div class="val-sub">Эталон: <b id="w-ref">--</b> кг &nbsp;|&nbsp; Δ: <b id="w-delta" style="color:var(--amber2)">--</b> кг</div>
+      <div class="val-sub">🎯 От зафикс. точки: <b id="w-ref">--</b> кг &nbsp;|&nbsp; Δ: <b id="w-delta" style="color:var(--amber2)">--</b> кг <span id="w-ref-date" style="color:var(--text3);font-size:11px"></span></div>
+      <div class="val-sub" style="margin-top:4px">📈 С прошлого замера: <b id="w-period-delta" style="color:var(--green)">--</b> кг (было <b id="w-period-prev">--</b>)</div>
       <div class="gauge-wrap">
         <div class="gauge"><div class="gauge-fill" id="w-gauge" style="width:0%"></div></div>
         <div class="gauge-lbl" id="w-gpct">0%</div>
@@ -616,6 +617,7 @@ input[type=checkbox]{width:auto}
       <div class="form-row"><label>Скорость отклика весов (0.1=медленно, 0.3=средне, 0.6=быстро)</label><input type="number" id="cfg-ema" step="0.05" min="0.05" max="0.9" placeholder="0.3"><div style="font-size:12px;color:var(--text3);margin-top:4px">EMA α-фильтр. <b>0.1</b> ≈ 30 сек до стабилизации (для улья, фильтрует пчёл). <b>0.3</b> ≈ 10 сек (рекомендуется). <b>0.6</b> ≈ 4 сек (для тестов/калибровки).</div></div>
       <div class="form-row"><label>Deep Sleep интервал (сек, 30–86400)</label><input type="number" id="cfg-sleep" step="1" min="30" max="86400" placeholder="900"></div>
       <div class="form-row"><label>Расписание замеров (HH:MM через пробел, до 8 времён)</label><input type="text" id="cfg-sched" placeholder="08:00 14:00 20:00" maxlength="60"></div>
+      <div class="form-row"><label>Уйти в сон после бездействия (сек, 0=не засыпать)</label><input type="number" id="cfg-autosleep" step="1" min="0" max="86400" placeholder="180"></div>
       <div class="form-row"><label>Таймаут подсветки LCD (сек, 0=всегда)</label><input type="number" id="cfg-bl" step="10" min="0" max="3600" placeholder="30"></div>
       <div class="btn-row">
         <button class="btn btn-green" onclick="saveSettings()">💾 Сохранить</button>
@@ -629,8 +631,9 @@ input[type=checkbox]{width:auto}
         <b style="color:var(--amber)">Порог тревоги</b> — изменение веса для уведомления в Telegram (роение, кража).<br>
         <b style="color:var(--amber)">Эталонный груз</b> — масса гири при калибровке HX711.<br>
         <b style="color:var(--amber)">Скорость отклика</b> — коэффициент EMA-фильтра шума. <b>В улье ставь 0.1–0.2</b> (фильтрует прилёт/вылет пчёл). <b>Для тестов 0.5–0.6</b> (быстрый отклик).<br>
-        <b style="color:var(--amber)">Deep Sleep</b> — интервал сна ESP. Используется если расписание не задано.<br>
-        <b style="color:var(--amber)">Расписание</b> — конкретные времена пробуждения и записи лога (напр. 08:00 14:00 20:00). Если задано — приоритет над интервалом. Пустое поле = только интервал.<br>
+        <b style="color:var(--amber)">Deep Sleep</b> — длительность сна ESP. Используется только если расписание не задано.<br>
+        <b style="color:var(--amber)">Расписание</b> — конкретные времена пробуждения (напр. 08:00 14:00 20:00). Если задано — приоритет над интервалом.<br>
+        <b style="color:var(--amber)">Auto-sleep</b> — через сколько секунд бездействия уйти в сон. 0 = не засыпать (отладка). Сбрасывается любой кнопкой и веб-запросом.<br>
         <b style="color:var(--amber)">Подсветка LCD</b> — 0 = всегда включена; иначе — таймаут без нажатий.
       </div>
     </div>
@@ -682,7 +685,7 @@ input[type=checkbox]{width:auto}
       <div class="btn-row">
         <button class="btn btn-amber" onclick="applyCalib()">✓ Применить</button>
         <button class="btn btn-blue"  onclick="doApi('/api/tare')">⊘ Тара</button>
-        <button class="btn btn-green" onclick="doApi('/api/save')">💾 Сохранить эталон</button>
+        <button class="btn btn-green" onclick="doApi('/api/save')">📍 Зафиксировать вес как точку отсчёта</button>
       </div>
       <div style="font-size:13px;color:var(--text3);margin-top:10px;line-height:1.7">
         Подберите Cal.Factor так, чтобы показание<br>совпало с реальной массой эталонного груза.
@@ -838,11 +841,46 @@ function updDash(d) {
   const w = parseFloat(d.weight)||0;
   _curWeight = w;
   setText('w-val', w.toFixed(2)+'<span class="val-unit">кг</span>', true);
-  setText('w-ref', parseFloat(d.ref||0).toFixed(2));
-  const dw = w-parseFloat(d.ref||0);
+  setText('w-ref', parseFloat(d.prev||0).toFixed(2));
+  const dw = w-parseFloat(d.prev||0);
   const dwEl=document.getElementById('w-delta');
   dwEl.textContent=(dw>=0?'+':'')+dw.toFixed(2);
   dwEl.style.color=dw>0?'var(--green)':dw<0?'var(--red)':'var(--amber2)';
+  // Дата фиксации (Unix timestamp → ДД.ММ.ГГГГ ЧЧ:ММ)
+  const refDate = parseInt(d.prevDate||0);
+  const rdEl = document.getElementById('w-ref-date');
+  if (rdEl) {
+    if (refDate > 0) {
+      const dt = new Date(refDate * 1000);
+      const dd = String(dt.getDate()).padStart(2,'0');
+      const mm = String(dt.getMonth()+1).padStart(2,'0');
+      const yyyy = dt.getFullYear();
+      const hh = String(dt.getHours()).padStart(2,'0');
+      const mi = String(dt.getMinutes()).padStart(2,'0');
+      // Дни с момента фиксации (для контекста "уже X дней наблюдаю")
+      const daysAgo = Math.floor((Date.now()/1000 - refDate) / 86400);
+      rdEl.textContent = ' (от ' + dd + '.' + mm + '.' + yyyy + ' ' + hh + ':' + mi
+                        + (daysAgo > 0 ? ', ' + daysAgo + ' дн назад' : '') + ')';
+    } else {
+      rdEl.textContent = ' (не зафикс.)';
+    }
+  }
+  // Дельта "за период" — сравнение с весом на момент прошлого TG-отчёта
+  const lastRep = parseFloat(d.lastRep||0);
+  const hasRep  = d.hasRep === true || d.hasRep === 'true';
+  const wpdEl = document.getElementById('w-period-delta');
+  const wppEl = document.getElementById('w-period-prev');
+  if (wpdEl && wppEl) {
+    if (hasRep) {
+      const dp = w - lastRep;
+      wpdEl.textContent = (dp>=0?'+':'')+dp.toFixed(2);
+      wpdEl.style.color = dp>0?'var(--green)':dp<0?'var(--red)':'var(--amber2)';
+      wppEl.textContent = lastRep.toFixed(2);
+    } else {
+      wpdEl.textContent = '—';
+      wppEl.textContent = 'нет данных';
+    }
+  }
   setGauge('w-gauge','w-gpct', Math.min(100,w/80*100), '', '%');
 
   const t=parseFloat(d.temp), rtcT=parseFloat(d.rtcT||0);
@@ -1213,6 +1251,7 @@ function loadConfig(silent){
     setV('cfg-alert',d.alertDelta); setV('cfg-calib',d.calibWeight);
     setV('cfg-ema',d.emaAlpha);     setV('cfg-sleep',d.sleepSec);
     setV('cfg-bl',d.lcdBlSec);
+    setV('cfg-autosleep',d.autoSleepSec);
     setV('cfg-sched',(d.schedTimes&&d.schedTimes.length>0)?d.schedTimes.join(' '):'');
     // Токен НЕ заполняем в input — он замаскирован звёздочками, а placeholder покажет статус
     if(d.tgTokenSet){document.getElementById('tg-token').placeholder='Токен задан (оставьте пустым чтобы не менять)';}
@@ -1231,11 +1270,13 @@ function saveSettings(){
   const g=(id)=>document.getElementById(id);
   const a=parseFloat(g('cfg-alert').value),c=parseFloat(g('cfg-calib').value);
   const e=parseFloat(g('cfg-ema').value),s=parseInt(g('cfg-sleep').value),b=parseInt(g('cfg-bl').value);
+  const aut=parseInt(g('cfg-autosleep').value);
   if(!isNaN(a)) body.alertDelta=a;
   if(!isNaN(c)) body.calibWeight=c;
   if(!isNaN(e)) body.emaAlpha=e;
   if(!isNaN(s)) body.sleepSec=s;
   if(!isNaN(b)) body.lcdBlSec=b;
+  if(!isNaN(aut)) body.autoSleepSec=aut;
   const sched=(g('cfg-sched').value||'').trim();
   body.schedTimes=sched.length>0?sched.split(/\s+/).filter(t=>/^\d{1,2}:\d{2}$/.test(t)):[];
   apiFetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
@@ -1478,6 +1519,7 @@ static void _handleConfig() {
   doc["emaAlpha"]    = web_get_ema_alpha();
   doc["sleepSec"]    = (unsigned long)get_sleep_sec();
   doc["lcdBlSec"]    = (unsigned int)get_lcd_bl_sec();
+  doc["autoSleepSec"] = (unsigned int)get_autosleep_sec();
   doc["wifiMode"]    = (int)get_wifi_mode();
   // НЕ использовать block scope для char-буферов + ArduinoJson!
   // ArduinoJson v6 для char* хранит указатель (zero-copy) — dangling pointer если буфер на стеке.
@@ -1519,6 +1561,9 @@ static void _handleData() {
   doc["weight"]   = *_wd.weight;
   doc["ref"]      = *_wd.lastSavedWeight;
   doc["prev"]     = *_wd.prevWeight;
+  doc["lastRep"]  = _wd.lastReportWeight ? *_wd.lastReportWeight : 0.0f;
+  doc["hasRep"]   = _wd.hasLastReport ? *_wd.hasLastReport : false;
+  doc["prevDate"] = (uint32_t)load_prev_weight_date();  // Unix timestamp фиксации
   doc["temp"]     = *_wd.tempC;
   doc["rtcT"]     = *_wd.rtcTempC;
   doc["sensor"]   = *_wd.sensorReady;
@@ -1623,6 +1668,11 @@ static void _handleSettings() {
     uint16_t val = doc["lcdBlSec"].as<uint16_t>();
     if (val <= 3600) { newLcdBlSec = val; hasLcdBlSec = true; }
     else { _sendJson(false, "lcdBlSec: 0–3600"); return; }
+  }
+  if (doc.containsKey("autoSleepSec")) {
+    uint32_t val = doc["autoSleepSec"].as<uint32_t>();
+    if (val <= 86400UL) { set_autosleep_sec((uint16_t)val); }
+    else { _sendJson(false, "autoSleepSec: 0–86400"); return; }
   }
   char apPassBuf[24];  // локальная — безопасно при параллельных запросах (пункт 20)
   apPassBuf[0] = '\0';

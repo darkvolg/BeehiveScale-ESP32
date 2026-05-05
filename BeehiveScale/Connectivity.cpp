@@ -1,5 +1,6 @@
 #include "Connectivity.h"
 #include "Memory.h"
+#include "RTC_Module.h"
 #include <ArduinoJson.h>
 #include <time.h>
 #include <RTClib.h>
@@ -442,19 +443,50 @@ bool tg_send_alert(float weight, float tempC, const String &datetime) {
 }
 
 bool tg_send_report(float weight, float tempC, float humidity, const String &datetime,
-                    float prevWeight) {
+                    float prevWeight, uint32_t prevWeightDate,
+                    float lastReportWeight, bool hasLastReport) {
   (void)humidity;  // нет датчика влажности — не выводим в отчёт
-  float delta = weight - prevWeight;
-  char msg[384];
+  float deltaRef    = weight - prevWeight;          // от опорного эталона (ручной)
+  float deltaPeriod = weight - lastReportWeight;    // от прошлого отчёта (за сутки)
+  char msg[640];
   int pos = 0;
   pos += snprintf(msg + pos, sizeof(msg) - pos,
     "🐝 <b>Отчёт: улей</b>\n"
     "Время: %s\n"
-    "Вес: <b>%.2f кг</b>\n"
-    "Эталон: %.2f кг\n"
-    "Δ: %s%.2f кг\n",
-    datetime.c_str(), weight, prevWeight,
-    (delta >= 0 ? "+" : ""), delta);
+    "Вес: <b>%.2f кг</b>\n",
+    datetime.c_str(), weight);
+
+  if (hasLastReport) {
+    pos += snprintf(msg + pos, sizeof(msg) - pos,
+      "📈 <b>С прошлого замера:</b> %s%.2f кг (было %.2f)\n",
+      (deltaPeriod >= 0 ? "+" : ""), deltaPeriod, lastReportWeight);
+  }
+  if (prevWeight > 0.05f) {
+    // Форматируем дату фиксации
+    char dateStr[40] = "";
+    if (prevWeightDate > 0) {
+      DateTime dt(prevWeightDate);
+      // Сколько дней прошло — для контекста "уже X дней"
+      TimeStamp ts = rtc_now();
+      int daysAgo = 0;
+      if (ts.valid) {
+        DateTime cur(ts.year, ts.month, ts.day, ts.hour, ts.minute, ts.second);
+        if (cur.unixtime() > prevWeightDate) {
+          daysAgo = (int)((cur.unixtime() - prevWeightDate) / 86400UL);
+        }
+      }
+      if (daysAgo > 0) {
+        snprintf(dateStr, sizeof(dateStr), " от %02u.%02u.%04u, %d дн назад",
+                 dt.day(), dt.month(), dt.year(), daysAgo);
+      } else {
+        snprintf(dateStr, sizeof(dateStr), " от %02u.%02u.%04u",
+                 dt.day(), dt.month(), dt.year());
+      }
+    }
+    pos += snprintf(msg + pos, sizeof(msg) - pos,
+      "🎯 <b>От зафикс. точки:</b> %s%.2f кг (зафикс. %.2f%s)\n",
+      (deltaRef >= 0 ? "+" : ""), deltaRef, prevWeight, dateStr);
+  }
   if (tempC > -90) {
     pos += snprintf(msg + pos, sizeof(msg) - pos, "Температура: %.1f °C\n", tempC);
   }

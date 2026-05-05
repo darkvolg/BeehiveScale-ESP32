@@ -48,7 +48,13 @@
 #define EEPROM_ADDR_ADMIN_USER   225  // char[24]
 #define EEPROM_ADDR_ADMIN_PASS   249  // char[32]
 #define EEPROM_ADDR_OTA_PASS     281  // char[32]
-// 313..383 reserved for future credential fields
+// ─── Точка отсчёта prevWeight: дата фиксации (v5.0.2) ────────────────────
+#define EEPROM_ADDR_PREV_DATE    313  // uint32_t — Unix timestamp когда вес был зафиксирован
+// ─── Auto-sleep timeout (v5.0.3) ─────────────────────────────────────────
+#define EEPROM_ADDR_AUTOSLEEP    317  // uint16_t — секунд бездействия до deep sleep (0=отключено)
+#define EEPROM_ADDR_AUTOSLEEP_MAGIC 319  // 1 байт magic
+#define EEPROM_MAGIC_AUTOSLEEP_VALUE 0xA8
+// 320..383 reserved for future fields
 #define EEPROM_SIZE              384  // расширено под credentials-блок
 
 // Веб-настройки (alertDelta, calibWeight, emaAlpha)
@@ -128,5 +134,14 @@ long load_prev_offset();
 // Опорный вес для дельты (не перезаписывается авто-фиксацией)
 void  save_prev_weight(float w);
 float load_prev_weight(float fallback);
+
+// Дата фиксации опорного веса (Unix timestamp). 0 = не задано.
+void     save_prev_weight_date(uint32_t unixtime);
+uint32_t load_prev_weight_date();
+
+// Auto-sleep timeout — через сколько секунд бездействия уйти в deep sleep.
+// 0 = не засыпать никогда (для отладки). Дефолт 180 сек (3 минуты).
+uint16_t get_autosleep_sec();
+void     set_autosleep_sec(uint16_t sec);
 
 #endif
