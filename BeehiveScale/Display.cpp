@@ -49,3 +49,5 @@ void lcd_backlight_tick(LiquidCrystal_I2C &lcd, uint16_t timeoutSec) {
     _blOn = false;
   }
 }
+
+bool lcd_backlight_is_on() { return _blOn; }

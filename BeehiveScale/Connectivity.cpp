@@ -81,7 +81,16 @@ bool wifi_connect() {
   while (WiFi.status() != WL_CONNECTED) {
     if (millis() - start > WIFI_TIMEOUT_MS) {
       _wifiStatus = WIFI_DISCONNECTED;
-      Serial.println(F("[WiFi] Timeout!"));
+      wl_status_t s = WiFi.status();
+      Serial.print(F("[WiFi] Timeout! Status="));
+      switch (s) {
+        case WL_NO_SSID_AVAIL: Serial.println(F("NO_SSID_AVAIL — сеть не найдена (проверь имя SSID, 2.4GHz)")); break;
+        case WL_CONNECT_FAILED: Serial.println(F("CONNECT_FAILED — неверный пароль или WPA3-only")); break;
+        case WL_CONNECTION_LOST: Serial.println(F("CONNECTION_LOST")); break;
+        case WL_DISCONNECTED: Serial.println(F("DISCONNECTED — попытка не удалась")); break;
+        case WL_IDLE_STATUS: Serial.println(F("IDLE — слабый сигнал или роутер не отвечает")); break;
+        default: Serial.println(s);
+      }
       return false;
     }
 #if defined(ESP32)
@@ -109,7 +118,9 @@ WifiStatus wifi_status() {
 }
 
 void wifi_ensure_connected() {
-  if (get_wifi_mode() == 0) {
+  // Если EEPROM=AP ИЛИ сейчас фактически работаем в AP (fallback после STA-таймаута)
+  // — не пытаемся реконнектиться, иначе будем рвать сеть каждые 10 сек.
+  if (get_wifi_mode() == 0 || WiFi.getMode() == WIFI_AP) {
     _wifiStatus = (WiFi.softAPIP() == IPAddress(0,0,0,0)) ? WIFI_DISCONNECTED : WIFI_CONNECTED;
     return;
   }
@@ -170,7 +181,10 @@ static bool _wifi_active() {
   return WiFi.status() == WL_CONNECTED;
 }
 
-static const char* TG_HOST = "api.telegram.org";
+// Cloudflare Worker proxy — обход блокировки api.telegram.org провайдером (Beeline RU).
+// Worker проксит as-is, Token и chat_id остаются в EEPROM ESP32.
+// См. cloudflare-worker/ESP32_INTEGRATION.md
+static const char* TG_HOST = "beehive-relay.darkvolg.workers.dev";
 
 #include <LittleFS.h>
 
@@ -180,11 +194,18 @@ static const char* TG_HOST = "api.telegram.org";
 static bool _ensureFS() {
   static bool _fsReady = false;
   if (_fsReady) return true;
+#if defined(ESP32)
+  _fsReady = LittleFS.begin(true);  // auto-format on mount fail (свежий чип)
+#else
   _fsReady = LittleFS.begin();
+#endif
   return _fsReady;
 }
 
 void queue_add(float weight, float temp, float hum, float rtcTemp, const String& dt) {
+  // Если ThingSpeak не настроен (дефолтный ключ) — не копим очередь.
+  // Иначе данные тысячами накапливаются в /queue.bin без шанса быть отправленными.
+  if (strncmp(TS_API_KEY, "YOUR_", 5) == 0) return;
   if (!_ensureFS()) return;
   File f = LittleFS.open(QUEUE_FILE, "a");
   if (!f) return;
@@ -211,6 +232,15 @@ void queue_add(float weight, float temp, float hum, float rtcTemp, const String&
 void queue_process() {
   if (!_wifi_active()) return;
   if (!_ensureFS()) return;
+  // Если ThingSpeak не настроен — удаляем накопленную очередь, не пытаемся слать.
+  if (strncmp(TS_API_KEY, "YOUR_", 5) == 0) {
+    if (LittleFS.exists(QUEUE_FILE)) {
+      LittleFS.remove(QUEUE_FILE);
+      Serial.println(F("[Queue] Cleared (ThingSpeak disabled)"));
+    }
+    if (LittleFS.exists("/queue_tmp.bin")) LittleFS.remove("/queue_tmp.bin");
+    return;
+  }
   // Восстановление orphaned tmp-файла после неудачного rename
   if (!LittleFS.exists(QUEUE_FILE) && LittleFS.exists("/queue_tmp.bin")) {
     LittleFS.rename("/queue_tmp.bin", QUEUE_FILE);
@@ -315,6 +345,13 @@ static bool _tg_post(const char* message) {
     }
   }
 
+#if defined(ESP32)
+  // На ESP32 TLS handshake требует ~30кБ свободной кучи. Логируем перед запросом
+  // чтобы при ошибках было видно "за что зацепились".
+  Serial.print(F("[TG] Free heap before TLS: "));
+  Serial.println(ESP.getFreeHeap());
+#endif
+
 #if defined(ESP8266)
   BearSSL::WiFiClientSecure client;
 #else
@@ -323,7 +360,8 @@ static bool _tg_post(const char* message) {
   client.setInsecure();
 
   HTTPClient http;
-  http.setTimeout(HTTP_TIMEOUT_MS);
+  // Telegram TLS handshake может занимать до 8 секунд при первом запросе
+  http.setTimeout(15000);
 
   char url[160];
   snprintf(url, sizeof(url), "https://%s/bot%s/sendMessage", TG_HOST, useToken);
@@ -335,17 +373,25 @@ static bool _tg_post(const char* message) {
   ESP.wdtFeed();
   if (!http.begin(client, url)) return false;
 #else
-  http.begin(client, url);
+  if (!http.begin(client, url)) {
+    Serial.println(F("[TG] http.begin() failed"));
+    return false;
+  }
 #endif
   yield();
   http.addHeader("Content-Type", "application/json");
+  // Cloudflare Worker проверяет этот заголовок — без него отдаст 403.
+  http.addHeader("X-Beehive-Secret", BEEHIVE_RELAY_SECRET);
 
-  StaticJsonDocument<256> doc;
+  // Размер: text может быть до ~1500 байт (приветственное сообщение + кириллица в UTF-8 = по 2 байта/символ),
+  // плюс JSON-обвязка ~80 байт. Маленький буфер обрезал JSON и терялся parse_mode → HTML не парсился.
+  StaticJsonDocument<2048> doc;
   doc["chat_id"] = useChatId;
   doc["text"] = message;
   doc["parse_mode"] = "HTML";
-  char body[384];
-  serializeJson(doc, body, sizeof(body));
+  char body[2048];
+  size_t bodyLen = serializeJson(doc, body, sizeof(body));
+  (void)bodyLen;
 
 #if defined(ESP8266)
   ESP.wdtFeed();
@@ -358,7 +404,19 @@ static bool _tg_post(const char* message) {
     Serial.println(F("[TG] Message sent OK"));
     return true;
   }
-  Serial.print(F("[TG] Error code: ")); Serial.println(code);
+  Serial.print(F("[TG] Error code: ")); Serial.print(code);
+  // Расшифровка типичных HTTPClient ошибок
+  switch (code) {
+    case -1:  Serial.println(F(" (CONNECTION_REFUSED — не достучались до api.telegram.org)")); break;
+    case -2:  Serial.println(F(" (SEND_HEADER_FAILED)")); break;
+    case -3:  Serial.println(F(" (SEND_PAYLOAD_FAILED)")); break;
+    case -4:  Serial.println(F(" (NOT_CONNECTED)")); break;
+    case -5:  Serial.println(F(" (CONNECTION_LOST — TLS handshake провалился, обычно мало RAM)")); break;
+    case -11: Serial.println(F(" (READ_TIMEOUT)")); break;
+    case 401: Serial.println(F(" (Unauthorized — неверный токен)")); break;
+    case 400: Serial.println(F(" (Bad Request — неверный chat_id или формат)")); break;
+    default:  Serial.println();
+  }
   return false;
 }
 
@@ -375,23 +433,30 @@ bool tg_send_alert(float weight, float tempC, const String &datetime) {
     snprintf(tempStr, sizeof(tempStr), "n/d");
   }
   snprintf(msg, sizeof(msg),
-    "<b>TREVOGA: uley</b>\n"
-    "Vremya: %s\n"
-    "Ves: <b>%.2f kg</b>\n"
-    "Temp: %s",
+    "🚨 <b>ТРЕВОГА: улей</b>\n"
+    "Время: %s\n"
+    "Вес: <b>%.2f кг</b>\n"
+    "Температура: %s",
     datetime.c_str(), weight, tempStr);
   return _tg_post(msg);
 }
 
-bool tg_send_report(float weight, float tempC, float humidity, const String &datetime) {
-  (void)humidity;  // пункт 22: нет датчика влажности — не выводим в отчёт
-  char msg[320];
+bool tg_send_report(float weight, float tempC, float humidity, const String &datetime,
+                    float prevWeight) {
+  (void)humidity;  // нет датчика влажности — не выводим в отчёт
+  float delta = weight - prevWeight;
+  char msg[384];
   int pos = 0;
   pos += snprintf(msg + pos, sizeof(msg) - pos,
-    "<b>Otchet: uley</b>\nVremya: %s\nVes: %.2f kg\n",
-    datetime.c_str(), weight);
+    "🐝 <b>Отчёт: улей</b>\n"
+    "Время: %s\n"
+    "Вес: <b>%.2f кг</b>\n"
+    "Эталон: %.2f кг\n"
+    "Δ: %s%.2f кг\n",
+    datetime.c_str(), weight, prevWeight,
+    (delta >= 0 ? "+" : ""), delta);
   if (tempC > -90) {
-    pos += snprintf(msg + pos, sizeof(msg) - pos, "Temp: %.1f C\n", tempC);
+    pos += snprintf(msg + pos, sizeof(msg) - pos, "Температура: %.1f °C\n", tempC);
   }
   return _tg_post(msg);
 }

@@ -74,7 +74,8 @@ void       ntp_loop();
 
 bool tg_send_message(const String &text);
 bool tg_send_alert(float weight, float tempC, const String &datetime);
-bool tg_send_report(float weight, float tempC, float humidity, const String &datetime);
+bool tg_send_report(float weight, float tempC, float humidity, const String &datetime,
+                    float prevWeight);
 bool ts_send(float weight, float tempC, float humidity, float rtcTempC);
 
 #endif

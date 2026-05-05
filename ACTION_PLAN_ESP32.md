@@ -13,13 +13,18 @@
 
 - [x] Создана папка `BeehiveScale-ESP32/` (копия из `BeehiveScale-main/`)
 - [x] WakeTestESP32 подтвердил работу deep sleep на новой плате (Wake #7+)
-- [ ] **platformio.ini** — добавить `[env:esp32dev]` рядом с `d1_mini` (двойная сборка)
-- [ ] **Version.h** — bump до `5.0.0-pre`
-- [ ] **BeehiveScale.ino** — pin mapping для ESP32 (см. таблицу ниже)
-- [ ] **SleepManager.cpp** — `esp_deep_sleep_start()`, `esp_sleep_enable_timer_wakeup()`, `esp_sleep_enable_ext0_wakeup()` для DS3231 SQW
-- [ ] **Memory.cpp** — `Preferences` API вместо `EEPROM` (опционально — EEPROM эмуляция тоже работает)
-- [ ] **Display.cpp** — проверить что LiquidCrystal_I2C работает на ESP32 (должно из коробки)
-- [ ] Собрать → залить → LCD показывает «BeehiveScale v5.0.0-pre / Boot OK»
+- [x] **platformio.ini** — добавить `[env:esp32dev]` рядом с `d1_mini` (двойная сборка)
+- [x] **Version.h** — bump до `5.0.0-pre`
+- [x] **BeehiveScale.ino** — pin mapping для ESP32 (см. таблицу ниже)
+- [x] **SleepManager.cpp** — `esp_deep_sleep_start()`, `esp_sleep_enable_timer_wakeup()`, `esp_sleep_enable_ext0_wakeup()` для DS3231 SQW (P0-уровень: wake по кнопке GPIO27, peripheral_power отключён — нет P-MOSFET)
+- [x] **Memory.cpp** — оставлен на EEPROM эмуляции (работает на ESP32 через NVS, мигрировать на Preferences не обязательно)
+- [x] **Display.cpp** — LiquidCrystal_I2C компилируется на ESP32 OK
+- [x] **Logger.cpp** — заменён ESP8266 LittleFS `Dir/openDir` на ESP32 `File/openNextFile`, `ESP.wdtFeed()` → `yield()`
+- [x] **WebServerModule.cpp** — `collectHeaders()` теперь принимает массив для ESP32
+- [x] **Сборка прошла:** `pio run -e esp32dev` → SUCCESS, RAM 16.2%, Flash 94.5% (1.24MB/1.31MB)
+- [x] **Залить на железо:** прошивка через Arduino IDE с Partition Scheme=Huge APP, ArduinoJson 6.x
+- [x] LCD показал «Vesy Pchelovod / Versiya 5.0.0-pre» (Геннадий 2026-05-05)
+- [x] Auto-sleep через 3 мин подтверждён (экран погас — корректное поведение)
 
 ### 🟡 P1 — Измерения (Фаза 2)
 **Почему P1:** ядро функционала.
@@ -114,3 +119,22 @@
 | 2026-05-05 | P0.1 | Создана папка BeehiveScale-ESP32, скопирована из main | Claude |
 | 2026-05-05 | P0.2 | WakeTestESP32 подтвердил deep sleep wake на новой плате | Геннадий |
 | 2026-05-05 | P0.3 | ACTION_PLAN_ESP32.md создан | Claude |
+| 2026-05-05 | P0.4 | BeehiveScale.ino: pin mapping ESP32 (HX711 16/17, btn 27/26) | Claude |
+| 2026-05-05 | P0.5 | SleepManager: SLEEP_WAKEUP_PIN=27, PERIPHERAL_POWER=-1 | Claude |
+| 2026-05-05 | P0.6 | Logger.cpp: ESP32 LittleFS API (File.openNextFile), убран ESP.wdtFeed | Claude |
+| 2026-05-05 | P0.7 | WebServerModule: collectHeaders с массивом для ESP32 | Claude |
+| 2026-05-05 | P0.8 | **Сборка ESP32 SUCCESS**: RAM 16.2%, Flash 94.5% (1238233 байт) | Claude |
+| 2026-05-05 | P0.9 | Battery.cpp: ADC_ATTEN_DB_11 → ADC_11db (совместимость с ESP32 Core 3.0+) | Claude |
+| 2026-05-05 | P0.10 | **Прошивка залита на железо** через Arduino IDE (Huge APP partition, ArduinoJson 6.x) | Геннадий |
+| 2026-05-05 | P0.11 | **LCD показал v5.0.0-pre** — P0 (Фаза 1) ЗАВЕРШЕНА | Геннадий |
+| 2026-05-05 | P1.1 | HX711 откалиброван (эталон 4.43, точность ±10г) | Геннадий |
+| 2026-05-05 | P1.2 | Кнопки D27/D26 работают, перевёл TARE на удержание 3 сек | Claude+Геннадий |
+| 2026-05-05 | P1.3 | DS18B20 (D4) и DS3231 (D21/D22) подключены и работают | Геннадий |
+| 2026-05-05 | P1.4 | Точность веса 3→2 знака на LCD и web | Claude |
+| 2026-05-05 | P2.1 | LittleFS auto-format при первом boot — web заработал | Claude |
+| 2026-05-05 | P2.2 | Фикс AP-fallback (WiFi.getMode()==WIFI_AP) — webserver стабилен | Claude |
+| 2026-05-05 | P2.3 | Мобильная CSS-вёрстка (tabs scroll, hdr flex-wrap) | Claude |
+| 2026-05-05 | P2.4 | **STA подключился к Beeline**, IP 192.168.0.58 | Геннадий |
+| 2026-05-05 | P3.1 | Sleep guard 60 сек, лог [AutoSleep] Sleep for X sec | Claude |
+| 2026-05-05 | P3.2 | **Расписание 15:07 сработало** — wake точно в 15:07:15 | Геннадий |
+| 2026-05-05 | END | **P0+P1+P2+P3 ЗАКРЫТЫ за одну сессию.** Осталось P4 (hw корпус, питание 18650) | — |

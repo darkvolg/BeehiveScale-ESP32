@@ -31,33 +31,45 @@
 #include "Battery.h"
 #include "Logger.h"
 
-// HX711 пины. По умолчанию D5/D6 (GPIO14/12) — стандарт ESP8266, как у Bee_Lite v1.1.
-// Для отладочного отката к старой распиновке (D0/TX) — раскомментировать LEGACY_HX711_PINS.
-// 2026-05-04: переход на D5/D6 для Фазы 2 (DEEP_SLEEP) — D0 нужен под перемычку D0→RST для wake-from-sleep.
-// #define LEGACY_HX711_PINS  // OFF: HX711 на D5/D6, D0 свободен под wake-up
-
-#ifdef LEGACY_HX711_PINS
-  #define DT_PIN          16   // D0 — HX711 DOUT (старая распиновка, без pull-up)
-  #define SCK_PIN          1   // TX — HX711 SCK (старая распиновка, заблокирует Serial debug)
-#else
-  #define DT_PIN          14   // D5 — HX711 DOUT (новая стандартная распиновка)
-  #define SCK_PIN         12   // D6 — HX711 SCK
+// Pin mapping — ESP8266 vs ESP32. ESP32 — основная плата с 2026-05-05.
+#if defined(ESP32)
+  // ESP32-WROOM-32 DevKit V1 (DOIT, 38 пинов)
+  // GPIO 6-11 — внутренняя SPI flash (ЗАПРЕЩЕНО).
+  // GPIO 0, 2, 12, 15 — boot-strap (осторожно).
+  // GPIO 34-39 — input only.
+  #define DT_PIN          16   // HX711 DOUT
+  #define SCK_PIN         17   // HX711 SCK
+  #define BUTTON_PIN      27   // MAIN button (RTC GPIO — можно wake)
+  #define MENU_BTN_PIN    26   // MENU button (RTC GPIO)
+  // SDA=21, SCL=22 (Wire.begin() default), DS3231 SQW=33, DS18B20=4, Battery ADC=34
+#elif defined(ESP8266)
+  // HX711 пины. По умолчанию D5/D6 (GPIO14/12) — стандарт ESP8266, как у Bee_Lite v1.1.
+  // Для отладочного отката к старой распиновке (D0/TX) — раскомментировать LEGACY_HX711_PINS.
+  // 2026-05-04: переход на D5/D6 для Фазы 2 (DEEP_SLEEP) — D0 нужен под перемычку D0→RST.
+  // #define LEGACY_HX711_PINS  // OFF: HX711 на D5/D6, D0 свободен под wake-up
+  #ifdef LEGACY_HX711_PINS
+    #define DT_PIN        16   // D0 — HX711 DOUT (старая распиновка, без pull-up)
+    #define SCK_PIN        1   // TX — HX711 SCK (старая распиновка, заблокирует Serial debug)
+  #else
+    #define DT_PIN        14   // D5 — HX711 DOUT (новая стандартная распиновка)
+    #define SCK_PIN       12   // D6 — HX711 SCK
+  #endif
+  #define BUTTON_PIN       0   // D3 — boot-strap! Не держать при включении
+  #define MENU_BTN_PIN     2   // D4 — boot-strap! Не держать при включении
 #endif
-#define BUTTON_PIN       0   // D3 — boot-strap! Не держать при включении
-#define MENU_BTN_PIN     2   // D4 — boot-strap! Не держать при включении
 #define LCD_ADDR      0x27
 
 #define WEIGHT_SAVE_MS    300000UL
 #define WEIGHT_SAVE_THR     0.05f
-#define TARE_COUNT             2   // 2 нажатия с подтверждением — защита от случайного тарирования
-#define TARE_TIMEOUT_MS     3000UL  // Окно для второго нажатия после первого (3 сек)
+// v5.0.0: тарирование = удержание MAIN ~3 сек (MEDIUM_PRESS), калибровка = ~6 сек (LONG_PRESS).
+// Старая логика двойного нажатия с подтверждением убрана.
 #define MENU_SCREENS           8
 #define STABLE_BUF_SIZE        6
 #define STABLE_THR             0.02f
 #define STABLE_SAVE_MIN_MS 600000UL  // 10 мин — минимальный интервал между EEPROM-записями при стабилизации
 #define SPIKE_FILTER_KG      5.0f    // Отбросить показание если скачок > 5 кг
 #define ZERO_DEADBAND_KG     0.05f   // Auto-zero: всё что |вес| < 50г → показываем 0
-#define SCALE_READ_INTERVAL_MS 1500UL // Период чтения HX711 (баланс между откликом и нагрузкой)
+#define SCALE_READ_INTERVAL_MS  600UL // Период чтения HX711 (v5.0.0: 600мс — быстрый отклик)
 #define WDT_TIMEOUT_SEC       30
 #define AUTO_SLEEP_MS     180000UL  // 3 минуты бездействия → deep sleep
 
@@ -125,6 +137,7 @@ bool webServerStarted = false;
 unsigned long lastActivityTime = 0;  // Таймер бездействия для auto-sleep
 bool diagRunRequested = false;       // Флаг запуска диагностики
 bool diagDone = false;               // Диагностика завершена (сводка на экране)
+bool tgReportPending = false;        // Запрос на отправку TG-отчёта при следующей возможности
 
 void handle_buttons();
 void process_weight();
@@ -417,6 +430,10 @@ void loop() {
     if (schedLog || bootLog || (useInterval && now - lastLogWrite >= LOG_INTERVAL_MS)) {
       log_append(sys.datetimeStr, sys.smoothedWeight,
                  sys.tempData.temperature, sys.tempData.humidity, sys.batVoltage, sys.batPercent);
+      // При срабатывании расписания — ставим флаг отправки TG-отчёта.
+      // Это решает проблему "ESP спит между расписаниями": каждое запланированное
+      // пробуждение в 09:00, 14:00, 21:00 → одна отправка в Telegram с весом и дельтой.
+      if (schedLog) tgReportPending = true;
       lastLogWrite = now;
     }
   }
@@ -425,7 +442,11 @@ void loop() {
   lcd_backlight_tick(lcd, get_lcd_bl_sec());
 
   wifi_ensure_connected();
-  if (get_wifi_mode() == 0) {
+  // Определяем "эффективный" режим WiFi по факту, а не из EEPROM:
+  // если STA-подключение упало и wifi_init() сделал fallback на AP, EEPROM остаётся в STA,
+  // но реально работаем в AP. Без этой проверки веб-сервер останавливается через 7 сек.
+  bool isApMode = (get_wifi_mode() == 0) || (WiFi.getMode() == WIFI_AP);
+  if (isApMode) {
     sys.wifiOk = (WiFi.softAPIP() != IPAddress(0,0,0,0));
   } else {
     sys.wifiOk = (WiFi.status() == WL_CONNECTED);
@@ -463,20 +484,26 @@ void loop() {
       lastTsUpload = now;
     }
 
+    // Отправка TG-отчёта в двух случаях:
+    // 1. Сработало расписание (tgReportPending=true) — отправляем сразу в это пробуждение
+    // 2. Расписания нет, и просто прошёл интервал (для непрерывного режима без расписания)
     uint32_t tgRptMs = get_tg_report_interval_min() * 60000UL;
-#ifdef SLEEP_MODE_DEEP_SLEEP
-    // В deep sleep millis() сбрасывается при каждом пробуждении —
-    // отправляем TG на каждом пробуждении (расписание и есть интервал отчётов)
-    bool doTgReport = (tgRptMs > 0);
-#else
-    bool doTgReport = (tgRptMs > 0 && now - lastTgReport >= tgRptMs);
-#endif
+    uint8_t schedCnt = 0; { uint16_t st[8]; get_sched_times(st, schedCnt); }
+    bool doTgReport = false;
+    if (tgReportPending) {
+      doTgReport = true;
+    } else if (schedCnt == 0 && tgRptMs > 0 && now - lastTgReport >= tgRptMs) {
+      doTgReport = true;
+    }
     if (doTgReport) {
       TimeStamp ts = rtc_now();
       String dt = rtc_format_datetime(ts);
-      tg_send_report(sys.smoothedWeight, sys.tempData.temperature,
-                     sys.tempData.humidity, dt);
-      lastTgReport = now;
+      if (tg_send_report(sys.smoothedWeight, sys.tempData.temperature,
+                         sys.tempData.humidity, dt, sys.prevWeight)) {
+        tgReportPending = false;  // успешно отправлено — снимаем флаг
+        lastTgReport = now;
+      }
+      // если не отправилось (нет WiFi, нет токена) — флаг остаётся, попробуем позже
     }
   }
 
@@ -497,21 +524,20 @@ void loop() {
   uint32_t sleepDur = sys.currentTime.valid
     ? sched_next_sec(sys.currentTime.hour, sys.currentTime.minute)
     : get_sleep_sec();
-  // Guard (пункт 8): sched_next_sec() может вернуть 0 в пограничном случае
-  // ровно на минуте расписания — без этой защиты ESP проснётся мгновенно
-  // и будет непрерывно войти-выйти из deep sleep, разряжая батарею.
-  if (sleepDur < 30) sleepDur = get_sleep_sec();
+  // Guard: sched_next_sec() может вернуть 0 в пограничном случае ровно на минуте расписания.
+  // Минимум 60 сек чтобы ESP не циклил "проснулся-уснул".
+  if (sleepDur < 60) sleepDur = 60;
+  Serial.print(F("[Sleep] Sleep for "));
+  Serial.print(sleepDur);
+  Serial.println(F(" sec"));
   sleep_enter(sleepDur);
 #endif
 }
 
 void handle_buttons() {
-  static int pressCount = 0;
-  static unsigned long lastPressTime = 0;
-
   // Boot grace period: первые 2 секунды после старта игнорируем кнопки.
-  // GPIO0 (D3) и GPIO2 (D4) — boot-strap пины, могут давать ложные срабатывания
-  // ISR во время инициализации модулей (LCD, I2C, WiFi) и до устаканивания питания.
+  // На ESP8266 это критично из-за boot-strap пинов GPIO0/2; на ESP32 (GPIO27/26 — RTC)
+  // таких проблем нет, но небольшой grace всё равно защищает от наводок при инициализации I2C/WiFi.
   if (millis() < 2000UL) {
     // На всякий случай ещё раз чистим ISR-флаги
     noInterrupts();
@@ -524,12 +550,26 @@ void handle_buttons() {
   ButtonAction actMain = read_button(BUTTON_PIN, btnMain);
   ButtonAction actMenu = read_button(MENU_BTN_PIN, btnMenu);
 
+  // Запоминаем состояние подсветки ДО обновления — для wake-grace.
+  // Если экран был погашен, и пользователь нажал MAIN — это "будящее" нажатие,
+  // тарирование не запускаем (иначе при каждом приходе пчеловода случайная тара).
+  bool wasBacklightOff = !lcd_backlight_is_on();
+
   // Подсветка: реагировать на физическое нажатие сразу, не ждать debounce/release
   bool anyPressed = (digitalRead(BUTTON_PIN) == LOW || digitalRead(MENU_BTN_PIN) == LOW);
   if (anyPressed || actMain != NO_ACTION || actMenu != NO_ACTION) {
     lastActivityTime = millis();
     lcd_backlight_activity(lcd);
   }
+
+  // Логика MAIN-кнопки (v5.0.1, возвращена старая):
+  //   1× SHORT  — запрос подтверждения "Tara? esche raz/3sek"
+  //   2× SHORT за 3 сек — выполнить тарирование
+  //   LONG (5 сек) — калибровка
+  //   На экранах 6/7 — SHORT входит в режим (calib menu / diag)
+  // Wake-grace: если экран был погашен — первое нажатие просто будит, не считается тарой.
+  static int pressCount = 0;
+  static unsigned long lastPressTime = 0;
 
   if (actMain == SHORT_PRESS) {
     if (sys.menuScreen == 6) {
@@ -540,20 +580,21 @@ void handle_buttons() {
       diagRunRequested = true;
       pressCount = 0;
       sys.needsRedraw = true;
+    } else if (wasBacklightOff && pressCount == 0) {
+      // Wake-grace: подсветка была погашена → нажатие "будящее" → НЕ открываем диалог тары.
+      // Геннадий пришёл к улью, нажал, увидел вес — этого достаточно.
+      // Чтобы тарировать — после пробуждения нажать MAIN ещё раз (диалог откроется).
     } else {
       pressCount++;
       lastPressTime = millis();
-      if (pressCount >= TARE_COUNT) {
-        // Подтверждено — выполняем тарирование
+      if (pressCount >= 2) {
         perform_taring();
         pressCount = 0;
       } else {
         // Первое нажатие — показываем запрос подтверждения
         lcd.clear();
         lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara? Nazhmite ");
-        char buf[17];
-        snprintf(buf, sizeof(buf), "esche %d raz/3sek", TARE_COUNT - pressCount);
-        lcd.setCursor(0, 1); lcd_print_padded(lcd, buf);
+        lcd.setCursor(0, 1); lcd_print_padded(lcd, "esche 1 raz/3sek");
       }
     }
   }
@@ -562,8 +603,8 @@ void handle_buttons() {
     pressCount = 0;
     sys.needsRedraw = true;
   }
-  if (pressCount > 0 && millis() - lastPressTime > TARE_TIMEOUT_MS) {
-    // Таймаут — отменяем подтверждение
+  if (pressCount > 0 && millis() - lastPressTime > 3000UL) {
+    // Таймаут окна подтверждения
     pressCount = 0;
     lcd.clear();
     lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara: otmena    ");
@@ -826,7 +867,7 @@ void show_screen_num(int n) {
 void display_screen_weight() {
   char buf[24];
   lcd.setCursor(0, 0);
-  snprintf(buf, sizeof(buf), "Ves:%6.1f%ckg", sys.smoothedWeight, sys.weightStable ? '*' : ' ');
+  snprintf(buf, sizeof(buf), "Ves:%6.2f%ckg", sys.smoothedWeight, sys.weightStable ? '*' : ' ');
   lcd_print_padded(lcd, buf);
   lcd.setCursor(0, 1);
   if (sys.currentTime.valid) {
@@ -864,10 +905,10 @@ void display_screen_diff() {
   char buf[24];
   float diff = sys.smoothedWeight - sys.prevWeight;
   lcd.setCursor(0, 0);
-  snprintf(buf, sizeof(buf), "D:%+6.1fkg", diff);
+  snprintf(buf, sizeof(buf), "D:%+6.2fkg", diff);
   lcd_print_padded(lcd, buf);
   lcd.setCursor(0, 1);
-  snprintf(buf, sizeof(buf), "Pred:%5.1fkg", sys.prevWeight);
+  snprintf(buf, sizeof(buf), "Pred:%5.2fkg", sys.prevWeight);
   lcd_print_padded(lcd, buf);
 }
 
@@ -1419,7 +1460,12 @@ void check_auto_sleep() {
   { uint32_t sleepDur = sys.currentTime.valid
       ? sched_next_sec(sys.currentTime.hour, sys.currentTime.minute)
       : get_sleep_sec();
-    if (sleepDur == 0) sleepDur = get_sleep_sec();
+    // Защита от циклов "проснулся → уснул на 0 сек → проснулся": минимум 60 сек.
+    // Если попали в минуту расписания — sched_next_sec может вернуть 0 → не циклим, ждём минуту.
+    if (sleepDur < 60) sleepDur = 60;
+    Serial.print(F("[AutoSleep] Sleep for "));
+    Serial.print(sleepDur);
+    Serial.println(F(" sec"));
     sleep_enter(sleepDur);
   }
 }

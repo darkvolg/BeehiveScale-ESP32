@@ -4,7 +4,7 @@
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
 #define FW_VERSION_PATCH 0
-#define FW_VERSION_SUFFIX "-pre"  // -pre = ESP32 порт в работе, нестабильно
+#define FW_VERSION_SUFFIX ""  // 5.0.0 — полное железо ESP32 работает (HX711, RTC, DS18B20, кнопки, web, deep sleep, Telegram через CF Worker)
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

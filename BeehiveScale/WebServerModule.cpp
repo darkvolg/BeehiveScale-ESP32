@@ -115,12 +115,24 @@ a{color:var(--amber);text-decoration:none}
 
 .tabs{display:flex;border-bottom:1px solid var(--border);
   background:rgba(20,23,16,.9);position:sticky;top:52px;z-index:98;overflow-x:auto;
-  justify-content:center;padding:0}
+  justify-content:center;padding:0;
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin}
 .tab{padding:10px 18px;font-size:13px;letter-spacing:1px;color:var(--text3);
   border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;text-transform:uppercase;
-  background:none;border-top:none;border-left:none;border-right:none;font-family:var(--mono)}
+  background:none;border-top:none;border-left:none;border-right:none;font-family:var(--mono);
+  flex-shrink:0}
 .tab:hover{color:var(--text2)}
 .tab.active{color:var(--amber);border-bottom-color:var(--amber)}
+/* Мобильная адаптация: табы становятся скроллируемыми с выравниванием от начала */
+@media (max-width:760px){
+  .tabs{justify-content:flex-start;padding:0 8px}
+  .tab{padding:10px 12px;font-size:12px;letter-spacing:.5px}
+  .hdr{padding:8px 12px;flex-wrap:wrap}
+  .hdr-logo{font-size:15px;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+  .hdr-logo #fw-ver{margin-left:0 !important;font-size:11px;color:var(--text3)}
+  .hdr-sub{display:none !important}
+  .hdr-right{font-size:11px;gap:8px}
+}
 
 .section{display:none;padding:20px 24px;max-width:1080px;margin:0 auto;width:100%}
 .section.active{display:block}
@@ -281,7 +293,7 @@ input[type=checkbox]{width:auto}
     <div class="hdr-logo">🐝 BeehiveScale <span id="fw-ver" style="font-size:12px;color:var(--text2);font-weight:400;margin-left:8px"></span></div>
   </div>
   <div class="hdr-right">
-    <div class="hdr-sub" style="margin-right:16px">LIVE MONITOR · ESP8266</div>
+    <div class="hdr-sub" style="margin-right:16px">LIVE MONITOR · ESP32</div>
     <span><span class="live"></span>ONLINE</span>
     <span id="cur-time">--:--:--</span>
   </div>
@@ -602,7 +614,7 @@ input[type=checkbox]{width:auto}
       <div class="form-row"><label>Порог тревоги Telegram (кг, 0.1–10)</label><input type="number" id="cfg-alert" step="0.1" min="0.1" max="10" placeholder="0.5"></div>
       <div class="form-row"><label>Эталонный груз калибровки (г, 100–50000)</label><input type="number" id="cfg-calib" step="100" min="100" max="50000" placeholder="1000"></div>
       <div class="form-row"><label>Скорость отклика весов (0.1=медленно, 0.3=средне, 0.6=быстро)</label><input type="number" id="cfg-ema" step="0.05" min="0.05" max="0.9" placeholder="0.3"><div style="font-size:12px;color:var(--text3);margin-top:4px">EMA α-фильтр. <b>0.1</b> ≈ 30 сек до стабилизации (для улья, фильтрует пчёл). <b>0.3</b> ≈ 10 сек (рекомендуется). <b>0.6</b> ≈ 4 сек (для тестов/калибровки).</div></div>
-      <div class="form-row"><label>Deep Sleep интервал (сек, 30–86400)</label><input type="number" id="cfg-sleep" step="60" min="30" max="86400" placeholder="900"></div>
+      <div class="form-row"><label>Deep Sleep интервал (сек, 30–86400)</label><input type="number" id="cfg-sleep" step="1" min="30" max="86400" placeholder="900"></div>
       <div class="form-row"><label>Расписание замеров (HH:MM через пробел, до 8 времён)</label><input type="text" id="cfg-sched" placeholder="08:00 14:00 20:00" maxlength="60"></div>
       <div class="form-row"><label>Таймаут подсветки LCD (сек, 0=всегда)</label><input type="number" id="cfg-bl" step="10" min="0" max="3600" placeholder="30"></div>
       <div class="btn-row">
@@ -723,7 +735,7 @@ input[type=checkbox]{width:auto}
       <div class="api-item"><div class="api-method post">POST /api/save</div><div class="api-desc">Сохранить текущий вес как эталон</div></div>
       <div class="api-item"><div class="api-method post">POST /api/settings</div><div class="api-desc">Изменить настройки JSON {alertDelta…}</div></div>
       <div class="api-item"><div class="api-method post">POST /api/ntp</div><div class="api-desc">Синхронизация времени NTP</div></div>
-      <div class="api-item"><div class="api-method post">POST /api/reboot</div><div class="api-desc">Перезагрузить ESP8266</div></div>
+      <div class="api-item"><div class="api-method post">POST /api/reboot</div><div class="api-desc">Перезагрузить ESP32</div></div>
       <div class="api-item"><div class="api-method del">POST /api/log/clear</div><div class="api-desc">Очистить лог на SD/Flash</div></div>
       <div class="api-item"><div class="api-method post">POST /api/tg/settings</div><div class="api-desc">Сохранить Telegram token/chatId</div></div>
       <div class="api-item"><div class="api-method post">POST /api/tg/test</div><div class="api-desc">Тестовое сообщение в Telegram</div></div>
@@ -825,11 +837,11 @@ function updDash(d) {
   if (d && d.fw) { const fv=document.getElementById('fw-ver'); if (fv && !fv.textContent) fv.textContent='v'+d.fw; }
   const w = parseFloat(d.weight)||0;
   _curWeight = w;
-  setText('w-val', w.toFixed(3)+'<span class="val-unit">кг</span>', true);
-  setText('w-ref', parseFloat(d.ref||0).toFixed(3));
+  setText('w-val', w.toFixed(2)+'<span class="val-unit">кг</span>', true);
+  setText('w-ref', parseFloat(d.ref||0).toFixed(2));
   const dw = w-parseFloat(d.ref||0);
   const dwEl=document.getElementById('w-delta');
-  dwEl.textContent=(dw>=0?'+':'')+dw.toFixed(3);
+  dwEl.textContent=(dw>=0?'+':'')+dw.toFixed(2);
   dwEl.style.color=dw>0?'var(--green)':dw<0?'var(--red)':'var(--amber2)';
   setGauge('w-gauge','w-gpct', Math.min(100,w/80*100), '', '%');
 
@@ -882,7 +894,7 @@ function updDash(d) {
   // Calib live
   if (document.getElementById('cf-live')) setText('cf-live',parseFloat(d.cf||0).toFixed(0));
   if (document.getElementById('ofs-live')) setText('ofs-live',d.offset||0);
-  if (document.getElementById('wiz-w')) setText('wiz-w',parseFloat(d.weight||0).toFixed(3));
+  if (document.getElementById('wiz-w')) setText('wiz-w',parseFloat(d.weight||0).toFixed(2));
   // Автозаполнение поля CF текущим значением, если пользователь ещё не вводил своё
   var cfInput=document.getElementById('calib-cf');
   if(cfInput&&cfInput.value===''&&d.cf) cfInput.value=Math.round(parseFloat(d.cf||0));
@@ -897,7 +909,7 @@ function updHive(d) {
     if (!isNaN(d.tMin)) setText('hi-trange',d.tMin.toFixed(1)+' / '+d.tMax.toFixed(1)+' °C');
     const dk=parseFloat(d.deltaKg||0);
     const de=document.getElementById('hi-delta');
-    de.textContent=(dk>=0?'+':'')+dk.toFixed(3)+' кг';
+    de.textContent=(dk>=0?'+':'')+dk.toFixed(2)+' кг';
     de.style.color=dk>0?'var(--green)':dk<0?'var(--red)':'var(--text2)';
     setText('hi-count',d.count||0);
     setText('hi-days',d.daysSinceStart||0);
@@ -935,7 +947,7 @@ function loadLog() {
 function drawMini() {
   const svg=document.getElementById('mini-svg');
   if (!_all||_all.length<2) {
-    const wt=_curWeight>0?_curWeight.toFixed(3)+' кг':'--';
+    const wt=_curWeight>0?_curWeight.toFixed(2)+' кг':'--';
     svg.innerHTML='<text x="450" y="120" text-anchor="middle" fill="#f5a623" font-size="28" font-weight="bold">'+wt+'</text>'+
       '<text x="450" y="150" text-anchor="middle" fill="#506040" font-size="13">Лог пуст — нет данных для графика</text>';
     return;
@@ -993,8 +1005,8 @@ function renderCharts() {
     _tipPts.w=pts;
     const ws=pts.map(d=>parseFloat(d.w)).filter(v=>!isNaN(v));
     const mn=ws.reduce((a,b)=>a<b?a:b),mx=ws.reduce((a,b)=>a>b?a:b),av=ws.reduce((a,b)=>a+b,0)/ws.length;
-    setText('c-wmin',mn.toFixed(3)); setText('c-wmax',mx.toFixed(3));
-    setText('c-wavg',av.toFixed(3)); setText('c-pts',pts.length);
+    setText('c-wmin',mn.toFixed(2)); setText('c-wmax',mx.toFixed(2));
+    setText('c-wavg',av.toFixed(2)); setText('c-pts',pts.length);
     drawLineSvg(document.getElementById('chart-w'),pts,'w','#f5a623',900,260,60,10,12,42,true);
   }
   if (_serVisible.t) {
@@ -1150,13 +1162,13 @@ function _doExcel(){
   const ws=XLSX.utils.json_to_sheet(rows);
   const vals=data.map(d=>parseFloat(d.w)).filter(v=>!isNaN(v));
   const stat=[['Параметр','Значение'],['Записей',data.length],
-    ['Мин вес',vals.length?vals.reduce((a,b)=>a<b?a:b).toFixed(3):''],
-    ['Макс вес',vals.length?vals.reduce((a,b)=>a>b?a:b).toFixed(3):''],
-    ['Среднее', vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(3):'']];
+    ['Мин вес',vals.length?vals.reduce((a,b)=>a<b?a:b).toFixed(2):''],
+    ['Макс вес',vals.length?vals.reduce((a,b)=>a>b?a:b).toFixed(2):''],
+    ['Среднее', vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):'']];
   const ws2=XLSX.utils.aoa_to_sheet(stat);
   const days={};
   data.forEach(d=>{const k=d.dt?d.dt.substring(0,10):'?';if(!days[k])days[k]={mn:999,mx:-999,n:0};const v=parseFloat(d.w);if(!isNaN(v)){days[k].mn=Math.min(days[k].mn,v);days[k].mx=Math.max(days[k].mx,v);days[k].n++;}});
-  const ws3=XLSX.utils.aoa_to_sheet([['Дата','Мин кг','Макс кг','Точек'],...Object.entries(days).map(([k,v])=>[k,v.mn.toFixed(3),v.mx.toFixed(3),v.n])]);
+  const ws3=XLSX.utils.aoa_to_sheet([['Дата','Мин кг','Макс кг','Точек'],...Object.entries(days).map(([k,v])=>[k,v.mn.toFixed(2),v.mx.toFixed(2),v.n])]);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Данные');
   XLSX.utils.book_append_sheet(wb,ws2,'Статистика');
@@ -1731,21 +1743,21 @@ static void _handleTgTest() {
   _activity();
 
   // Справка: что бот присылает и как настроить
-  char info[512];
+  char info[1024];
   uint32_t rptMin = get_tg_report_interval_min();
   float alertKg = web_get_alert_delta();
   snprintf(info, sizeof(info),
-    "<b>" FW_NAME " v" FW_VERSION "</b>\n\n"
-    "<b>Chto prihodit:</b>\n"
-    "- <b>Otchet</b> — ves, temp, vlazhnost (kazhdye %lu min%s)\n"
-    "- <b>Trevoga</b> — pri izmenenii vesa na %.1f+ kg (kuldaun 30 min)\n\n"
-    "<b>Veb-panel: http://192.168.4.1</b>\n"
-    "- Podklyuchenie k Wi-Fi routeru\n"
-    "- Interval otchetov, porog trevogi\n"
-    "- Raspisanie zamerov\n"
-    "- Grafiki, eksport CSV, kalibrovka",
+    "🐝 <b>" FW_NAME " v" FW_VERSION "</b>\n\n"
+    "<b>Что присылает:</b>\n"
+    "• <b>Отчёт</b> — вес, температура (по расписанию или каждые %lu мин%s)\n"
+    "• <b>Тревога</b> — при изменении веса на %.1f+ кг (пауза 30 мин)\n\n"
+    "<b>Веб-панель:</b> http://192.168.4.1\n"
+    "• Подключение к Wi-Fi роутеру\n"
+    "• Интервал отчётов, порог тревоги\n"
+    "• Расписание замеров (например 09:00 21:00)\n"
+    "• Графики, экспорт CSV, калибровка",
     (unsigned long)(rptMin ? rptMin : 0),
-    rptMin ? "" : ", otkl",
+    rptMin ? "" : ", выкл",
     alertKg);
 
   bool ok = tg_send_message(info);
@@ -2284,8 +2296,13 @@ void webserver_init(WebData &data, WebActions &actions) {
     _srv.onNotFound(_handleNotFound);
 
     // Нужно явно запросить сохранение заголовка X-CSRF-Token — иначе server.header()
-    // вернёт пустую строку (ESP8266WebServer по умолчанию не буферизирует headers).
+    // вернёт пустую строку (WebServer по умолчанию не буферизирует headers).
+#if defined(ESP32)
+    static const char *_csrfHdr[] = { "X-CSRF-Token" };
+    _srv.collectHeaders(_csrfHdr, 1);
+#else
     _srv.collectHeaders("X-CSRF-Token");
+#endif
     _routesBound = true;
   }
 

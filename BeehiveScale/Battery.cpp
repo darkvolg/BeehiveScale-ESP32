@@ -12,11 +12,9 @@ static float bat_read_raw() {
 void bat_init() {
 #if defined(ESP32)
   analogReadResolution(12);
-  #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-    analogSetAttenuation(ADC_ATTEN_DB_11);
-  #else
-    analogSetAttenuation(ADC_11db);
-  #endif
+  // ADC_11db — универсальная Arduino-обёртка, работает во всех версиях ESP32 Core.
+  // (В Core 3.0+ ESP-IDF переименовал ADC_ATTEN_DB_11 → ADC_ATTEN_DB_12, но Arduino-enum стабилен.)
+  analogSetAttenuation(ADC_11db);
 #endif
   // Усреднение по 10 выборкам при старте для стабильности
   float sum = 0;

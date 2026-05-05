@@ -187,6 +187,19 @@ bool log_init() {
     Serial.println(F("[Log] SD OK"));
   }
 #else
+  // ESP32 умеет форматировать при mount fail через LittleFS.begin(true).
+  // На ESP8266 такой опции нет — там оставляем старую логику.
+#if defined(ESP32)
+  _flashOk = LittleFS.begin(true);  // true = auto-format on mount fail
+  if (!_flashOk) {
+    delay(100);
+    _flashOk = LittleFS.begin(true);
+  }
+  if (!_flashOk) {
+    Serial.println(F("[Log] LittleFS FAILED even with auto-format"));
+    return false;
+  }
+#else
   _flashOk = LittleFS.begin();
   if (!_flashOk) {
     delay(100);
@@ -203,6 +216,7 @@ bool log_init() {
       return false;
     }
   }
+#endif
   if (!_flashOk) {
     Serial.println(F("[Log] LittleFS FAILED"));
     return false;
@@ -486,6 +500,24 @@ void log_clear() {
     // Собираем имена файлов перед удалением (итерация + удаление одновременно небезопасна)
     String delFiles[8];
     int delCnt = 0;
+#if defined(ESP32)
+    File root = LittleFS.open("/");
+    if (root && root.isDirectory()) {
+      File entry;
+      while ((entry = root.openNextFile()) && delCnt < 8) {
+        String fn = entry.name();
+        // На ESP32 LittleFS имена могут быть с ведущим '/' или без — нормализуем
+        const char *base = fn.c_str();
+        if (base[0] == '/') base++;
+        String b(base);
+        if (b.startsWith("log_") && b.endsWith(".csv")) {
+          delFiles[delCnt++] = String("/") + b;
+        }
+        entry.close();
+      }
+      root.close();
+    }
+#else
     Dir dir = LittleFS.openDir("/");
     while (dir.next() && delCnt < 8) {
       String fn = dir.fileName();
@@ -493,6 +525,7 @@ void log_clear() {
         delFiles[delCnt++] = "/" + fn;
       }
     }
+#endif
     for (int i = 0; i < delCnt; i++) {
       LittleFS.remove(delFiles[i]);
     }
@@ -631,13 +664,13 @@ bool log_first_date(char *buf, size_t bufLen) {
   if (!f) return false;
   // пропустить заголовок
   int byteCount = 0;
-  while (f.available()) { int c = f.read(); if ((++byteCount & 1023) == 0) { yield(); ESP.wdtFeed(); } if (c == '\n' || c < 0) break; }
+  while (f.available()) { int c = f.read(); if ((++byteCount & 1023) == 0) { yield(); } if (c == '\n' || c < 0) break; }
   char ln[48];
   while (f.available()) {
     int pos = 0;
     while (f.available()) {
       int c = f.read();
-      if ((++byteCount & 1023) == 0) { yield(); ESP.wdtFeed(); }
+      if ((++byteCount & 1023) == 0) { yield(); }
       if (c == '\n' || c == '\r' || c < 0) break;
       if (pos < (int)sizeof(ln) - 1) ln[pos++] = (char)c;
     }

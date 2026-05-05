@@ -14,5 +14,6 @@ void lcd_print_padded(LiquidCrystal_I2C &lcd, const String &text);
 // timeoutSec: 0 = всегда включена; иначе выключается через timeoutSec секунд
 void lcd_backlight_activity(LiquidCrystal_I2C &lcd);
 void lcd_backlight_tick(LiquidCrystal_I2C &lcd, uint16_t timeoutSec);
+bool lcd_backlight_is_on();
 
 #endif

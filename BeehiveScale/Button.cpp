@@ -1,7 +1,7 @@
 #include "Button.h"
 
 static const unsigned long DEBOUNCE_MS = 50;
-static const unsigned long LONG_PRESS_MS = 5000;  // 5 сек — для запуска калибровки и "домой" из меню
+static const unsigned long LONG_PRESS_MS   = 5000; // 5 сек — калибровка (как раньше)
 
 // ISR хранилище — максимум 2 кнопки
 static ButtonState* _isrState[2] = {nullptr, nullptr};

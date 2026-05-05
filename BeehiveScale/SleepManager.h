@@ -7,13 +7,18 @@
 #if defined(SLEEP_MODE_CONTINUOUS) && defined(SLEEP_MODE_DEEP_SLEEP)
   #error "Cannot define both SLEEP_MODE_CONTINUOUS and SLEEP_MODE_DEEP_SLEEP"
 #endif
-#define SLEEP_WAKEUP_PIN     0
 
-#if defined(ESP8266)
-#define PERIPHERAL_POWER_PIN -1
+// Wake-on-button pin (EXT0). На ESP8266 — D3 (GPIO0), на ESP32 — MAIN button GPIO27.
+#if defined(ESP32)
+  #define SLEEP_WAKEUP_PIN  27
 #else
-#define PERIPHERAL_POWER_PIN 26
+  #define SLEEP_WAKEUP_PIN   0
 #endif
+
+// PERIPHERAL_POWER_PIN — high-side P-MOSFET для отключения LCD/HX711/RTC во сне.
+// У Геннадия P-MOSFET нет (заказа на Озоне не было), поэтому отключено на обеих платформах.
+// Если когда-то добавится — для ESP32 использовать свободный RTC GPIO (например 25 или 32).
+#define PERIPHERAL_POWER_PIN -1
 
 struct SleepPersistData {
   uint32_t magic;
