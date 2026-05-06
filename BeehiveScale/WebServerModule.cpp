@@ -94,7 +94,7 @@ static const char PAGE_HTML[] PROGMEM = R"rawhtml(
 :root{
   --bg:#0d0f0b;--panel:#141710;--border:#2e3829;
   --amber:#f5a623;--amber2:#ffd166;--green:#6fcf97;
-  --red:#eb5757;--blue:#56ccf2;--text:#c8d4b8;--text2:#8a9e78;--text3:#506040;
+  --red:#eb5757;--blue:#56ccf2;--text:#c8d4b8;--text2:#8a9e78;--text3:#7a8a68;
   --mono:'Courier New',monospace;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:15px;min-height:100vh}

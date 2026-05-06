@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 8
-#define FW_VERSION_SUFFIX ""  // 5.0.8 — fix: мерцание LCD добито. Посимвольный dirty-check (тик секунды = 1-2 байта вместо 16) + I2C clock 100→400 кГц.
+#define FW_VERSION_PATCH 9
+#define FW_VERSION_SUFFIX ""  // 5.0.9 — fix: контрастность web-интерфейса. --text3 поднят #506040→#7a8a68 (контраст 3.5:1→5.13:1, PASS WCAG AA). Описания на /settings больше не сливаются с фоном.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
