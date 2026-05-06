@@ -68,14 +68,34 @@ void lcd_print_padded(LiquidCrystal_I2C &lcd, const char* text) {
   for (int i = len; i < LCD_COLS; i++) buf[i] = ' ';
   buf[LCD_COLS] = '\0';
 
-  // Dirty-check: применяется только при печати с col=0 (полная перезапись строки).
-  // Частичные записи (например show_screen_num в col=13) идут через lcd.print()
-  // напрямую и dirty-check для них не работает — это редкие случаи (3-4 символа).
+  // v5.0.8: посимвольный dirty-check. Раньше при изменении хотя бы 1 символа
+  // переписывались все 16 байт (мерцание раз в секунду от тика часов). Теперь
+  // находим минимальный диапазон [firstDiff..lastDiff] изменённых символов и
+  // переписываем только его. Тик секунды = 1-2 символа вместо 16.
   if (_curCol == 0 && _curRow < LCD_ROWS) {
-    if (memcmp(buf, _bufRow[_curRow], LCD_COLS) == 0) {
-      return; // текст идентичен — пропускаем I2C-запись (источник мерцания)
+    int firstDiff = -1;
+    int lastDiff  = -1;
+    for (int i = 0; i < LCD_COLS; i++) {
+      if (buf[i] != _bufRow[_curRow][i]) {
+        if (firstDiff < 0) firstDiff = i;
+        lastDiff = i;
+      }
     }
-    memcpy(_bufRow[_curRow], buf, LCD_COLS);
+    if (firstDiff < 0) {
+      return; // строка идентична
+    }
+    // Обновляем кеш на изменённом диапазоне
+    for (int i = firstDiff; i <= lastDiff; i++) {
+      _bufRow[_curRow][i] = buf[i];
+    }
+    // Пишем только diff-диапазон
+    lcd.setCursor(firstDiff, _curRow);
+    for (int i = firstDiff; i <= lastDiff; i++) {
+      lcd.write((uint8_t)buf[i]);
+    }
+    // Восстанавливаем «логическую» позицию курсора как после полной печати
+    _curCol = LCD_COLS;
+    return;
   }
 
   lcd.print(buf);

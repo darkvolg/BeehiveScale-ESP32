@@ -179,6 +179,10 @@ void setup() {
   Wire.setClockStretchLimit(2500);   // DS3231 может тянуть до 2ms при конверсии температуры
 #else
   Wire.begin();
+  // v5.0.8: 400 кГц вместо стандартных 100 кГц. Сокращает время записи на LCD
+  // в 4× → каждый I2C-апдейт меньше виден глазом. PCF8574 (LCD-адаптер) и
+  // DS3231 поддерживают Fast Mode 400 kHz по даташиту.
+  Wire.setClock(400000);
 #endif
 #if defined(ESP32)
   if (!EEPROM.begin(EEPROM_SIZE)) {
