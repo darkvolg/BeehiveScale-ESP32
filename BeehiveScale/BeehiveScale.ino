@@ -658,9 +658,9 @@ void handle_buttons() {
     else if (mainHeld >= 3000UL) level = 1;
     if (level != mainHintLevel) {
       if (level == 1) {
-        lcd.setCursor(0, 1); lcd_print_padded(lcd, "Otpust = TARA!  ");
+        lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Otpust = TARA!  ");
       } else if (level == 2) {
-        lcd.setCursor(0, 1); lcd_print_padded(lcd, "Otpust = KALIBR ");
+        lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Otpust = KALIBR ");
       }
       // level == 0 (release) — обработчики MEDIUM/LONG ниже сами перерисуют LCD.
       mainHintLevel = level;
@@ -692,9 +692,9 @@ void handle_buttons() {
   if (actMain == MEDIUM_PRESS && sys.menuScreen != 6 && sys.menuScreen != 7) {
     tareConfirmPending = true;
     tareConfirmStartMs = millis();
-    lcd.clear();
-    lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara? MENU=OK   ");
-    lcd.setCursor(0, 1); lcd_print_padded(lcd, "Otmena cherez 4s");
+    lcd_clear_buf(lcd);
+    lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Tara? MENU=OK   ");
+    lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Otmena cherez 4s");
   }
 
   if (actMain == LONG_PRESS && sys.menuScreen != 6 && sys.menuScreen != 7) {
@@ -714,9 +714,9 @@ void handle_buttons() {
   // Таймаут окна подтверждения (4 сек) — тихая отмена с сообщением.
   if (tareConfirmPending && (millis() - tareConfirmStartMs > 4000UL)) {
     tareConfirmPending = false;
-    lcd.clear();
-    lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara: otmena    ");
-    lcd.setCursor(0, 1); lcd_print_padded(lcd, "                ");
+    lcd_clear_buf(lcd);
+    lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Tara: otmena    ");
+    lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "                ");
     { unsigned long _t=millis(); while(millis()-_t<800UL){app_wdt_reset();yield();} }
     sys.needsRedraw = true;
   }
@@ -946,7 +946,7 @@ void show_screen_num(int n);  // forward declaration
 void update_interface() {
   if (!sys.needsRedraw) return;
   if (sys.menuScreen != sys.lastMenuScreen) {
-    lcd.clear();
+    lcd_clear_buf(lcd);
     if (sys.lastMenuScreen == 7) diagDone = false;  // сброс диагностики при уходе
     sys.lastMenuScreen = sys.menuScreen;
   }
@@ -975,16 +975,16 @@ void update_interface() {
 void show_screen_num(int n) {
   char buf[8];
   snprintf(buf, sizeof(buf), "%d/%d", n + 1, MENU_SCREENS);
-  lcd.setCursor(13, 1);
+  lcd_set_cursor(lcd,13, 1);
   lcd.print(buf);
 }
 
 void display_screen_weight() {
   char buf[24];
-  lcd.setCursor(0, 0);
+  lcd_set_cursor(lcd,0, 0);
   snprintf(buf, sizeof(buf), "Ves:%6.2f%ckg", sys.smoothedWeight, sys.weightStable ? '*' : ' ');
   lcd_print_padded(lcd, buf);
-  lcd.setCursor(0, 1);
+  lcd_set_cursor(lcd,0, 1);
   if (sys.currentTime.valid) {
     snprintf(buf, sizeof(buf), "%02u:%02u:%02u %s",
              sys.currentTime.hour, sys.currentTime.minute, sys.currentTime.second,
@@ -997,7 +997,7 @@ void display_screen_weight() {
 
 void display_screen_temp() {
   char buf[24];
-  lcd.setCursor(0, 0);
+  lcd_set_cursor(lcd,0, 0);
   if (sys.tempData.valid) {
     if (isnan(sys.rtcTempC)) snprintf(buf, sizeof(buf), "T:%.1fC  R:---", sys.tempData.temperature);
     else snprintf(buf, sizeof(buf), "T:%.1fC R:%.1fC", sys.tempData.temperature, sys.rtcTempC);
@@ -1007,7 +1007,7 @@ void display_screen_temp() {
   }
   lcd_print_padded(lcd, buf);
 
-  lcd.setCursor(0, 1);
+  lcd_set_cursor(lcd,0, 1);
   if (sys.tempData.humidity > -90) {
     snprintf(buf, sizeof(buf), "H: %4.1f %%", sys.tempData.humidity);
   } else {
@@ -1019,38 +1019,38 @@ void display_screen_temp() {
 void display_screen_diff() {
   char buf[24];
   float diff = sys.smoothedWeight - sys.prevWeight;
-  lcd.setCursor(0, 0);
+  lcd_set_cursor(lcd,0, 0);
   snprintf(buf, sizeof(buf), "D:%+6.2fkg", diff);
   lcd_print_padded(lcd, buf);
-  lcd.setCursor(0, 1);
+  lcd_set_cursor(lcd,0, 1);
   snprintf(buf, sizeof(buf), "Pred:%5.2fkg", sys.prevWeight);
   lcd_print_padded(lcd, buf);
 }
 
 void display_screen_status() {
   char buf[24];
-  lcd.setCursor(0, 0);
+  lcd_set_cursor(lcd,0, 0);
   snprintf(buf, sizeof(buf), "CF:%.0f", sys.calibrationFactor);
   lcd_print_padded(lcd, buf);
-  lcd.setCursor(0, 1);
+  lcd_set_cursor(lcd,0, 1);
   snprintf(buf, sizeof(buf), "W:%s N:%lu",
            sys.wifiOk ? "OK" : "--", persist.wakeupCount);
   lcd_print_padded(lcd, buf);
 }
 
 void display_screen_datetime() {
-  lcd.setCursor(0, 0);
+  lcd_set_cursor(lcd,0, 0);
   lcd_print_padded(lcd, rtc_format_datetime(sys.currentTime));
-  lcd.setCursor(0, 1);
+  lcd_set_cursor(lcd,0, 1);
   lcd_print_padded(lcd, sys.currentTime.valid ? "RTC OK          " : "RTC ERROR!      ");
 }
 
 void display_screen_battery() {
   char buf[24];
-  lcd.setCursor(0, 0);
+  lcd_set_cursor(lcd,0, 0);
   snprintf(buf, sizeof(buf), "Bat:%4.2fV %3d%%", sys.batVoltage, sys.batPercent);
   lcd_print_padded(lcd, buf);
-  lcd.setCursor(0, 1);
+  lcd_set_cursor(lcd,0, 1);
   if (sys.batPercent < 10) {
     lcd_print_padded(lcd, "!LOW BATTERY!   ");
   } else {
@@ -1060,10 +1060,10 @@ void display_screen_battery() {
 
 void display_screen_calib_menu() {
   char buf[24];
-  lcd.setCursor(0, 0);
+  lcd_set_cursor(lcd,0, 0);
   snprintf(buf, sizeof(buf), "CF:%.1f", sys.calibrationFactor);
   lcd_print_padded(lcd, buf);
-  lcd.setCursor(0, 1);
+  lcd_set_cursor(lcd,0, 1);
   lcd_print_padded(lcd, "MAIN=Vojti      ");
 }
 
@@ -1076,14 +1076,14 @@ void display_screen_diag() {
     diagRunRequested = false;
 
     char buf[17];
-    lcd.clear();
-    lcd.setCursor(0, 0);
+    lcd_clear_buf(lcd);
+    lcd_set_cursor(lcd,0, 0);
     lcd_print_padded(lcd, "Diagnostika...");
 
     Serial.println(F("[DIAG] Start"));
 
     // --- HX711 ---
-    lcd.setCursor(0, 1);
+    lcd_set_cursor(lcd,0, 1);
     bool hx711ok = check_sensor(scale);
     if (hx711ok) {
       long raw = scale.read();
@@ -1100,7 +1100,7 @@ void display_screen_diag() {
     app_wdt_reset(); yield();
 
     // --- DS18B20 ---
-    lcd.setCursor(0, 1);
+    lcd_set_cursor(lcd,0, 1);
     if (!temp_available()) {
       lcd_print_padded(lcd, "DS18B20... FAIL");
       Serial.println(F("[DIAG] DS18B20: not found"));
@@ -1129,7 +1129,7 @@ void display_screen_diag() {
     app_wdt_reset(); yield();
 
     // --- RTC ---
-    lcd.setCursor(0, 1);
+    lcd_set_cursor(lcd,0, 1);
     TimeStamp ts = rtc_now();
     bool rtcok = ts.valid;
     if (rtcok) {
@@ -1149,7 +1149,7 @@ void display_screen_diag() {
     app_wdt_reset(); yield();
 
     // --- Battery ---
-    lcd.setCursor(0, 1);
+    lcd_set_cursor(lcd,0, 1);
     float bv = bat_voltage();
     bool batok = bv > 0.5f;
     if (batok) {
@@ -1170,12 +1170,12 @@ void display_screen_diag() {
     app_wdt_reset(); yield();
 
     // --- Сводка ---
-    lcd.clear();
-    lcd.setCursor(0, 0);
+    lcd_clear_buf(lcd);
+    lcd_set_cursor(lcd,0, 0);
     snprintf(buf, sizeof(buf), "Diag: %d/%d %s", diagPass, diagTotal,
              diagPass == diagTotal ? " OK" : "FAIL");
     lcd_print_padded(lcd, buf);
-    lcd.setCursor(0, 1);
+    lcd_set_cursor(lcd,0, 1);
     lcd_print_padded(lcd, "MAIN=povtor");
 
     Serial.print(F("[DIAG] Result: "));
@@ -1196,7 +1196,7 @@ void adjust_calibration() {
   int stepIdx = 0;
   char buf[24];
 
-  lcd.clear();
+  lcd_clear_buf(lcd);
   unsigned long lastWeighTime = 0;
   float liveWeight = sys.smoothedWeight;
   unsigned long adjustStart = millis();
@@ -1213,14 +1213,14 @@ void adjust_calibration() {
       lastWeighTime = now;
 
       // Обновляем LCD
-      lcd.setCursor(0, 0);
+      lcd_set_cursor(lcd,0, 0);
       if (steps[stepIdx] >= 1.0f)
         snprintf(buf, sizeof(buf), "CF:%-7.1f+/-%.0f", cf, steps[stepIdx]);
       else
         snprintf(buf, sizeof(buf), "CF:%-7.1f+/-.1", cf);
       lcd_print_padded(lcd, buf);
 
-      lcd.setCursor(0, 1);
+      lcd_set_cursor(lcd,0, 1);
       snprintf(buf, sizeof(buf), "Ves:%6.2fkg", liveWeight);
       lcd_print_padded(lcd, buf);
     }
@@ -1258,10 +1258,10 @@ void adjust_calibration() {
       save_calibration(cf);
       sys.emaInitialized = false;
 
-      lcd.clear();
-      lcd.setCursor(0, 0); lcd_print_padded(lcd, "Sokhraneno!     ");
+      lcd_clear_buf(lcd);
+      lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Sokhraneno!     ");
       snprintf(buf, sizeof(buf), "CF:%.1f", cf);
-      lcd.setCursor(0, 1); lcd_print_padded(lcd, buf);
+      lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, buf);
       { unsigned long _t0=millis(); while(millis()-_t0<1500UL){app_wdt_reset();yield();} }
       sys.needsRedraw = true;
       lastActivityTime = millis();
@@ -1285,9 +1285,9 @@ void display_error() {
     blink = !blink;
     lastBlink = _nb;
   }
-  lcd.setCursor(0, 0);
+  lcd_set_cursor(lcd,0, 0);
   lcd_print_padded(lcd, blink ? "*** OSHIBKA! ***" : "                ");
-  lcd.setCursor(0, 1);
+  lcd_set_cursor(lcd,0, 1);
   lcd_print_padded(lcd, "Check HX711 wire");
 }
 
@@ -1299,9 +1299,9 @@ void perform_taring() {
   sys.hasPrevOffset = true;
   save_prev_offset(sys.prevOffset);
 
-  lcd.clear();
-  lcd.setCursor(0, 0); lcd_print_padded(lcd, " Tarirovka...   ");
-  lcd.setCursor(0, 1); lcd_print_padded(lcd, " Podozhdite...  ");
+  lcd_clear_buf(lcd);
+  lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, " Tarirovka...   ");
+  lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, " Podozhdite...  ");
 
   // Пауза 1.5 сек — дать датчику успокоиться после нажатия кнопки
   { unsigned long _t=millis(); while(millis()-_t<1500UL){app_wdt_reset();yield();} }
@@ -1309,9 +1309,9 @@ void perform_taring() {
 
   // Проверяем готовность датчика перед тарированием
   if (!scale.wait_ready_timeout(3000)) {
-    lcd.clear();
-    lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara: OSHIBKA!  ");
-    lcd.setCursor(0, 1); lcd_print_padded(lcd, "HX711 ne otvech.");
+    lcd_clear_buf(lcd);
+    lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Tara: OSHIBKA!  ");
+    lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "HX711 ne otvech.");
     { unsigned long _t0=millis(); while(millis()-_t0<2000UL){app_wdt_reset();yield();} }
     sys.needsRedraw = true;
     return;
@@ -1335,9 +1335,9 @@ void perform_taring() {
   save_offset(sys.offset);
 
   char _ofs[17]; snprintf(_ofs, sizeof(_ofs), "Ofs:%ld", sys.offset);
-  lcd.clear();
-  lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara: OK        ");
-  lcd.setCursor(0, 1); lcd_print_padded(lcd, _ofs);
+  lcd_clear_buf(lcd);
+  lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Tara: OK        ");
+  lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, _ofs);
   app_wdt_reset();
   { unsigned long _t0=millis(); while(millis()-_t0<1200UL){app_wdt_reset();yield();} }
   sys.needsRedraw = true;
@@ -1346,9 +1346,9 @@ void perform_taring() {
 
 void undo_tare() {
   if (!sys.hasPrevOffset) {
-    lcd.clear();
-    lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara: net       ");
-    lcd.setCursor(0, 1); lcd_print_padded(lcd, "predydushchej   ");
+    lcd_clear_buf(lcd);
+    lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Tara: net       ");
+    lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "predydushchej   ");
     { unsigned long _t0=millis(); while(millis()-_t0<1200UL){app_wdt_reset();yield();} }
     sys.needsRedraw = true;
     return;
@@ -1361,10 +1361,10 @@ void undo_tare() {
   sys.emaInitialized = false;
   sys.smoothedWeight = 0.0f;
 
-  lcd.clear();
-  lcd.setCursor(0, 0); lcd_print_padded(lcd, "Tara: Otmena    ");
+  lcd_clear_buf(lcd);
+  lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Tara: Otmena    ");
   char _ofs[17]; snprintf(_ofs, sizeof(_ofs), "Ofs:%ld", sys.offset);
-  lcd.setCursor(0, 1); lcd_print_padded(lcd, _ofs);
+  lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, _ofs);
   app_wdt_reset();
   { unsigned long _t0=millis(); while(millis()-_t0<1200UL){app_wdt_reset();yield();} }
   sys.needsRedraw = true;
@@ -1389,9 +1389,9 @@ void perform_calibration() {
     return true;
   };
 
-  lcd.clear();
-  lcd.setCursor(0, 0); lcd_print_padded(lcd, "Ubrat gruz!     ");
-  lcd.setCursor(0, 1); lcd_print_padded(lcd, "Zhmi knopku...  ");
+  lcd_clear_buf(lcd);
+  lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Ubrat gruz!     ");
+  lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Zhmi knopku...  ");
   unsigned long start = millis();
   while (digitalRead(BUTTON_PIN) == LOW) {
     app_wdt_reset(); yield();
@@ -1401,9 +1401,9 @@ void perform_calibration() {
 
   // Проверяем HX711 перед тарированием
   if (!scale.wait_ready_timeout(3000)) {
-    lcd.clear();
-    lcd.setCursor(0, 0); lcd_print_padded(lcd, "OSHIBKA HX711!  ");
-    lcd.setCursor(0, 1); lcd_print_padded(lcd, "Proverte provod!");
+    lcd_clear_buf(lcd);
+    lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "OSHIBKA HX711!  ");
+    lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Proverte provod!");
     { unsigned long _t0=millis(); while(millis()-_t0<2000UL){app_wdt_reset();yield();} }
     sys.needsRedraw = true; lastActivityTime = millis();
     return;
@@ -1426,9 +1426,9 @@ void perform_calibration() {
     delay(400);
     scale.set_scale(1.0f);
     if (!scale.wait_ready_timeout(3000)) {
-      lcd.clear();
-      lcd.setCursor(0, 0); lcd_print_padded(lcd, "HX711 zavis!    ");
-      lcd.setCursor(0, 1); lcd_print_padded(lcd, "Proverte provod!");
+      lcd_clear_buf(lcd);
+      lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "HX711 zavis!    ");
+      lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Proverte provod!");
       { unsigned long _t0=millis(); while(millis()-_t0<2000UL){app_wdt_reset();yield();} }
       sys.needsRedraw = true; lastActivityTime = millis();
       return;
@@ -1449,20 +1449,20 @@ void perform_calibration() {
   long zeroOffset = scale.get_offset();
   Serial.print(F("[Calib] zero offset=")); Serial.println(zeroOffset);
 
-  lcd.clear();
-  lcd.setCursor(0, 0); lcd_print_padded(lcd, "Polozh. 1 kg    ");
-  lcd.setCursor(0, 1); lcd_print_padded(lcd, "Zhmi knopku...  ");
+  lcd_clear_buf(lcd);
+  lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Polozh. 1 kg    ");
+  lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Zhmi knopku...  ");
   if (!wait_press(BUTTON_PIN, 30000)) { sys.needsRedraw = true; lastActivityTime = millis(); return; }
 
   // Пауза 1.5 сек — дать грузу стабилизироваться
-  lcd.clear();
-  lcd.setCursor(0, 0); lcd_print_padded(lcd, "Kalibrovka...   ");
+  lcd_clear_buf(lcd);
+  lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Kalibrovka...   ");
   { unsigned long _t=millis(); while(millis()-_t<1500UL){app_wdt_reset();yield();} }
 
   if (!scale.wait_ready_timeout(3000)) {
-    lcd.clear();
-    lcd.setCursor(0, 0); lcd_print_padded(lcd, "OSHIBKA HX711!  ");
-    lcd.setCursor(0, 1); lcd_print_padded(lcd, "Povtorite       ");
+    lcd_clear_buf(lcd);
+    lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "OSHIBKA HX711!  ");
+    lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Povtorite       ");
     { unsigned long _t0=millis(); while(millis()-_t0<2000UL){app_wdt_reset();yield();} }
     sys.needsRedraw = true; lastActivityTime = millis();
     return;
@@ -1489,10 +1489,10 @@ void perform_calibration() {
       Serial.print(F("[Calib] Retry raw=")); Serial.println(raw, 0);
     }
     if (fabsf(raw) < 1000.0f) {
-      lcd.clear();
-      lcd.setCursor(0, 0); lcd_print_padded(lcd, "OSHIBKA raw=0   ");
+      lcd_clear_buf(lcd);
+      lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "OSHIBKA raw=0   ");
       char dbg[17]; snprintf(dbg, sizeof(dbg), "raw=%.0f", raw);
-      lcd.setCursor(0, 1); lcd_print_padded(lcd, dbg);
+      lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, dbg);
       Serial.print(F("[Calib] ERROR: raw too small=")); Serial.println(raw, 0);
       { unsigned long _t0=millis(); while(millis()-_t0<3000UL){app_wdt_reset();yield();} }
       sys.needsRedraw = true; lastActivityTime = millis();
@@ -1518,9 +1518,9 @@ void perform_calibration() {
   sys.smoothedWeight = 0.0f;
   sys.emaInitialized = false;
 
-  lcd.clear();
-  lcd.setCursor(0, 0); lcd_print_padded(lcd, "OK! Factor:     ");
-  { char _cbuf[16]; dtostrf(sys.calibrationFactor, 7, 3, _cbuf); lcd.setCursor(0, 1); lcd_print_padded(lcd, _cbuf); }
+  lcd_clear_buf(lcd);
+  lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "OK! Factor:     ");
+  { char _cbuf[16]; dtostrf(sys.calibrationFactor, 7, 3, _cbuf); lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, _cbuf); }
   app_wdt_reset();
   { unsigned long _t0=millis(); while(millis()-_t0<2500UL){app_wdt_reset();yield();} }
   sys.needsRedraw = true;
@@ -1540,13 +1540,13 @@ void check_auto_sleep() {
 
   // Показываем сообщение на LCD (включаем подсветку — она могла быть выключена по таймауту)
   lcd.backlight();
-  lcd.clear();
-  lcd.setCursor(0, 0); lcd_print_padded(lcd, "Auto sleep...   ");
-  lcd.setCursor(0, 1); lcd_print_padded(lcd, "Btn to wake up  ");
+  lcd_clear_buf(lcd);
+  lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, "Auto sleep...   ");
+  lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Btn to wake up  ");
   { unsigned long _t0=millis(); while(millis()-_t0<3000UL){app_wdt_reset();yield();} }
 
   // Гасим подсветку LCD и очищаем DDRAM (иначе остаются "квадратики" от старых символов)
-  lcd.clear();
+  lcd_clear_buf(lcd);
   lcd.noBacklight();
   lcd.noDisplay();  // ESP32-bonus: ещё снижает потребление PCF8574
 
@@ -1597,11 +1597,11 @@ void check_auto_sleep() {
 }
 
 void show_splash_screen() {
-  lcd.clear();
-  lcd.setCursor(0, 0); lcd_print_padded(lcd, " Vesy Pchelovod ");
+  lcd_clear_buf(lcd);
+  lcd_set_cursor(lcd,0, 0); lcd_print_padded(lcd, " Vesy Pchelovod ");
   char verLine[17];
   snprintf(verLine, sizeof(verLine), "  Versiya %s", FW_VERSION);
-  lcd.setCursor(0, 1); lcd_print_padded(lcd, verLine);
+  lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, verLine);
   { unsigned long _t0=millis(); while(millis()-_t0<1200UL){app_wdt_reset();yield();} }
 
   if (sys.sensorReady) {
@@ -1610,13 +1610,13 @@ void show_splash_screen() {
       float diff = current - sys.lastSavedWeight;
       char buf[17];
       snprintf(buf, sizeof(buf), "VES: %+6.2f kg", diff);
-      lcd.setCursor(0, 1);
+      lcd_set_cursor(lcd,0, 1);
       lcd_print_padded(lcd, buf);
       { unsigned long _t0=millis(); while(millis()-_t0<2500UL){app_wdt_reset();yield();} }
     }
   }
 
-  lcd.clear();
+  lcd_clear_buf(lcd);
   sys.needsRedraw = true;
 }
 

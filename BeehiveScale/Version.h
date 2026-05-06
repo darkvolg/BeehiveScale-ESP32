@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 6
-#define FW_VERSION_SUFFIX ""  // 5.0.6 — fix: меню больше не заедает, тара/калибровка срабатывают надёжно. Button.cpp использует irqTime для pressStart, process_weight пропускает HX711 при нажатой кнопке, SCALE_READ_SAMPLES 5→2.
+#define FW_VERSION_PATCH 7
+#define FW_VERSION_SUFFIX ""  // 5.0.7 — fix: мерцание LCD устранено через dirty-check кеш строк (lcd_set_cursor + lcd_clear_buf обёртки). Лишние I2C-перезаписи одинакового текста пропускаются.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

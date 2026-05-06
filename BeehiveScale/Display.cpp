@@ -1,7 +1,24 @@
 #include "Display.h"
+#include <string.h>
 
 static unsigned long _blLastActivity = 0;
 static bool _blOn = true;
+
+// v5.0.7: dirty-check кеш строк LCD. Если новый текст совпадает с тем что уже на экране —
+// пропускаем I2C-запись. Это убирает «мелкое мерцание» от частых перезаписей одного и того же.
+static uint8_t _curCol = 0;
+static uint8_t _curRow = 0;
+static char    _bufRow[LCD_ROWS][LCD_COLS + 1];
+static bool    _bufInit = false;
+
+static void _ensure_buf_init() {
+  if (_bufInit) return;
+  for (uint8_t r = 0; r < LCD_ROWS; r++) {
+    for (uint8_t c = 0; c < LCD_COLS; c++) _bufRow[r][c] = ' ';
+    _bufRow[r][LCD_COLS] = '\0';
+  }
+  _bufInit = true;
+}
 
 void lcd_init(LiquidCrystal_I2C &lcd) {
   delay(50);
@@ -12,9 +29,36 @@ void lcd_init(LiquidCrystal_I2C &lcd) {
   lcd.noCursor();
   lcd.setCursor(0, 0);
   _blLastActivity = millis();
+  // Инициализируем кеш как «всё пробелы» (соответствует состоянию после lcd.clear()).
+  for (uint8_t r = 0; r < LCD_ROWS; r++) {
+    for (uint8_t c = 0; c < LCD_COLS; c++) _bufRow[r][c] = ' ';
+    _bufRow[r][LCD_COLS] = '\0';
+  }
+  _bufInit = true;
+  _curCol = 0;
+  _curRow = 0;
+}
+
+void lcd_set_cursor(LiquidCrystal_I2C &lcd, uint8_t col, uint8_t row) {
+  _ensure_buf_init();
+  _curCol = col;
+  _curRow = row;
+  lcd.setCursor(col, row);
+}
+
+void lcd_clear_buf(LiquidCrystal_I2C &lcd) {
+  _ensure_buf_init();
+  for (uint8_t r = 0; r < LCD_ROWS; r++) {
+    for (uint8_t c = 0; c < LCD_COLS; c++) _bufRow[r][c] = ' ';
+  }
+  _curCol = 0;
+  _curRow = 0;
+  lcd.clear();
 }
 
 void lcd_print_padded(LiquidCrystal_I2C &lcd, const char* text) {
+  _ensure_buf_init();
+
   char buf[LCD_COLS + 1];
   int len = 0;
   if (text) {
@@ -23,6 +67,17 @@ void lcd_print_padded(LiquidCrystal_I2C &lcd, const char* text) {
   for (int i = 0; i < len; i++) buf[i] = text[i];
   for (int i = len; i < LCD_COLS; i++) buf[i] = ' ';
   buf[LCD_COLS] = '\0';
+
+  // Dirty-check: применяется только при печати с col=0 (полная перезапись строки).
+  // Частичные записи (например show_screen_num в col=13) идут через lcd.print()
+  // напрямую и dirty-check для них не работает — это редкие случаи (3-4 символа).
+  if (_curCol == 0 && _curRow < LCD_ROWS) {
+    if (memcmp(buf, _bufRow[_curRow], LCD_COLS) == 0) {
+      return; // текст идентичен — пропускаем I2C-запись (источник мерцания)
+    }
+    memcpy(_bufRow[_curRow], buf, LCD_COLS);
+  }
+
   lcd.print(buf);
 }
 
