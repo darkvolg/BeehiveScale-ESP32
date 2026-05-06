@@ -94,7 +94,7 @@ static const char PAGE_HTML[] PROGMEM = R"rawhtml(
 :root{
   --bg:#0d0f0b;--panel:#141710;--border:#2e3829;
   --amber:#f5a623;--amber2:#ffd166;--green:#6fcf97;
-  --red:#eb5757;--blue:#56ccf2;--text:#c8d4b8;--text2:#8a9e78;--text3:#7a8a68;
+  --red:#eb5757;--blue:#56ccf2;--text:#c8d4b8;--text2:#8a9e78;--text3:#8c9d80;
   --mono:'Courier New',monospace;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:15px;min-height:100vh}
@@ -149,18 +149,18 @@ a{color:var(--amber);text-decoration:none}
 .card.green::before{background:linear-gradient(90deg,var(--green),transparent)}
 .card.red::before{background:linear-gradient(90deg,var(--red),transparent)}
 .card.full{grid-column:1/-1}
-.card-title{font-size:12px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
-.card-title span{cursor:pointer;color:var(--text3);font-size:11px}
+.card-title{font-size:13px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.card-title span{cursor:pointer;color:var(--text3);font-size:12px}
 .card-title span:hover{color:var(--amber)}
 
 .val-big{font-size:42px;font-weight:700;color:var(--amber);line-height:1;letter-spacing:-1px}
 .val-unit{font-size:18px;color:var(--text2);margin-left:3px}
-.val-sub{font-size:12px;color:var(--text3);margin-top:6px;line-height:1.7}
+.val-sub{font-size:13px;color:var(--text3);margin-top:6px;line-height:1.7}
 
 .gauge-wrap{display:flex;align-items:center;gap:8px;margin-top:8px}
 .gauge{flex:1;height:4px;background:var(--border)}
 .gauge-fill{height:100%;background:var(--amber);transition:width .5s}
-.gauge-lbl{font-size:12px;color:var(--text3);min-width:40px;text-align:right}
+.gauge-lbl{font-size:13px;color:var(--text3);min-width:40px;text-align:right}
 
 .status-row{display:flex;align-items:center;gap:8px;padding:6px 0;
   border-bottom:1px solid #1c2018;font-size:13px}
@@ -188,7 +188,7 @@ a{color:var(--amber);text-decoration:none}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 
 .form-row{margin-bottom:12px}
-.form-row label{display:block;font-size:11px;letter-spacing:1.5px;color:var(--text3);
+.form-row label{display:block;font-size:12px;letter-spacing:0.8px;color:var(--text3);
   text-transform:uppercase;margin-bottom:5px}
 input,select{background:#1c2018;border:1px solid var(--border);color:var(--text);
   font-family:var(--mono);font-size:13px;padding:9px 12px;outline:none;width:100%}
