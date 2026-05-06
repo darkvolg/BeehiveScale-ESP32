@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 5
-#define FW_VERSION_SUFFIX ""  // 5.0.5 — fix: температура в TG-отчёте больше не пропадает после wake-up (force-read DS18B20 + fallback на persist.lastTempC + EEPROM-сохранение)
+#define FW_VERSION_PATCH 6
+#define FW_VERSION_SUFFIX ""  // 5.0.6 — fix: меню больше не заедает, тара/калибровка срабатывают надёжно. Button.cpp использует irqTime для pressStart, process_weight пропускает HX711 при нажатой кнопке, SCALE_READ_SAMPLES 5→2.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

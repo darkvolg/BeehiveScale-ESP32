@@ -772,6 +772,13 @@ void process_weight() {
   // Период чтения HX711. 1500мс — компромисс между скоростью отклика UI
   // и нагрузкой на CPU/WebServer. HX711@10Hz даёт независимые сэмплы каждые 100мс.
   if (millis() - lastReadTime < SCALE_READ_INTERVAL_MS) return;
+
+  // v5.0.6: пропускаем чтение HX711 если пользователь сейчас держит кнопку.
+  // wait_ready_timeout(1000)+get_units() блокирует loop до 1.5 сек — за это время
+  // теряются нажатия и сбивается отсчёт удержания. Откладываем чтение до отпускания.
+  if (digitalRead(BUTTON_PIN) == LOW || digitalRead(MENU_BTN_PIN) == LOW) {
+    return;
+  }
   lastReadTime = millis();
 
   // spikeRejectCnt перенесён наверх функции чтобы его можно было сбросить

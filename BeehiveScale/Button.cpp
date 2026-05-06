@@ -62,7 +62,24 @@ ButtonAction read_button(int pin, ButtonState &state,
       // Слишком короткий — дребезг, игнорируем
       return NO_ACTION;
     }
-    // Кнопка ещё нажата — обработаем через обычный debounce ниже
+    // v5.0.6: кнопка ещё нажата — фиксируем pressStart на момент irqTime,
+    // чтобы реальное удержание считалось от физического нажатия, а не от
+    // момента detection (loop мог быть заблокирован process_weight на 500+мс).
+    // Это критично для MEDIUM/LONG срабатывания при долгих блокировках loop.
+    if (now - irqT >= DEBOUNCE_MS) {
+      state.pressStart = irqT;
+      state.isPressed = true;
+      state.longFired = false;
+      state.lastRaw = true;
+      state.lastChangeTime = irqT;
+      // Сразу проверяем не дотянули ли уже до longMs
+      if ((now - state.pressStart) >= longMs) {
+        state.longFired = true;
+        return LONG_PRESS;
+      }
+      return NO_ACTION;
+    }
+    // Иначе — обработаем через обычный debounce ниже
   }
 
   // Стандартный debounce по опросу
