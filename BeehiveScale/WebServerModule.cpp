@@ -94,7 +94,7 @@ static const char PAGE_HTML[] PROGMEM = R"rawhtml(
 :root{
   --bg:#0d0f0b;--panel:#141710;--border:#2e3829;
   --amber:#f5a623;--amber2:#ffd166;--green:#6fcf97;
-  --red:#eb5757;--blue:#56ccf2;--text:#c8d4b8;--text2:#8a9e78;--text3:#8c9d80;
+  --red:#eb5757;--blue:#56ccf2;--text:#c8d4b8;--text2:#a5b894;--text3:#a5b894;
   --mono:'Courier New',monospace;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:15px;min-height:100vh}
@@ -316,7 +316,8 @@ input[type=checkbox]{width:auto}
     <div class="card">
       <div class="card-title">⚖ Текущий вес</div>
       <div class="val-big" id="w-val">--<span class="val-unit">кг</span></div>
-      <div class="val-sub">🎯 От зафикс. точки: <b id="w-ref">--</b> кг &nbsp;|&nbsp; Δ: <b id="w-delta" style="color:var(--amber2)">--</b> кг <span id="w-ref-date" style="color:var(--text3);font-size:11px"></span></div>
+      <div class="val-sub">🎯 От зафикс. точки: <b id="w-ref">--</b> кг &nbsp;|&nbsp; Δ: <b id="w-delta" style="color:var(--amber2)">--</b> кг</div>
+      <div class="val-sub" id="w-ref-date" style="font-size:12px;margin-top:2px"></div>
       <div class="val-sub" style="margin-top:4px">📈 С прошлого замера: <b id="w-period-delta" style="color:var(--green)">--</b> кг (было <b id="w-period-prev">--</b>)</div>
       <div class="gauge-wrap">
         <div class="gauge"><div class="gauge-fill" id="w-gauge" style="width:0%"></div></div>
@@ -859,10 +860,10 @@ function updDash(d) {
       const mi = String(dt.getMinutes()).padStart(2,'0');
       // Дни с момента фиксации (для контекста "уже X дней наблюдаю")
       const daysAgo = Math.floor((Date.now()/1000 - refDate) / 86400);
-      rdEl.textContent = ' (от ' + dd + '.' + mm + '.' + yyyy + ' ' + hh + ':' + mi
-                        + (daysAgo > 0 ? ', ' + daysAgo + ' дн назад' : '') + ')';
+      rdEl.textContent = 'от ' + dd + '.' + mm + '.' + yyyy + ' ' + hh + ':' + mi
+                        + (daysAgo > 0 ? ', ' + daysAgo + ' дн назад' : '');
     } else {
-      rdEl.textContent = ' (не зафикс.)';
+      rdEl.textContent = 'не зафикс.';
     }
   }
   // Дельта "за период" — сравнение с весом на момент прошлого TG-отчёта
