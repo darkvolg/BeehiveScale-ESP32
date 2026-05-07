@@ -127,11 +127,12 @@ a{color:var(--amber);text-decoration:none}
 @media (max-width:760px){
   .tabs{justify-content:flex-start;padding:0 8px}
   .tab{padding:10px 12px;font-size:12px;letter-spacing:.5px}
-  .hdr{padding:8px 12px;flex-wrap:wrap}
+  .hdr{padding:8px 12px;flex-wrap:nowrap;justify-content:space-between;gap:8px}
+  .hdr-inner{align-items:flex-start;flex:0 1 auto}
   .hdr-logo{font-size:15px;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
   .hdr-logo #fw-ver{margin-left:0 !important;font-size:11px;color:var(--text3)}
   .hdr-sub{display:none !important}
-  .hdr-right{font-size:11px;gap:8px}
+  .hdr-right{position:static;transform:none;left:auto;top:auto;font-size:11px;gap:8px;flex:0 0 auto;flex-direction:column;align-items:flex-end;text-align:right}
 }
 
 .section{display:none;padding:20px 24px;max-width:1080px;margin:0 auto;width:100%}
@@ -311,12 +312,18 @@ input[type=checkbox]{width:auto}
 
 <!-- ═══════════════ MAIN ═══════════════ -->
 <div class="section active" id="sec-main">
+  <div class="card full" style="padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <div style="font-size:13px;color:var(--text2)">
+      💤 Auto-sleep: <b id="ka-status" style="color:var(--amber)">обычный режим</b>
+    </div>
+    <button class="btn btn-blue" style="padding:8px 14px;font-size:13px" onclick="doKeepAlive()">☕ Продлить на 10 мин</button>
+  </div>
   <div class="grid">
 
     <div class="card">
       <div class="card-title">⚖ Текущий вес</div>
       <div class="val-big" id="w-val">--<span class="val-unit">кг</span></div>
-      <div class="val-sub">🎯 От зафикс. точки: <b id="w-ref">--</b> кг &nbsp;|&nbsp; Δ: <b id="w-delta" style="color:var(--amber2)">--</b> кг</div>
+      <div class="val-sub" style="display:flex;flex-wrap:wrap;gap:4px 10px"><span style="white-space:nowrap">🎯 От зафикс. точки: <b id="w-ref">--</b> кг</span><span style="white-space:nowrap">Δ: <b id="w-delta" style="color:var(--amber2)">--</b> кг</span></div>
       <div class="val-sub" id="w-ref-date" style="font-size:12px;margin-top:2px"></div>
       <div class="val-sub" style="margin-top:4px">📈 С прошлого замера: <b id="w-period-delta" style="color:var(--green)">--</b> кг (было <b id="w-period-prev">--</b>)</div>
       <div class="gauge-wrap">
@@ -386,7 +393,7 @@ input[type=checkbox]{width:auto}
         <div class="tip" id="tip-mini"></div>
         <svg id="mini-svg" class="chart-svg" viewBox="0 0 900 350" preserveAspectRatio="xMidYMid meet"
              onmousemove="onTip(event,'mini')" onmouseleave="hideTip('mini')">
-          <text x="450" y="130" text-anchor="middle" fill="#506040" font-size="12">Загрузка...</text>
+          <text x="450" y="130" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
         </svg>
       </div>
     </div>
@@ -427,7 +434,7 @@ input[type=checkbox]{width:auto}
       </div>
       <svg id="chart-w" class="chart-svg" viewBox="0 0 900 260" preserveAspectRatio="xMidYMid meet"
            onmousemove="onTip(event,'w')" onmouseleave="hideTip('w')">
-        <text x="450" y="120" text-anchor="middle" fill="#506040" font-size="12">Загрузка...</text>
+        <text x="450" y="120" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
       </svg>
     </div>
 
@@ -440,7 +447,7 @@ input[type=checkbox]{width:auto}
       </div>
       <svg id="chart-t" class="chart-svg" viewBox="0 0 900 260" preserveAspectRatio="xMidYMid meet"
            onmousemove="onTip(event,'t')" onmouseleave="hideTip('t')">
-        <text x="450" y="120" text-anchor="middle" fill="#506040" font-size="12">Загрузка...</text>
+        <text x="450" y="120" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
       </svg>
     </div>
 
@@ -449,7 +456,7 @@ input[type=checkbox]{width:auto}
       <div class="tip" id="tip-b"></div>
       <svg id="chart-b" class="chart-svg" viewBox="0 0 900 260" preserveAspectRatio="xMidYMid meet"
            onmousemove="onTip(event,'b')" onmouseleave="hideTip('b')">
-        <text x="450" y="120" text-anchor="middle" fill="#506040" font-size="12">Загрузка...</text>
+        <text x="450" y="120" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
       </svg>
     </div>
   </div>
@@ -828,6 +835,19 @@ function doApi(url) {
   }).catch(()=>toast('Нет связи',true));
 }
 
+// ── Keepalive: продлить работу на 10 минут ────────────────────────────
+function doKeepAlive() {
+  apiFetch('/api/keepalive',{method:'POST'}).then(r=>r.json()).then(d=>{
+    toast(d.msg||(d.ok?'Продлено':'Ошибка'), !d.ok);
+    if (d.ok) fetch('/api/data').then(r=>r.json()).then(updDash).catch(()=>{});
+  }).catch(()=>toast('Нет связи',true));
+}
+function _fmtMmSs(sec) {
+  if (sec <= 0) return '0:00';
+  const m = Math.floor(sec/60), s = sec%60;
+  return m + ':' + (s<10?'0':'') + s;
+}
+
 // ── Fetch /api/data ───────────────────────────────────────────────────
 function fetchData() {
   fetch('/api/data').then(r=>r.json()).then(updDash).catch(()=>{});
@@ -839,6 +859,18 @@ function updDash(d) {
   if (d && d.csrf) _csrfTok = d.csrf;
   if (d && d.credsDefault) showCredsWarning();
   if (d && d.fw) { const fv=document.getElementById('fw-ver'); if (fv && !fv.textContent) fv.textContent='v'+d.fw; }
+  // Статус продления auto-sleep
+  const kaEl = document.getElementById('ka-status');
+  if (kaEl) {
+    const left = parseInt(d && d.keepLeftSec || 0);
+    if (left > 0) {
+      kaEl.textContent = 'продлено, осталось ' + _fmtMmSs(left);
+      kaEl.style.color = 'var(--green)';
+    } else {
+      kaEl.textContent = 'обычный режим';
+      kaEl.style.color = 'var(--amber)';
+    }
+  }
   const w = parseFloat(d.weight)||0;
   _curWeight = w;
   setText('w-val', w.toFixed(2)+'<span class="val-unit">кг</span>', true);
@@ -988,12 +1020,12 @@ function drawMini() {
   if (!_all||_all.length<2) {
     const wt=_curWeight>0?_curWeight.toFixed(2)+' кг':'--';
     svg.innerHTML='<text x="450" y="120" text-anchor="middle" fill="#f5a623" font-size="28" font-weight="bold">'+wt+'</text>'+
-      '<text x="450" y="150" text-anchor="middle" fill="#506040" font-size="13">Лог пуст — нет данных для графика</text>';
+      '<text x="450" y="160" text-anchor="middle" fill="#506040" font-size="22">Лог пуст — нет данных для графика</text>';
     return;
   }
   const pts=_all.slice(-120);
   _tipPts.mini=pts;
-  drawLineSvg(svg,pts,'w','#f5a623',900,350,60,10,12,50,true);
+  drawLineSvg(svg,pts,'w','#f5a623',900,350,90,15,12,80,true);
 }
 
 // ── Chart page ────────────────────────────────────────────────────────
@@ -1032,7 +1064,7 @@ function renderCharts() {
   if (!_all.length) {
     [{id:'chart-w',cy:120},{id:'chart-t',cy:90},{id:'chart-b',cy:70}].forEach(function(s){
       var svg=document.getElementById(s.id);
-      if(svg) svg.innerHTML='<text x="450" y="'+s.cy+'" text-anchor="middle" fill="#506040" font-size="13">Нет данных</text>';
+      if(svg) svg.innerHTML='<text x="450" y="'+s.cy+'" text-anchor="middle" fill="#506040" font-size="22">Нет данных</text>';
     });
     return;
   }
@@ -1046,17 +1078,17 @@ function renderCharts() {
     const mn=ws.reduce((a,b)=>a<b?a:b),mx=ws.reduce((a,b)=>a>b?a:b),av=ws.reduce((a,b)=>a+b,0)/ws.length;
     setText('c-wmin',mn.toFixed(2)); setText('c-wmax',mx.toFixed(2));
     setText('c-wavg',av.toFixed(2)); setText('c-pts',pts.length);
-    drawLineSvg(document.getElementById('chart-w'),pts,'w','#f5a623',900,260,60,10,12,42,true);
+    drawLineSvg(document.getElementById('chart-w'),pts,'w','#f5a623',900,260,90,15,12,75,true);
   }
   if (_serVisible.t) {
     _tipPts.t=pts;
     const ts=pts.map(d=>parseFloat(d.t)).filter(v=>!isNaN(v)&&v>-90);
     if(ts.length){setText('c-tmin',ts.reduce((a,b)=>a<b?a:b).toFixed(1));setText('c-tmax',ts.reduce((a,b)=>a>b?a:b).toFixed(1));}
-    drawLineSvg(document.getElementById('chart-t'),pts,'t','#56ccf2',900,260,60,10,12,42,true);
+    drawLineSvg(document.getElementById('chart-t'),pts,'t','#56ccf2',900,260,90,15,12,75,true);
   }
   if (_serVisible.b) {
     _tipPts.b=pts;
-    drawLineSvg(document.getElementById('chart-b'),pts,'b','#6fcf97',900,260,60,10,12,42,true);
+    drawLineSvg(document.getElementById('chart-b'),pts,'b','#6fcf97',900,260,90,15,12,75,true);
   }
 }
 
@@ -1064,7 +1096,7 @@ function renderCharts() {
 function drawLineSvg(svg,pts,key,color,W,H,L,R,T,B,showAxes) {
   const pW=W-L-R, pH=H-T-B;
   const vals=pts.map(d=>parseFloat(d[key])).filter(v=>!isNaN(v)&&v>-90);
-  if (vals.length<2) { svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#506040" font-size="13">Нет данных</text>`; return; }
+  if (vals.length<2) { svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#506040" font-size="22">Нет данных</text>`; return; }
   // Для температуры и батареи: игнорируем нули при расчёте шкалы (0 = датчик не работал / USB)
   let scaleVals=(key==='t'||key==='b')?vals.filter(v=>v>0.05):vals;
   if(scaleVals.length<2) scaleVals=vals;
@@ -1083,7 +1115,7 @@ function drawLineSvg(svg,pts,key,color,W,H,L,R,T,B,showAxes) {
     html+=`<line x1="${L}" y1="${y.toFixed(1)}" x2="${W-R}" y2="${y.toFixed(1)}" stroke="#1a201a" stroke-width="1"/>`;
     if(showAxes) {
       const dec=key==='b'?2:key==='t'?1:3;
-      html+=`<text x="${L-5}" y="${(y+4).toFixed(1)}" text-anchor="end" fill="#506040" font-size="12">${v.toFixed(dec)}</text>`;
+      html+=`<text x="${L-5}" y="${(y+9).toFixed(1)}" text-anchor="end" fill="#506040" font-size="26">${v.toFixed(dec)}</text>`;
     }
   }
   // x labels — 5-7 меток равномерно
@@ -1094,13 +1126,13 @@ function drawLineSvg(svg,pts,key,color,W,H,L,R,T,B,showAxes) {
       const x=xS(i),lbl=pts[i].dt?esc(pts[i].dt.substring(11,16)):'';
       const a=n===0?'start':n===xCount-1?'end':'middle';
       html+=`<line x1="${x.toFixed(1)}" y1="${T}" x2="${x.toFixed(1)}" y2="${T+pH}" stroke="#181d18" stroke-dasharray="3,3" stroke-width="1"/>`;
-      html+=`<text x="${x.toFixed(1)}" y="${H-B+16}" text-anchor="${a}" fill="#506040" font-size="11">${lbl}</text>`;
+      html+=`<text x="${x.toFixed(1)}" y="${H-B+28}" text-anchor="${a}" fill="#506040" font-size="24">${lbl}</text>`;
     }
     // date labels at edges — под осью X, не наложение на время
     const d0=pts[0].dt?esc(pts[0].dt.substring(0,10)):'';
     const d1=pts[pts.length-1].dt?esc(pts[pts.length-1].dt.substring(0,10)):'';
-    if(d0) html+=`<text x="${L}" y="${H-B+28}" text-anchor="start" fill="#3d5030" font-size="9">${d0}</text>`;
-    if(d1&&d1!==d0) html+=`<text x="${W-R}" y="${H-B+28}" text-anchor="end" fill="#3d5030" font-size="9">${d1}</text>`;
+    if(d0) html+=`<text x="${L}" y="${H-B+52}" text-anchor="start" fill="#3d5030" font-size="18">${d0}</text>`;
+    if(d1&&d1!==d0) html+=`<text x="${W-R}" y="${H-B+52}" text-anchor="end" fill="#3d5030" font-size="18">${d1}</text>`;
   }
   // axes
   if(showAxes){
@@ -1583,6 +1615,13 @@ static void _handleData() {
   doc["csrf"]         = _csrfToken;
   doc["credsDefault"] = credentials_is_default();
   doc["fw"]           = FW_VERSION;
+  // Оставшееся время web-продления (секунды). 0 = продление не активно
+  if (extendSleepUntilMs != 0) {
+    long left = (long)(extendSleepUntilMs - millis());
+    doc["keepLeftSec"] = (left > 0) ? (left / 1000) : 0;
+  } else {
+    doc["keepLeftSec"] = 0;
+  }
 #if defined(ESP32) || defined(ESP8266)
   doc["heap"]     = ESP.getFreeHeap();
 #else
@@ -1606,6 +1645,16 @@ static void _handleSave() {
   _activity();
   if (_wa.doSave) { _wa.doSave(); _sendJson(true, "Эталон сохранён"); }
   else _sendJson(false, "Нет обработчика");
+}
+
+// POST /api/keepalive — продлить работу на 10 минут (отодвигает auto-sleep)
+static void _handleKeepAlive() {
+  if (!_auth()) return;
+  if (!_csrf_check()) return;
+  _activity();
+  extendSleepUntilMs = millis() + 10UL * 60UL * 1000UL;
+  if (extendSleepUntilMs == 0) extendSleepUntilMs = 1;  // 0 = "неактивно", избегаем коллизии при rollover
+  _sendJson(true, "Продлено на 10 мин");
 }
 
 // Forward declaration — используется в авто-бэкапе при сохранении настроек
@@ -2326,6 +2375,7 @@ void webserver_init(WebData &data, WebActions &actions) {
     _srv.on("/api/data",     HTTP_GET,  _handleData);
     _srv.on("/api/tare",     HTTP_POST, _handleTare);
     _srv.on("/api/save",     HTTP_POST, _handleSave);
+    _srv.on("/api/keepalive",HTTP_POST, _handleKeepAlive);
     _srv.on("/api/settings",   HTTP_POST, _handleSettings);
     _srv.on("/api/ntp",        HTTP_POST, _handleNtp);
     _srv.on("/api/reboot",     HTTP_POST, _handleReboot);

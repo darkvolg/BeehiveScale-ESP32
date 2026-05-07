@@ -135,6 +135,7 @@ ButtonState    btnMenu;
 SleepPersistData persist;
 bool webServerStarted = false;
 unsigned long lastActivityTime = 0;  // Таймер бездействия для auto-sleep
+unsigned long extendSleepUntilMs = 0; // Продление работы по запросу из web (POST /api/keepalive). 0 = неактивно.
 bool diagRunRequested = false;       // Флаг запуска диагностики
 bool diagDone = false;               // Диагностика завершена (сводка на экране)
 bool tgReportPending = false;        // Запрос на отправку TG-отчёта при следующей возможности
@@ -1535,6 +1536,17 @@ void perform_calibration() {
 void check_auto_sleep() {
   uint16_t autoSec = get_autosleep_sec();
   if (autoSec == 0) return;  // 0 = не засыпать (отладка / постоянное питание)
+
+  // Web-продление: пользователь нажал "☕ Продлить на 10 мин" — пока не истёк дедлайн, в сон не уходим.
+  // (long) cast обрабатывает переход millis() через 0 за ~49 дней. Когда продление кончилось, обнуляем
+  // и сбрасываем lastActivityTime — чтобы пользователь получил один полный обычный idle-цикл.
+  if (extendSleepUntilMs != 0) {
+    if ((long)(extendSleepUntilMs - millis()) > 0) return;
+    extendSleepUntilMs = 0;
+    lastActivityTime = millis();
+    return;
+  }
+
   unsigned long autoMs = (unsigned long)autoSec * 1000UL;
   if (millis() - lastActivityTime < autoMs) return;
 

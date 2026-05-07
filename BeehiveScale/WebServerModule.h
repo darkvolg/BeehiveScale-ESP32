@@ -36,6 +36,7 @@ struct WebActions {
 };
 
 extern unsigned long lastActivityTime;
+extern unsigned long extendSleepUntilMs;  // 0 = нет продления; >0 = millis()-моментум до которого auto-sleep заблокирован
 
 void webserver_init(WebData &data, WebActions &actions);
 void webserver_handle();
