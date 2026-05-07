@@ -869,10 +869,22 @@ function _fmtMmSs(sec) {
 }
 
 // ── Fetch /api/data ───────────────────────────────────────────────────
+// ESP32 WebServer синхронный — обрабатывает 1 запрос за раз. Параллельные fetch()
+// от браузера сериализуются в случайном порядке, и медленный /api/log/json (стрим
+// всего лога) может оказаться первым → дашборд не показывается пока лог не передан.
+// Решение: chain'им запросы — /api/data → /api/daystat → /api/log/json.
+// Дашборд рендерится сразу, лог тянется в фоне. Лог обновляем не чаще раз в 30 сек.
+let _lastLogFetch = 0;
 function fetchData() {
-  fetch('/api/data').then(r=>r.json()).then(updDash).catch(()=>{});
-  fetch('/api/daystat').then(r=>r.json()).then(updHive).catch(()=>{});
-  loadLog();
+  fetch('/api/data').then(r=>r.json()).then(updDash).catch(()=>{})
+    .then(()=>fetch('/api/daystat').then(r=>r.json()).then(updHive).catch(()=>{}))
+    .then(()=>{
+      const now = Date.now();
+      // Throttle: первый раз грузим всегда, дальше — раз в 30 сек
+      if (_lastLogFetch && (now - _lastLogFetch) < 30000) return;
+      _lastLogFetch = now;
+      loadLog();
+    });
 }
 
 function updDash(d) {

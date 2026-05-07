@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 13
-#define FW_VERSION_SUFFIX ""  // 5.0.13 — feat: интерактивный курсор на графиках (mouse + touch). Тач-скраб по графику показывает вертикальную линию + точку + tooltip с весом/датой. Графики занимают всю высоту контейнера (aspect-ratio 3/2 mini, 9/5 charts вместо фикс. height) — viewBox 900x600/500.
+#define FW_VERSION_PATCH 14
+#define FW_VERSION_SUFFIX ""  // 5.0.14 — perf: дашборд грузится моментально. fetchData теперь chain'ит запросы (/api/data → /api/daystat → /api/log/json) — ESP32 синхронный WebServer не блокируется медленным log/json. Throttle лога на 30 сек (раньше было каждые 5с — забивало очередь и затягивало загрузку до 1+ мин).
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
