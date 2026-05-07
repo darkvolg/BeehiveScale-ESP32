@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 12
-#define FW_VERSION_SUFFIX ""  // 5.0.12 — feat: кнопка "☕ Продлить на 10 мин" + UI fixes: шапка не съезжает на mobile (.hdr-right теперь static), Δ не переносится в карточке "Текущий вес", графики читаемые на телефоне (font Y 12→26, X 11→24, dates 9→18, padding L 60→90 / B 50→80 mini, 42→75 chart).
+#define FW_VERSION_PATCH 13
+#define FW_VERSION_SUFFIX ""  // 5.0.13 — feat: интерактивный курсор на графиках (mouse + touch). Тач-скраб по графику показывает вертикальную линию + точку + tooltip с весом/датой. Графики занимают всю высоту контейнера (aspect-ratio 3/2 mini, 9/5 charts вместо фикс. height) — viewBox 900x600/500.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

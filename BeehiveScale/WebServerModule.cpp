@@ -215,7 +215,9 @@ input[type=checkbox]{width:auto}
 
 /* ── Chart ── */
 .chart-container{position:relative;margin-bottom:10px}
-.chart-svg{width:100%;display:block;overflow:visible}
+.chart-svg{width:100%;height:100%;display:block;overflow:visible;touch-action:pan-y}
+.chart-cursor{position:absolute;top:0;width:1.5px;background:var(--amber);pointer-events:none;z-index:5;display:none;opacity:.7}
+.chart-dot{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--amber);border:2px solid #fff;pointer-events:none;z-index:6;display:none;transform:translate(-50%,-50%);box-shadow:0 0 6px var(--amber)}
 .period-tabs{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
 .period-btn{padding:5px 12px;font-size:12px;letter-spacing:1px;border:1px solid var(--border);
   background:transparent;color:var(--text3);cursor:pointer;font-family:var(--mono);text-transform:uppercase}
@@ -230,7 +232,7 @@ input[type=checkbox]{width:auto}
 
 /* ── Tooltip ── */
 .tip{position:absolute;display:none;background:rgba(13,15,11,.95);border:1px solid var(--border);
-  padding:6px 10px;font-size:10px;pointer-events:none;z-index:50;line-height:1.6;min-width:120px}
+  padding:8px 12px;font-size:13px;pointer-events:none;z-index:50;line-height:1.5;min-width:140px;box-shadow:0 4px 12px rgba(0,0,0,.5)}
 
 /* ── Export panel ── */
 .exp-panel{background:#0f1209;border:1px solid var(--border);padding:12px;margin-top:10px;position:relative;z-index:10}
@@ -389,11 +391,14 @@ input[type=checkbox]{width:auto}
         📈 Мини-график
         <span onclick="nav('chart')">[открыть полный →]</span>
       </div>
-      <div class="chart-container" style="height:350px">
+      <div class="chart-container" style="aspect-ratio:3/2">
         <div class="tip" id="tip-mini"></div>
-        <svg id="mini-svg" class="chart-svg" viewBox="0 0 900 350" preserveAspectRatio="xMidYMid meet"
-             onmousemove="onTip(event,'mini')" onmouseleave="hideTip('mini')">
-          <text x="450" y="130" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
+        <div class="chart-cursor" id="cur-mini"></div>
+        <div class="chart-dot" id="dot-mini"></div>
+        <svg id="mini-svg" class="chart-svg" viewBox="0 0 900 600" preserveAspectRatio="xMidYMid meet"
+             onmousemove="onTip(event,'mini')" onmouseleave="hideTip('mini')"
+             ontouchstart="onTip(event,'mini')" ontouchmove="onTip(event,'mini')" ontouchend="onTipEnd('mini')">
+          <text x="450" y="280" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
         </svg>
       </div>
     </div>
@@ -424,40 +429,55 @@ input[type=checkbox]{width:auto}
     </div>
 
     <!-- График веса -->
-    <div class="chart-container" id="cwrap-w" style="height:280px;margin-bottom:20px">
-      <div class="tip" id="tip-w"></div>
-      <div style="font-size:13px;color:var(--text3);margin-bottom:4px">
+    <div id="cwrap-w" style="margin-bottom:20px">
+      <div style="font-size:13px;color:var(--text3);margin-bottom:6px">
         Мин: <b id="c-wmin" style="color:var(--amber)">--</b> &nbsp;
         Макс: <b id="c-wmax" style="color:var(--amber)">--</b> &nbsp;
         Среднее: <b id="c-wavg" style="color:var(--amber)">--</b> кг &nbsp;
         Точек: <b id="c-pts">0</b>
       </div>
-      <svg id="chart-w" class="chart-svg" viewBox="0 0 900 260" preserveAspectRatio="xMidYMid meet"
-           onmousemove="onTip(event,'w')" onmouseleave="hideTip('w')">
-        <text x="450" y="120" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
-      </svg>
+      <div class="chart-container" style="aspect-ratio:9/5">
+        <div class="tip" id="tip-w"></div>
+        <div class="chart-cursor" id="cur-w"></div>
+        <div class="chart-dot" id="dot-w"></div>
+        <svg id="chart-w" class="chart-svg" viewBox="0 0 900 500" preserveAspectRatio="xMidYMid meet"
+             onmousemove="onTip(event,'w')" onmouseleave="hideTip('w')"
+             ontouchstart="onTip(event,'w')" ontouchmove="onTip(event,'w')" ontouchend="onTipEnd('w')">
+          <text x="450" y="240" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
+        </svg>
+      </div>
     </div>
 
     <!-- График температуры -->
-    <div class="chart-container" id="cwrap-t" style="height:280px;margin-bottom:20px;border-top:1px solid var(--border);padding-top:14px">
-      <div class="tip" id="tip-t"></div>
-      <div style="font-size:13px;color:var(--text3);margin-bottom:4px">
+    <div id="cwrap-t" style="margin-bottom:20px;border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:13px;color:var(--text3);margin-bottom:6px">
         Темп мин: <b id="c-tmin" style="color:var(--blue)">--</b> &nbsp;
         Макс: <b id="c-tmax" style="color:var(--blue)">--</b> °C
       </div>
-      <svg id="chart-t" class="chart-svg" viewBox="0 0 900 260" preserveAspectRatio="xMidYMid meet"
-           onmousemove="onTip(event,'t')" onmouseleave="hideTip('t')">
-        <text x="450" y="120" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
-      </svg>
+      <div class="chart-container" style="aspect-ratio:9/5">
+        <div class="tip" id="tip-t"></div>
+        <div class="chart-cursor" id="cur-t"></div>
+        <div class="chart-dot" id="dot-t"></div>
+        <svg id="chart-t" class="chart-svg" viewBox="0 0 900 500" preserveAspectRatio="xMidYMid meet"
+             onmousemove="onTip(event,'t')" onmouseleave="hideTip('t')"
+             ontouchstart="onTip(event,'t')" ontouchmove="onTip(event,'t')" ontouchend="onTipEnd('t')">
+          <text x="450" y="240" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
+        </svg>
+      </div>
     </div>
 
     <!-- График батареи -->
-    <div class="chart-container" id="cwrap-b" style="height:280px;border-top:1px solid var(--border);padding-top:14px">
-      <div class="tip" id="tip-b"></div>
-      <svg id="chart-b" class="chart-svg" viewBox="0 0 900 260" preserveAspectRatio="xMidYMid meet"
-           onmousemove="onTip(event,'b')" onmouseleave="hideTip('b')">
-        <text x="450" y="120" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
-      </svg>
+    <div id="cwrap-b" style="border-top:1px solid var(--border);padding-top:14px">
+      <div class="chart-container" style="aspect-ratio:9/5">
+        <div class="tip" id="tip-b"></div>
+        <div class="chart-cursor" id="cur-b"></div>
+        <div class="chart-dot" id="dot-b"></div>
+        <svg id="chart-b" class="chart-svg" viewBox="0 0 900 500" preserveAspectRatio="xMidYMid meet"
+             onmousemove="onTip(event,'b')" onmouseleave="hideTip('b')"
+             ontouchstart="onTip(event,'b')" ontouchmove="onTip(event,'b')" ontouchend="onTipEnd('b')">
+          <text x="450" y="240" text-anchor="middle" fill="#506040" font-size="22">Загрузка...</text>
+        </svg>
+      </div>
     </div>
   </div>
 
@@ -1019,13 +1039,13 @@ function drawMini() {
   const svg=document.getElementById('mini-svg');
   if (!_all||_all.length<2) {
     const wt=_curWeight>0?_curWeight.toFixed(2)+' кг':'--';
-    svg.innerHTML='<text x="450" y="120" text-anchor="middle" fill="#f5a623" font-size="28" font-weight="bold">'+wt+'</text>'+
-      '<text x="450" y="160" text-anchor="middle" fill="#506040" font-size="22">Лог пуст — нет данных для графика</text>';
+    svg.innerHTML='<text x="450" y="270" text-anchor="middle" fill="#f5a623" font-size="42" font-weight="bold">'+wt+'</text>'+
+      '<text x="450" y="320" text-anchor="middle" fill="#506040" font-size="26">Лог пуст — нет данных для графика</text>';
     return;
   }
   const pts=_all.slice(-120);
   _tipPts.mini=pts;
-  drawLineSvg(svg,pts,'w','#f5a623',900,350,90,15,12,80,true);
+  drawLineSvg(svg,pts,'w','#f5a623',900,600,90,15,12,90,true);
 }
 
 // ── Chart page ────────────────────────────────────────────────────────
@@ -1062,7 +1082,7 @@ function filterPts() {
 
 function renderCharts() {
   if (!_all.length) {
-    [{id:'chart-w',cy:120},{id:'chart-t',cy:90},{id:'chart-b',cy:70}].forEach(function(s){
+    [{id:'chart-w',cy:240},{id:'chart-t',cy:240},{id:'chart-b',cy:240}].forEach(function(s){
       var svg=document.getElementById(s.id);
       if(svg) svg.innerHTML='<text x="450" y="'+s.cy+'" text-anchor="middle" fill="#506040" font-size="22">Нет данных</text>';
     });
@@ -1078,17 +1098,17 @@ function renderCharts() {
     const mn=ws.reduce((a,b)=>a<b?a:b),mx=ws.reduce((a,b)=>a>b?a:b),av=ws.reduce((a,b)=>a+b,0)/ws.length;
     setText('c-wmin',mn.toFixed(2)); setText('c-wmax',mx.toFixed(2));
     setText('c-wavg',av.toFixed(2)); setText('c-pts',pts.length);
-    drawLineSvg(document.getElementById('chart-w'),pts,'w','#f5a623',900,260,90,15,12,75,true);
+    drawLineSvg(document.getElementById('chart-w'),pts,'w','#f5a623',900,500,90,15,12,85,true);
   }
   if (_serVisible.t) {
     _tipPts.t=pts;
     const ts=pts.map(d=>parseFloat(d.t)).filter(v=>!isNaN(v)&&v>-90);
     if(ts.length){setText('c-tmin',ts.reduce((a,b)=>a<b?a:b).toFixed(1));setText('c-tmax',ts.reduce((a,b)=>a>b?a:b).toFixed(1));}
-    drawLineSvg(document.getElementById('chart-t'),pts,'t','#56ccf2',900,260,90,15,12,75,true);
+    drawLineSvg(document.getElementById('chart-t'),pts,'t','#56ccf2',900,500,90,15,12,85,true);
   }
   if (_serVisible.b) {
     _tipPts.b=pts;
-    drawLineSvg(document.getElementById('chart-b'),pts,'b','#6fcf97',900,260,90,15,12,75,true);
+    drawLineSvg(document.getElementById('chart-b'),pts,'b','#6fcf97',900,500,90,15,12,85,true);
   }
 }
 
@@ -1160,30 +1180,82 @@ function drawLineSvg(svg,pts,key,color,W,H,L,R,T,B,showAxes) {
   svg.innerHTML=html;
 }
 
-// ── Tooltip ───────────────────────────────────────────────────────────
+// ── Tooltip + интерактивный курсор (mouse + touch) ────────────────────
+let _tipHideTimer = {};
 function onTip(e,s){
   const pts=_tipPts[s];
   if(!pts||!pts.length) return;
+  // Поддержка touch — берём первый палец
+  let cX, cY;
+  if (e.touches && e.touches.length) {
+    cX = e.touches[0].clientX; cY = e.touches[0].clientY;
+    if (e.cancelable) e.preventDefault();  // блокируем скролл страницы при скрабе по графику
+  } else {
+    cX = e.clientX; cY = e.clientY;
+  }
   const key={w:'w',t:'t',b:'b',mini:'w'}[s];
   const color={w:'var(--amber)',t:'var(--blue)',b:'var(--green)',mini:'var(--amber)'}[s];
   const unit={w:' кг',t:' °C',b:' В',mini:' кг'}[s];
-  const W=900,L=60,R=10;
-  const pW=W-L-R;
+  // viewBox геометрия: mini=900x600, charts=900x500. L,R одинаковые.
+  const W=900,L=90,R=15;
+  const H=(s==='mini')?600:500;
+  const T=12, B=(s==='mini')?90:85;
+  const pW=W-L-R, pH=H-T-B;
   const svg=e.currentTarget, rect=svg.getBoundingClientRect();
-  const svgX=(e.clientX-rect.left)/rect.width*W;
+  const relX=cX-rect.left, relY=cY-rect.top;
+  // Преобразуем экранные координаты в viewBox-координаты
+  // SVG с preserveAspectRatio="xMidYMid meet" может иметь вертикальные отступы — учтём
+  const scale = Math.min(rect.width/W, rect.height/H);
+  const svgW = W*scale, svgH = H*scale;
+  const padX = (rect.width-svgW)/2, padY=(rect.height-svgH)/2;
+  const svgX = (relX-padX)/scale;
+  // Найти ближайшую точку
   let best=-1,bestD=9999;
   for(let i=0;i<pts.length;i++){const x=L+i/(pts.length-1||1)*pW,d=Math.abs(x-svgX);if(d<bestD){bestD=d;best=i;}}
   if(best<0||bestD>pW/pts.length*3){hideTip(s);return;}
   const p=pts[best], v=parseFloat(p[key]);
+  // Найти Y для точки (в viewBox)
+  const vals=pts.map(d=>parseFloat(d[key])).filter(x=>!isNaN(x)&&x>-90);
+  let scaleVals=(key==='t'||key==='b')?vals.filter(x=>x>0.05):vals;
+  if(scaleVals.length<2) scaleVals=vals;
+  let mn=scaleVals.reduce((a,b)=>a<b?a:b), mx=scaleVals.reduce((a,b)=>a>b?a:b);
+  const range=mx-mn||1; mn-=range*0.05; mx+=range*0.05;
+  if(mx===mn){mn-=0.5;mx+=0.5;}
+  const xVB = L+best/(pts.length-1||1)*pW;
+  const yVB = !isNaN(v)&&v>-90 ? T+pH-(v-mn)/(mx-mn)*pH : T+pH/2;
+  // Пересчёт обратно в экран
+  const screenX = padX + xVB*scale;
+  const screenY = padY + yVB*scale;
+  // Курсор-линия и точка — позиция считается от родителя .chart-container, а не от SVG
+  const containerEl = svg.closest('.chart-container');
+  const cRect = containerEl ? containerEl.getBoundingClientRect() : rect;
+  const ox = rect.left - cRect.left;  // смещение SVG внутри контейнера
+  const oy = rect.top - cRect.top;
+  const cur=document.getElementById('cur-'+s);
+  const dot=document.getElementById('dot-'+s);
+  if(cur){cur.style.left=(ox+screenX)+'px';cur.style.top=oy+'px';cur.style.height=rect.height+'px';cur.style.background=color;cur.style.display='block';}
+  if(dot){dot.style.left=(ox+screenX)+'px';dot.style.top=(oy+screenY)+'px';dot.style.background=color;dot.style.borderColor='#fff';dot.style.boxShadow='0 0 6px '+color;dot.style.display='block';}
+  // Tooltip
   const tip=document.getElementById('tip-'+s);
   tip.innerHTML=`<b style="color:${color}">${isNaN(v)||v<=-90?'--':v.toFixed(key==='b'?3:2)+unit}</b><br>${esc(p.dt||'')}`;
-  tip.style.display='';
-  let tx=(e.clientX-rect.left)+10, ty=(e.clientY-rect.top)-48;
-  if(tx+140>rect.width) tx=(e.clientX-rect.left)-150;
-  if(ty<0) ty=10;
+  tip.style.display='block';
+  let tx=relX+12, ty=relY-58;
+  if(tx+150>rect.width) tx=relX-160;
+  if(ty<0) ty=relY+18;
   tip.style.left=tx+'px'; tip.style.top=ty+'px';
+  // Авто-скрытие после касания
+  if(_tipHideTimer[s]){clearTimeout(_tipHideTimer[s]);_tipHideTimer[s]=null;}
 }
-function hideTip(s){const el=document.getElementById('tip-'+s);if(el)el.style.display='none';}
+function hideTip(s){
+  const el=document.getElementById('tip-'+s);if(el)el.style.display='none';
+  const cur=document.getElementById('cur-'+s);if(cur)cur.style.display='none';
+  const dot=document.getElementById('dot-'+s);if(dot)dot.style.display='none';
+}
+// Touch-end — скрываем через 2 сек, чтобы успеть прочесть значение
+function onTipEnd(s){
+  if(_tipHideTimer[s]) clearTimeout(_tipHideTimer[s]);
+  _tipHideTimer[s] = setTimeout(()=>hideTip(s), 2000);
+}
 
 // ── Export ────────────────────────────────────────────────────────────
 function getExpData() {
