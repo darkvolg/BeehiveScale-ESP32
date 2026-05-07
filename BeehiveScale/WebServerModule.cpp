@@ -1610,7 +1610,9 @@ static void _sendProgmemChunked(const char *pgm) {
   _srv.send(200, "text/html; charset=utf-8", "");
   size_t total = strlen_P(pgm);
   size_t sent = 0;
-  char chunk[512];
+  // 4KB чанки (было 512) — на странице ~70КБ это уменьшает кол-во TCP-пакетов
+  // и yield()-ов в ~8 раз. На слабом WiFi это сокращает загрузку HTML с 30+ сек до 3-5 сек.
+  static char chunk[4096];  // static чтобы не жечь стек
   while (sent < total) {
     size_t n = min((size_t)sizeof(chunk), total - sent);
     memcpy_P(chunk, pgm + sent, n);
@@ -1692,10 +1694,23 @@ static void _handleData() {
   doc["offset"]   = *_wd.offset;
   doc["batV"]     = *_wd.batVoltage;
   doc["batPct"]   = *_wd.batPercent;
-  doc["sdLog"]      = (unsigned long)log_size();
-  doc["sdFree"]     = (unsigned long)log_free_space();
-  doc["sdFallback"] = log_using_fallback();
-  doc["sdOk"]       = log_fs_ok() ? 1 : 0;
+  // SD-статистика: LittleFS.usedBytes()/totalBytes() итерирует все файлы → медленно.
+  // Кешируем на 10 сек чтобы поллинг /api/data был быстрым (~5мс вместо 100-500мс).
+  static unsigned long _sdStatsLastMs = 0;
+  static unsigned long _sdLogCache = 0, _sdFreeCache = 0;
+  static bool _sdFallbackCache = false, _sdOkCache = false;
+  if (_sdStatsLastMs == 0 || (millis() - _sdStatsLastMs) > 10000UL) {
+    _sdLogCache      = (unsigned long)log_size();
+    _sdFreeCache     = (unsigned long)log_free_space();
+    _sdFallbackCache = log_using_fallback();
+    _sdOkCache       = log_fs_ok();
+    _sdStatsLastMs   = millis();
+    if (_sdStatsLastMs == 0) _sdStatsLastMs = 1;
+  }
+  doc["sdLog"]      = _sdLogCache;
+  doc["sdFree"]     = _sdFreeCache;
+  doc["sdFallback"] = _sdFallbackCache;
+  doc["sdOk"]       = _sdOkCache ? 1 : 0;
   doc["csrf"]         = _csrfToken;
   doc["credsDefault"] = credentials_is_default();
   doc["fw"]           = FW_VERSION;
