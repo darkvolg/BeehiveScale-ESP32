@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeehiveScale v4.1 — Руководство пользователя</title>
+    <title>BeehiveScale ESP32 v5.0.17 — Руководство пользователя</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -12,6 +12,7 @@
             --success: #4CAF50;
             --warning: #FF9800;
             --danger: #f44336;
+            --tg: #229ED9;
             --dark: #1a1a2e;
             --card-bg: #16213e;
             --card-bg2: #0f1a2e;
@@ -105,11 +106,13 @@
         .tip    { background: rgba(76,175,80,0.08);  border-left: 4px solid var(--success); padding: 14px; border-radius: 0 10px 10px 0; margin: 14px 0; }
         .warn   { background: rgba(255,152,0,0.08);  border-left: 4px solid var(--warning); padding: 14px; border-radius: 0 10px 10px 0; margin: 14px 0; }
         .danger { background: rgba(244,67,54,0.08);  border-left: 4px solid var(--danger);  padding: 14px; border-radius: 0 10px 10px 0; margin: 14px 0; }
-        .tip strong, .warn strong, .danger strong { display: block; margin-bottom: 4px; }
+        .info-tg{ background: rgba(34,158,217,0.08); border-left: 4px solid var(--tg);      padding: 14px; border-radius: 0 10px 10px 0; margin: 14px 0; }
+        .tip strong, .warn strong, .danger strong, .info-tg strong { display: block; margin-bottom: 4px; }
+        .info-tg strong { color: var(--tg); }
 
-        .lcd-screen { background: #1a2e1a; border: 3px solid #2a4a2a; border-radius: 8px; padding: 18px 22px; font-family: 'Courier New', monospace; display: inline-block; margin: 10px 0; box-shadow: inset 0 0 20px rgba(0,0,0,0.4), 0 0 15px rgba(50,150,50,0.1); }
-        .lcd-row { font-size: 1.3em; color: #7fff7f; line-height: 1.8; letter-spacing: 2px; white-space: pre; }
-        .lcd-row .hl { color: #ffff00; }
+        .lcd-screen { background: #0a1a3a; border: 3px solid #1a2a5a; border-radius: 8px; padding: 18px 22px; font-family: 'Courier New', monospace; display: inline-block; margin: 10px 0; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 15px rgba(80,150,255,0.15); }
+        .lcd-row { font-size: 1.3em; color: #e8e8ff; line-height: 1.8; letter-spacing: 2px; white-space: pre; font-weight: bold; }
+        .lcd-row .hl { color: #ffeb66; }
 
         .diagram-wrap { background: #0a0f1e; border-radius: 15px; padding: 20px; overflow-x: auto; margin: 20px 0; border: 1px solid var(--border); }
 
@@ -120,6 +123,8 @@
         .btn-card h4 { color: var(--text); margin-bottom: 8px; }
         .btn-card p { color: var(--text-muted); font-size: 0.88em; }
         .btn-tag { display: inline-block; margin-top: 8px; background: rgba(245,166,35,0.15); color: var(--primary); padding: 3px 12px; border-radius: 10px; font-size: 0.82em; }
+        .btn-tag.danger { background: rgba(244,67,54,0.15); color: var(--danger); }
+        .btn-tag.tg { background: rgba(34,158,217,0.15); color: var(--tg); }
 
         .screen-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
         .screen-item { background: var(--card-bg2); border-radius: 10px; padding: 16px; border-left: 3px solid var(--primary); }
@@ -143,6 +148,8 @@
 
         code { background: rgba(0,0,0,0.35); padding: 2px 7px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.9em; color: #f5a623; }
 
+        .changelog-tag { display: inline-block; background: rgba(76,175,80,0.15); color: var(--success); padding: 2px 9px; border-radius: 10px; font-size: 0.78em; margin-left: 8px; vertical-align: middle; }
+
         @media (max-width: 768px) {
             header h1 { font-size: 1.9em; }
             .nav-tab { padding: 10px 14px; font-size: 0.88em; }
@@ -156,15 +163,18 @@
 
 <!-- HEADER -->
 <header>
-    <h1>🐝 BeehiveScale v4.1</h1>
+    <h1>🐝 BeehiveScale ESP32 v5.0.17</h1>
     <p class="subtitle">Умные весы для пчеловода — Руководство пользователя</p>
     <div class="badges">
-        <span class="badge">NodeMCU ESP8266MOD</span>
+        <span class="badge">ESP32-WROOM-32</span>
         <span class="badge">HX711 + тензодатчик</span>
         <span class="badge">LCD 16×2 I2C</span>
         <span class="badge">DS18B20 + DS3231</span>
-        <span class="badge">SD-карта (SPI)</span>
-        <span class="badge">Wi-Fi AP</span>
+        <span class="badge">LittleFS лог</span>
+        <span class="badge">Wi-Fi AP/STA</span>
+        <span class="badge">Telegram через CF Worker</span>
+        <span class="badge">Deep Sleep + расписание</span>
+        <span class="badge">📅 Архив + PWA</span>
     </div>
 </header>
 
@@ -177,93 +187,116 @@
     <div class="nav-tab" onclick="showSection('firmware',this)">💾 Прошивка</div>
     <div class="nav-tab" onclick="showSection('operation',this)">🖥️ Работа</div>
     <div class="nav-tab" onclick="showSection('calibration',this)">⚖️ Калибровка</div>
+    <div class="nav-tab" onclick="showSection('schedule',this)">⏰ Расписание</div>
     <div class="nav-tab" onclick="showSection('webui',this)">🌐 Веб</div>
+    <div class="nav-tab" onclick="showSection('telegram',this)">📱 Telegram</div>
     <div class="nav-tab" onclick="showSection('faq',this)">❓ FAQ</div>
 </div>
 
 <!-- ===== OVERVIEW ===== -->
 <div id="overview" class="section active">
     <div class="card">
-        <h2>📋 Что такое BeehiveScale</h2>
-        <p>BeehiveScale — электронные весы для пчелиных ульев на базе NodeMCU ESP8266. Устройство непрерывно измеряет вес улья, температуру, заряд батареи и передаёт данные через встроенный веб-интерфейс. Подходит для контроля взятка, зимовки, отслеживания роения.</p>
+        <h2>📋 Что такое BeehiveScale ESP32</h2>
+        <p>BeehiveScale ESP32 — электронные весы для пчелиных ульев на базе <strong>ESP32-WROOM-32 DevKit V1</strong>. Устройство непрерывно измеряет вес улья, температуру, заряд батареи. Передаёт данные через встроенный Wi-Fi-сайт и шлёт отчёты в <strong>Telegram</strong> по расписанию. В режиме экономии (deep sleep между замерами) живёт на 18650 от 30 до 40 дней. Подходит для контроля взятка, зимовки, отслеживания роения.</p>
         <div class="comp-grid" style="margin-top:20px">
-            <div class="comp-card"><div class="comp-icon">⚖️</div><h4>Измерение веса</h4><p>Точность 0.01 кг. EMA-сглаживание. Авто-фиксация стабильного значения</p></div>
+            <div class="comp-card"><div class="comp-icon">⚖️</div><h4>Измерение веса</h4><p>Точность 0.01 кг. EMA-сглаживание α=0.3. Спайк-фильтр от помех</p></div>
             <div class="comp-card"><div class="comp-icon">🌡️</div><h4>Температура</h4><p>DS18B20 в улье + DS3231 RTC — температура воздуха</p></div>
-            <div class="comp-card"><div class="comp-icon">🌐</div><h4>Wi-Fi точка доступа</h4><p>Веб-интерфейс без роутера. SSID: BeehiveScale, пароль: 12345678</p></div>
-            <div class="comp-card"><div class="comp-icon">🔋</div><h4>Батарея</h4><p>Мониторинг Li-Ion 1S. Напряжение, %, предупреждение при &lt;10%</p></div>
-            <div class="comp-card"><div class="comp-icon">💤</div><h4>Deep Sleep</h4><p>Авто-сон через 3 мин бездействия. GPIO16 (D0) → RST для пробуждения</p></div>
-            <div class="comp-card"><div class="comp-icon">🕐</div><h4>Реальное время</h4><p>DS3231 RTC — точные дата/время без интернета</p></div>
-            <div class="comp-card"><div class="comp-icon">💾</div><h4>SD-карта (лог)</h4><p>Запись веса, температуры, батареи каждую минуту. CSV скачивается через Wi-Fi</p></div>
+            <div class="comp-card"><div class="comp-icon">🌐</div><h4>Wi-Fi AP/STA</h4><p>Свой Wi-Fi (BeehiveScale / 12345678) или подключение к домашнему роутеру</p></div>
+            <div class="comp-card"><div class="comp-icon">📱</div><h4>Telegram</h4><p>Отчёты по расписанию через Cloudflare Worker (обходит блокировку Beeline и др.)</p></div>
+            <div class="comp-card"><div class="comp-icon">⏰</div><h4>Расписание</h4><p>Замер + отчёт в заданное время (например, 09:00 и 21:00)</p></div>
+            <div class="comp-card"><div class="comp-icon">💤</div><h4>Deep Sleep</h4><p>Авто-сон 3 мин бездействия + расписание. ~7 мА в спячке (после HT7333 — ~3 мА)</p></div>
+            <div class="comp-card"><div class="comp-icon">🔋</div><h4>18650 + AS21</h4><p>Зарядка от microUSB. TP4056 + DW01 + Boost 5V на одном модуле</p></div>
+            <div class="comp-card"><div class="comp-icon">🕐</div><h4>RTC DS3231</h4><p>Точные дата/время без интернета. Батарейка CR2032 на годы</p></div>
+            <div class="comp-card"><div class="comp-icon">💾</div><h4>LittleFS лог</h4><p>Замеры пишутся во внутренний flash ESP32. CSV скачивается через сайт</p></div>
+            <div class="comp-card"><div class="comp-icon">📊</div><h4>Графики</h4><p>Сайт показывает кривую веса по дням. Тач-курсор: палец → значение в точке</p></div>
         </div>
     </div>
 
     <div class="card">
-        <h2>📟 Экраны LCD (7 штук, переключение кнопкой MENU)</h2>
+        <h2>📟 Экраны LCD (8 штук, переключение кнопкой MENU)</h2>
         <div class="screen-list">
             <div class="screen-item">
-                <div class="screen-num">Экран 0 — Текущий вес</div>
+                <div class="screen-num">Экран 1 — Вес и время</div>
                 <div class="lcd-screen">
-                    <div class="lcd-row">Ves: <span class="hl">25.40</span>*kg  </div>
-                    <div class="lcd-row">10:35:22  <span class="hl">W</span> </div>
+                    <div class="lcd-row">Ves: <span class="hl">4.42</span>*kg  </div>
+                    <div class="lcd-row">21:35:22       <span class="hl">W</span></div>
                 </div>
                 <p style="margin-top:6px">* = показания стабильны, W = Wi-Fi OK</p>
             </div>
             <div class="screen-item">
-                <div class="screen-num">Экран 1 — Дельта веса</div>
+                <div class="screen-num">Экран 2 — Дельта (Δ)</div>
                 <div class="lcd-screen">
-                    <div class="lcd-row">D:<span class="hl">+01.60</span>kg  </div>
-                    <div class="lcd-row">Pred:<span class="hl">23.80</span>kg</div>
+                    <div class="lcd-row">D:<span class="hl">+0.34</span>kg   </div>
+                    <div class="lcd-row">Pred:<span class="hl">4.08</span>kg </div>
                 </div>
-                <p style="margin-top:6px">D = текущий − предыдущий вес (со знаком). Pred = предыдущий (опорный) вес. Обновляется кнопкой «Save» в веб-интерфейсе.</p>
+                <p style="margin-top:6px">D = текущий − зафиксированный вес. Pred = эталон. Меняется кнопкой «📍 Зафиксировать» на сайте.</p>
             </div>
             <div class="screen-item">
-                <div class="screen-num">Экран 2 — Батарея</div>
+                <div class="screen-num">Экран 3 — Батарея</div>
                 <div class="lcd-screen">
-                    <div class="lcd-row">Bat:<span class="hl">3.85</span>V <span class="hl"> 71</span>%</div>
+                    <div class="lcd-row">Bat:<span class="hl">3.85</span>V <span class="hl"> 78</span>%</div>
                     <div class="lcd-row">Li-Ion 1S       </div>
                 </div>
-                <p style="margin-top:6px">При &lt;10%: !! LOW BATTERY !!</p>
+                <p style="margin-top:6px">При &lt;10%: !LOW BATTERY!</p>
             </div>
             <div class="screen-item">
-                <div class="screen-num">Экран 3 — Температура</div>
+                <div class="screen-num">Экран 4 — Температура</div>
                 <div class="lcd-screen">
-                    <div class="lcd-row">T:<span class="hl">28.5</span>C R:<span class="hl">22.1</span>C</div>
-                    <div class="lcd-row">H: <span class="hl">65.2</span> %    </div>
+                    <div class="lcd-row">T:<span class="hl">27.5</span>C R:<span class="hl">28.0</span>C</div>
+                    <div class="lcd-row">H: --   (DS18) </div>
                 </div>
-                <p style="margin-top:6px">T = улей, R = RTC (воздух), H = влажность</p>
+                <p style="margin-top:6px">T = улей (DS18B20), R = RTC. Влажность не измеряется (DS18B20 — только температура)</p>
             </div>
             <div class="screen-item">
-                <div class="screen-num">Экран 4 — Дата и время</div>
+                <div class="screen-num">Экран 5 — Дата и время</div>
                 <div class="lcd-screen">
-                    <div class="lcd-row"><span class="hl">2024-06-15</span>   </div>
+                    <div class="lcd-row"><span class="hl">08.05.26 21:35</span></div>
                     <div class="lcd-row">RTC OK          </div>
                 </div>
+                <p style="margin-top:6px">«RTC ERROR!» = села CR2032</p>
             </div>
             <div class="screen-item">
-                <div class="screen-num">Экран 5 — Статус</div>
+                <div class="screen-num">Экран 6 — Статус</div>
                 <div class="lcd-screen">
-                    <div class="lcd-row">CF:<span class="hl">2280</span>      </div>
-                    <div class="lcd-row">W:<span class="hl">OK</span> N:<span class="hl">14</span>     </div>
+                    <div class="lcd-row">CF:<span class="hl">20534</span>    </div>
+                    <div class="lcd-row">W:<span class="hl">OK</span>   N:<span class="hl">42</span>    </div>
                 </div>
-                <p style="margin-top:6px">CF = коэффициент, N = пробуждений</p>
+                <p style="margin-top:6px">CF = калибровочный коэффициент, N = пробуждений из сна</p>
             </div>
             <div class="screen-item">
-                <div class="screen-num">Экран 6 — Калибровка</div>
+                <div class="screen-num">Экран 7 — Меню CF (для опытных)</div>
                 <div class="lcd-screen">
-                    <div class="lcd-row">CF:<span class="hl">2280.0</span>    </div>
+                    <div class="lcd-row">CF:<span class="hl">20534.0</span> </div>
                     <div class="lcd-row">MAIN=Vojti      </div>
                 </div>
-                <p style="margin-top:6px">Нажмите MAIN для входа в режим подстройки CF</p>
+                <p style="margin-top:6px">Точка входа в ручную подстройку коэффициента CF (для тонкой правки если веса «чуть-чуть врут»). <b>Обычным пользователям не нужно</b> — пропусти кнопкой MENU.</p>
             </div>
             <div class="screen-item">
-                <div class="screen-num">Экран 7 — Диагностика</div>
+                <div class="screen-num">Экран 8 — Диагностика</div>
                 <div class="lcd-screen">
                     <div class="lcd-row"><span class="hl">Diagnostika...</span></div>
                     <div class="lcd-row">HX711...    <span class="hl">OK</span></div>
                 </div>
-                <p style="margin-top:6px">Тест системы: HX711, DS18B20, RTC, батарея. Нажмите MAIN для запуска.</p>
+                <p style="margin-top:6px">Самопроверка: HX711, DS18B20, RTC, батарея. MAIN = повтор</p>
             </div>
         </div>
+    </div>
+
+    <div class="card">
+        <h2>🆕 Что нового в v5.0.x по сравнению с v4.x (ESP8266)</h2>
+        <table class="conn-table">
+            <thead><tr><th>Что</th><th>Раньше (v4.1, ESP8266)</th><th>Сейчас (v5.0.17, ESP32)</th></tr></thead>
+            <tbody>
+                <tr><td class="from">Микроконтроллер</td><td>NodeMCU ESP8266</td><td class="to">ESP32-WROOM-32 DevKit V1</td></tr>
+                <tr><td class="from">Deep Sleep wake</td><td>Только кнопкой RST (GPIO16 занят HX711)</td><td class="to">Просыпается по расписанию из DS3231 / по таймеру</td></tr>
+                <tr><td class="from">Лог</td><td>SD-карта (SPI)</td><td class="to">LittleFS внутренний flash (нет окисления, надёжнее)</td></tr>
+                <tr><td class="from">Telegram</td><td>Только локально (блокировка Beeline)</td><td class="to">Через Cloudflare Worker — работает у любого провайдера</td></tr>
+                <tr><td class="from">Расписание</td><td>—</td><td class="to">Замер + отчёт в заданное время (09:00, 21:00 и т.д.)</td></tr>
+                <tr><td class="from">Эталон веса</td><td>В EEPROM</td><td class="to">+ дата фиксации + EEPROM-резерв (переживает reset)</td></tr>
+                <tr><td class="from">Веб-панель</td><td>Базовая (вес/тара/настройки)</td><td class="to">Графики, тач-курсор, мобильная вёрстка, ☕+10мин</td></tr>
+                <tr><td class="from">LCD</td><td>Мерцал при изменении веса</td><td class="to">Dirty-check кеш + I2C 400kHz — без мерцания</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -271,153 +304,517 @@
 <div id="components" class="section">
     <div class="card">
         <h2>🔧 Список компонентов</h2>
+        <p style="color:var(--text-muted);margin-bottom:15px">Кликни по любой иконке — детали компонента раскроются ниже.</p>
         <div class="comp-grid">
-            <div class="comp-card"><div class="comp-icon">📟</div><h4>NodeMCU ESP8266MOD</h4><p>Lolin NodeMCU. Процессор, Wi-Fi, управление схемой</p><span class="qty">× 1</span></div>
-            <div class="comp-card"><div class="comp-icon">⚖️</div><h4>HX711</h4><p>24-бит АЦП для тензодатчиков. Усиление 128</p><span class="qty">× 1</span></div>
-            <div class="comp-card"><div class="comp-icon">🏋️</div><h4>Тензодатчик</h4><p>Балочный или платформенный. 50–200 кг нагрузка</p><span class="qty">× 4</span></div>
-            <div class="comp-card"><div class="comp-icon">📺</div><h4>LCD 1602 I2C</h4><p>16×2 символов. PCF8574, адрес 0x27</p><span class="qty">× 1</span></div>
-            <div class="comp-card"><div class="comp-icon">🌡️</div><h4>DS18B20</h4><p>Цифровой термометр OneWire, −55…+125°C</p><span class="qty">× 1</span></div>
-            <div class="comp-card"><div class="comp-icon">🕐</div><h4>DS3231 RTC</h4><p>Часы реального времени I2C. Батарейка CR2032</p><span class="qty">× 1</span></div>
-            <div class="comp-card"><div class="comp-icon">🔘</div><h4>Кнопки тактовые</h4><p>MAIN (тара) и MENU (навигация). 6×6 мм</p><span class="qty">× 2</span></div>
-            <div class="comp-card"><div class="comp-icon">🔋</div><h4>Li-Ion 1S + TP4056</h4><p>Аккумулятор 3.7–4.2 В с зарядным модулем</p><span class="qty">× 1</span></div>
-            <div class="comp-card"><div class="comp-icon">💾</div><h4>Модуль SD-карты</h4><p>MicroSD SPI-модуль. CS, SCK, MISO, MOSI. FAT32</p><span class="qty">× 1</span></div>
-            <div class="comp-card"><div class="comp-icon">📐</div><h4>Резисторы</h4><p>4.7 кОм — DS18B20 pull-up<br>2 × 100 кОм — делитель батареи</p><span class="qty">× 3</span></div>
+            <div class="comp-card active" data-comp="esp32"  onclick="showComp('esp32')"><div class="comp-icon">📟</div><h4>ESP32-WROOM-32</h4><p>Мозг устройства. DOIT DevKit V1, 38 пинов, USB-C</p><span class="qty">× 1</span></div>
+            <div class="comp-card" data-comp="hx711"          onclick="showComp('hx711')"><div class="comp-icon">⚖️</div><h4>HX711</h4><p>24-бит АЦП тензодатчика. Усиление 128</p><span class="qty">× 1</span></div>
+            <div class="comp-card" data-comp="loadcell"       onclick="showComp('loadcell')"><div class="comp-icon">🏋️</div><h4>Тензодатчик</h4><p>Балочный или платформенный. 50–200 кг</p><span class="qty">× 1–4</span></div>
+            <div class="comp-card" data-comp="lcd"            onclick="showComp('lcd')"><div class="comp-icon">📺</div><h4>LCD 1602 I²C</h4><p>16×2 символов. PCF8574, 0x27, питание 5В</p><span class="qty">× 1</span></div>
+            <div class="comp-card" data-comp="ds18b20"        onclick="showComp('ds18b20')"><div class="comp-icon">🌡️</div><h4>DS18B20</h4><p>Цифровой термометр 1-Wire, −55…+125°C</p><span class="qty">× 1</span></div>
+            <div class="comp-card" data-comp="ds3231"         onclick="showComp('ds3231')"><div class="comp-icon">🕐</div><h4>DS3231 RTC</h4><p>Часы реального времени I²C. CR2032. Точность ±2 мин/год</p><span class="qty">× 1</span></div>
+            <div class="comp-card" data-comp="buttons"        onclick="showComp('buttons')"><div class="comp-icon">🔘</div><h4>Кнопки</h4><p>MAIN и MENU. Тактовые 6×6 мм</p><span class="qty">× 2</span></div>
+            <div class="comp-card" data-comp="as21"           onclick="showComp('as21')"><div class="comp-icon">🔋</div><h4>AS21 V6.0 + 18650</h4><p>TP4056+DW01+Boost. microUSB зарядка, держатель</p><span class="qty">× 1</span></div>
+            <div class="comp-card" data-comp="resistors"      onclick="showComp('resistors')"><div class="comp-icon">📐</div><h4>Резисторы</h4><p>4.7к (DS18B20 pull-up) + 2×100к (делитель)</p><span class="qty">× 3</span></div>
+            <div class="comp-card" data-comp="socket"         onclick="showComp('socket')"><div class="comp-icon">🔌</div><h4>DIP-сокет 2×19</h4><p>Female pin headers — ESP32 на съёмном сокете</p><span class="qty">× 1</span></div>
+            <div class="comp-card" data-comp="littlefs"       onclick="showComp('littlefs')"><div class="comp-icon">💾</div><h4>LittleFS</h4><p>Внутренний flash ESP32. Лог замеров. SD не нужна</p><span class="qty">встроено</span></div>
+            <div class="comp-card" data-comp="cfworker"       onclick="showComp('cfworker')"><div class="comp-icon">☁️</div><h4>CF Worker (Telegram)</h4><p>beehive-relay.darkvolg.workers.dev — обходит Beeline</p><span class="qty">облако</span></div>
         </div>
-        <div class="warn" style="margin-top:20px"><strong>⚠️ Питание LCD</strong>LCD 1602 работает от 5В. Подключайте к VIN (USB-питание NodeMCU), а не к 3V3.</div>
     </div>
+
+    <!-- Детали выбранного компонента ниже -->
+    <div class="card" id="comp-detail-card">
+
+        <!-- ESP32 -->
+        <div class="comp-detail" id="detail-esp32">
+            <h2>📟 ESP32-WROOM-32 DevKit V1 (DOIT)</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">Главный микроконтроллер. 240 МГц, 4 МБ flash, Wi-Fi 802.11 b/g/n, Bluetooth, 38 пинов, USB-C для прошивки и Serial.</p>
+            <table class="conn-table">
+                <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">Питание (VIN)</td><td class="to">5В от AS21 (через USB-C тоже работает)</td></tr>
+                    <tr><td class="from">Внутренний LDO</td><td class="to">AMS1117 → 3.3В для всей периферии (~600 мА запас)</td></tr>
+                    <tr><td class="from">Ток в active + WiFi</td><td class="to">~80–90 мА</td></tr>
+                    <tr><td class="from">Ток в deep sleep</td><td class="to">~7 мА (с AMS1117) → ~3 мА после замены на HT7333</td></tr>
+                    <tr><td class="from">Запрещённые пины</td><td class="to">D6–D11 (SPI flash), D34–D39 input only</td></tr>
+                </tbody>
+            </table>
+            <div class="warn"><strong>⚠️ Partition Scheme</strong>Прошивка ~1.24МБ + WiFi + Web не влезает в default. В Arduino IDE обязательно выбрать <b>Huge APP (3MB No OTA / 1MB SPIFFS)</b>.</div>
+            <div class="tip"><strong>💡 Что покупать</strong>Ищи именно <b>DOIT DevKit V1, 38 пинов, USB-C</b>. Бывают версии 30 пинов (без D6–D11 в ряду) и microUSB — оба тоже работают, но распиновка может отличаться.</div>
+        </div>
+
+        <!-- HX711 -->
+        <div class="comp-detail" id="detail-hx711" style="display:none">
+            <h2>⚖️ HX711 — АЦП тензодатчика</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">24-битный АЦП с программируемым усилителем. Подключается к тензодатчику с одной стороны и к ESP32 по 4 проводам с другой.</p>
+            <table class="conn-table">
+                <thead><tr><th>HX711</th><th></th><th>ESP32</th><th>Цвет провода</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">VCC</td><td class="arrow">→</td><td class="to">3V3</td><td class="note">красный</td></tr>
+                    <tr><td class="from">GND</td><td class="arrow">→</td><td class="to">GND</td><td class="note">чёрный</td></tr>
+                    <tr><td class="from">DT (DATA)</td><td class="arrow">→</td><td class="to">D16 (GPIO16)</td><td class="note">жёлтый</td></tr>
+                    <tr><td class="from">SCK (CLK)</td><td class="arrow">→</td><td class="to">D17 (GPIO17)</td><td class="note">зелёный</td></tr>
+                </tbody>
+            </table>
+            <h3>Подключение тензодатчика к HX711</h3>
+            <table class="conn-table">
+                <thead><tr><th>Тензодатчик (TAL220 и аналоги)</th><th></th><th>HX711</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">Красный (E+)</td><td class="arrow">→</td><td class="to">E+</td></tr>
+                    <tr><td class="from">Чёрный (E−)</td><td class="arrow">→</td><td class="to">E−</td></tr>
+                    <tr><td class="from">Зелёный (A+)</td><td class="arrow">→</td><td class="to">A+</td></tr>
+                    <tr><td class="from">Белый (A−)</td><td class="arrow">→</td><td class="to">A−</td></tr>
+                </tbody>
+            </table>
+            <div class="tip"><strong>💡 КНР-датчики</strong>Цвета могут отличаться. Принцип: <b>пара толстых проводов</b> (питание тензомоста) → E+/E−, <b>пара тонких</b> (сигнал) → A+/A−. Если знак показаний обратный — поменяй A+ и A− местами.</div>
+            <div class="warn"><strong>⚠️ Питание 3.3В, не 5В</strong>HX711 работает от 5В тоже, но при 3.3В показания стабильнее (меньше шум от Boost-преобразователя). У нас именно 3.3В.</div>
+
+            <h3>🔋 ОБЯЗАТЕЛЬНАЯ доработка для deep sleep — Pull-up на SCK</h3>
+            <div class="danger" style="background:rgba(244,67,54,0.08);border-left:4px solid var(--danger);padding:14px;border-radius:0 10px 10px 0;margin:14px 0"><strong style="color:var(--danger);display:block;margin-bottom:4px">⚠ Без этого резистора <code>scale.power_down()</code> в коде НЕ работает!</strong>Программный power_down переводит SCK в HIGH (по datasheet HX711 удерживает в power-down). Но при deep sleep ESP32 <b>пин GPIO17 уходит в Z</b> (D17 — не RTC GPIO, не удерживается). HX711 видит «провисание» SCK → просыпается обратно → продолжает есть <b>1.5–2 мА в sleep вместо 1 мкА</b>.</div>
+            <p style="color:var(--text-muted);margin:10px 0"><b>Решение — внешний pull-up резистор 10 кΩ:</b></p>
+            <table class="conn-table">
+                <thead><tr><th>Резистор 10 кΩ (1/4Вт или 0805 SMD)</th><th></th><th>Куда</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">Один конец</td><td class="arrow">→</td><td class="to"><b>D17 (GPIO17, SCK HX711)</b></td></tr>
+                    <tr><td class="from">Другой конец</td><td class="arrow">→</td><td class="to"><b>3V3 пин ESP32</b> ⚠ не VIN, не 5В!</td></tr>
+                </tbody>
+            </table>
+            <div class="tip"><strong>💡 Замер экономии (подтверждено на железе)</strong>Без pull-up: deep sleep ~9 мА. С pull-up: deep sleep ~5 мА. <b>Разница 4 мА</b> — это <b>удвоение автономии</b> (с 14 до 26 дней на 21700).</div>
+            <div class="warn"><strong>⚠ Не путать!</strong> SCK HX711 это <b>D17 (GPIO17)</b> — clock тензодатчика. НЕ SCL I²C (D22 — clock для LCD/DS3231). Pull-up должен быть именно на D17, иначе экономии не будет.</div>
+        </div>
+
+        <!-- Тензодатчик -->
+        <div class="comp-detail" id="detail-loadcell" style="display:none">
+            <h2>🏋️ Тензодатчик (load cell)</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">Чувствительный элемент. Деформируется под весом → меняется сопротивление тензомоста → HX711 это измеряет.</p>
+            <table class="conn-table">
+                <thead><tr><th>Тип</th><th>Нагрузка</th><th>Особенности</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">Балочный (TAL220, TAL221)</td><td class="to">10–100 кг</td><td class="note">Один датчик. Простая установка, точность 0.05%</td></tr>
+                    <tr><td class="from">Платформенный (4× углы)</td><td class="to">200 кг (50×4)</td><td class="note">4 датчика по углам платформы. Соединяются параллельно</td></tr>
+                    <tr><td class="from">S-образный</td><td class="to">50–500 кг</td><td class="note">Подвесной. Для крупных ульев / весов в подвесе</td></tr>
+                </tbody>
+            </table>
+            <div class="tip"><strong>💡 Для пчёл</strong>Полный улей с мёдом — обычно 30–40 кг. Бери датчик на <b>50 кг</b> (двукратный запас). Балочный TAL220 на 50 кг — оптимально.</div>
+            <div class="warn"><strong>⚠️ Не нагружай больше номинала</strong>Перегрузка ломает тензомост — датчик нужно менять. На «сесть» точно нельзя.</div>
+        </div>
+
+        <!-- LCD -->
+        <div class="comp-detail" id="detail-lcd" style="display:none">
+            <h2>📺 LCD 1602 I²C (PCF8574 backpack)</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">Символьный дисплей 16 столбцов × 2 строки. Подсветка синяя/зелёная. С I²C-адаптером (PCF8574 backpack) — всего 4 провода.</p>
+            <table class="conn-table">
+                <thead><tr><th>LCD</th><th></th><th>ESP32</th><th>Цвет</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">VCC</td><td class="arrow">→</td><td class="to">VIN (5В!)</td><td class="note">оранжевый</td></tr>
+                    <tr><td class="from">GND</td><td class="arrow">→</td><td class="to">GND</td><td class="note">чёрный</td></tr>
+                    <tr><td class="from">SDA</td><td class="arrow">→</td><td class="to">D21 (GPIO21)</td><td class="note">зелёный</td></tr>
+                    <tr><td class="from">SCL</td><td class="arrow">→</td><td class="to">D22 (GPIO22)</td><td class="note">жёлтый</td></tr>
+                </tbody>
+            </table>
+            <table class="conn-table" style="margin-top:15px">
+                <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">I²C адрес</td><td class="to">0x27 (или 0x3F — реже)</td></tr>
+                    <tr><td class="from">Питание</td><td class="to">5В обязательно (от VIN, не 3V3)</td></tr>
+                    <tr><td class="from">Ток</td><td class="to">~30 мА (в основном на подсветку)</td></tr>
+                    <tr><td class="from">Контрастность</td><td class="to">Подстроечный резистор на обратной стороне backpack</td></tr>
+                </tbody>
+            </table>
+            <div class="warn"><strong>⚠️ Адрес</strong>Если LCD не работает — проверь адрес I²C-сканером. Если 0x3F — измени <code>LCD_ADDR</code> в коде.</div>
+            <div class="tip"><strong>💡 I²C на 400kHz</strong>В v5.0.8 включён Fast Mode 400kHz — каждое обновление символа в 4× быстрее, не видно глазом «мерцания». PCF8574 это поддерживает.</div>
+        </div>
+
+        <!-- DS18B20 -->
+        <div class="comp-detail" id="detail-ds18b20" style="display:none">
+            <h2>🌡️ DS18B20 — цифровой термометр</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">Точный цифровой датчик температуры по шине 1-Wire. Корпус TO-92 (как маленький транзистор) или зонд в металлической трубке (для улья — берём именно такой, с проводом 1–2 метра).</p>
+            <table class="conn-table">
+                <thead><tr><th>DS18B20 (плоской стороной к себе)</th><th></th><th>ESP32 / схема</th><th>Цвет</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">GND (левая ножка)</td><td class="arrow">→</td><td class="to">GND</td><td class="note">чёрный</td></tr>
+                    <tr><td class="from">DATA (центр)</td><td class="arrow">→</td><td class="to">D4 (GPIO4) + 4.7 кОм на 3V3</td><td class="note">белый</td></tr>
+                    <tr><td class="from">VCC (правая)</td><td class="arrow">→</td><td class="to">3V3</td><td class="note">красный</td></tr>
+                </tbody>
+            </table>
+            <table class="conn-table" style="margin-top:15px">
+                <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">Диапазон</td><td class="to">−55 … +125°C</td></tr>
+                    <tr><td class="from">Точность</td><td class="to">±0.5°C (в диапазоне −10 … +85°C)</td></tr>
+                    <tr><td class="from">Время преобразования</td><td class="to">~750 мс (12-bit)</td></tr>
+                    <tr><td class="from">Кабель</td><td class="to">Можно вынести на 1–2 м без проблем</td></tr>
+                </tbody>
+            </table>
+            <div class="danger"><strong>❌ Без резистора 4.7 кОм датчик не работает!</strong>Pull-up между DATA и VCC обязателен для 1-Wire. Без него — −127°C / no response.</div>
+            <div class="tip"><strong>💡 Длинный кабель в улей</strong>Если выносишь датчик глубже — pull-up ставь ближе к самому датчику, не к ESP32. На длинных линиях это критично.</div>
+        </div>
+
+        <!-- DS3231 -->
+        <div class="comp-detail" id="detail-ds3231" style="display:none">
+            <h2>🕐 DS3231 RTC — часы реального времени</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">Сверхточный модуль часов с термокомпенсированным кварцем. Хранит время даже когда ESP32 выключена — за счёт батарейки CR2032 (на годы). В прошивке v5.0.17 даёт точное время для логов и расписания. Пин SQW подведён к D33 как <b>задел на будущее</b> — для alarm-wake (фаза P3).</p>
+            <table class="conn-table">
+                <thead><tr><th>DS3231</th><th></th><th>ESP32</th><th>Цвет</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">VCC</td><td class="arrow">→</td><td class="to">3V3 (НЕ 5В!)</td><td class="note">красный</td></tr>
+                    <tr><td class="from">GND</td><td class="arrow">→</td><td class="to">GND</td><td class="note">чёрный</td></tr>
+                    <tr><td class="from">SDA</td><td class="arrow">→</td><td class="to">D21 (общая шина с LCD)</td><td class="note">зелёный</td></tr>
+                    <tr><td class="from">SCL</td><td class="arrow">→</td><td class="to">D22 (общая шина с LCD)</td><td class="note">жёлтый</td></tr>
+                    <tr><td class="from">SQW (INT) <span style="color:var(--warning)">опц.</span></td><td class="arrow">→</td><td class="to">D33 (GPIO33, RTC GPIO)</td><td class="note">фиолетовый — задел на P3</td></tr>
+                    <tr><td class="from">32K, RST</td><td>—</td><td class="to">не используются</td><td class="note">—</td></tr>
+                </tbody>
+            </table>
+            <table class="conn-table" style="margin-top:15px">
+                <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">I²C адрес</td><td class="to">0x68</td></tr>
+                    <tr><td class="from">Точность хода</td><td class="to">±2 мин/год</td></tr>
+                    <tr><td class="from">Батарейка</td><td class="to">CR2032 (хватает на 5–10 лет)</td></tr>
+                    <tr><td class="from">Ток от CR2032</td><td class="to">~110 мкА</td></tr>
+                </tbody>
+            </table>
+            <div class="warn"><strong>⚠️ Power LED и резистор R5 на модуле</strong>На большинстве модулей DS3231 распаяны:<br>1) <b>Power LED</b> — жжёт ~200 мкА постоянно. От CR2032 батарейка садится за неделю → <b>выпаять</b>.<br>2) <b>R5</b> или диод в цепи зарядки CR2032 (модуль рассчитан на Li-ion). Для обычной не-перезаряжаемой CR2032 это вредно → <b>тоже выпаять</b>.</div>
+            <div class="tip"><strong>💡 VCC = 3V3, не 5В</strong>На 5В есть риск что модуль попытается «зарядить» CR2032 через схему — это запрещено для не-перезаряжаемых.</div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="comp-detail" id="detail-buttons" style="display:none">
+            <h2>🔘 Тактовые кнопки 6×6 мм</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">Обычные тактовые кнопки. Внешние резисторы не нужны — используется встроенный pull-up ESP32 (<code>INPUT_PULLUP</code>).</p>
+            <table class="conn-table">
+                <thead><tr><th>Кнопка</th><th>Пин 1</th><th>Пин 2</th><th>Цвет</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">MAIN (тара / калибровка)</td><td><span class="col-gpio">D27</span> (RTC GPIO)</td><td>GND</td><td class="note">синий</td></tr>
+                    <tr><td class="from">MENU (навигация / OK)</td><td><span class="col-gpio">D26</span></td><td>GND</td><td class="note">голубой</td></tr>
+                </tbody>
+            </table>
+            <h3>Длительности нажатий</h3>
+            <table class="conn-table">
+                <thead><tr><th>Кнопка</th><th>Действие</th><th>Длительность</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">MENU</td><td>Следующий экран</td><td class="note">короткое</td></tr>
+                    <tr><td class="from">MENU</td><td>OK / на главную</td><td class="note">2.5 сек</td></tr>
+                    <tr><td class="from">MAIN</td><td>(ничего — защита)</td><td class="note">короткое</td></tr>
+                    <tr><td class="from">MAIN</td><td>ТАРА (с диалогом MENU=OK)</td><td class="note">3 сек MEDIUM</td></tr>
+                    <tr><td class="from">MAIN</td><td>КАЛИБРОВКА</td><td class="note">6 сек LONG</td></tr>
+                </tbody>
+            </table>
+            <div class="tip"><strong>💡 D27 = RTC GPIO</strong>Кнопка MAIN на D27 может разбудить ESP32 из deep sleep (через <code>esp_sleep_enable_ext0_wakeup</code>). Это RTC GPIO — в режиме сна остаётся активным.</div>
+        </div>
+
+        <!-- AS21 -->
+        <div class="comp-detail" id="detail-as21" style="display:none">
+            <h2>🔋 AS21 V6.0 — модуль зарядки и Boost</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">2-in-1 модуль (PENGHEKEJI): контроллер заряда Li-ion + повышающий Boost-преобразователь с регулируемым выходом 5/6/9/12В. <b>Своего microUSB разъёма нет</b> — зарядка идёт через входные пины VIN+GND (от внешнего 5В адаптера). Держатель 18650 в комплекте не идёт — банка подключается проводами к BAT+GND.</p>
+            <h3>Распиновка модуля (6 контактов, 2 ряда по 3)</h3>
+            <table class="conn-table">
+                <thead><tr><th>Пин</th><th>Что это</th><th>Куда подключить</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">VIN</td><td>Вход для зарядки 18650 (4.5–8В, рек. 5В, ток до 1А)</td><td class="to">+5В от внешнего адаптера (когда заряжаешь)</td></tr>
+                    <tr><td class="from">GND</td><td>Земля входа</td><td class="to">GND адаптера</td></tr>
+                    <tr><td class="from">BAT</td><td>Полюс банки 18650</td><td class="to">+ банки. <b>Сюда же красный провод делителя</b> для мониторинга</td></tr>
+                    <tr><td class="from">GND</td><td>Земля банки</td><td class="to">− банки</td></tr>
+                    <tr><td class="from">VOUT</td><td>Выход Boost (5/6/9/12В по перемычке)</td><td class="to">ESP32 VIN (оранжевый провод)</td></tr>
+                    <tr><td class="from">GND</td><td>Земля выхода</td><td class="to">ESP32 GND (чёрный)</td></tr>
+                </tbody>
+            </table>
+            <div class="warn"><strong>⚠️ Перемычка напряжения 5V / 6V / 9V / 12V</strong>На плате AS21 4 квадратные площадки выбора выходного напряжения. <b>Должна стоять перемычка на «5V»</b> (капля припоя между двумя площадками «5V»). Если стоит 6V — на VIN ESP32 будет ~6.6В, что может сжечь LCD 1602 (макс 5.5В) и перегреть DS3231 (макс 5.5В).</div>
+            <h3>Технические параметры (datasheet)</h3>
+            <table class="conn-table">
+                <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">Зарядное напряжение</td><td class="to">DC 4.5–8В (рек. 5В)</td></tr>
+                    <tr><td class="from">Зарядный ток</td><td class="to">0–1А</td></tr>
+                    <tr><td class="from">Окончание зарядки</td><td class="to">4.2В ±2%</td></tr>
+                    <tr><td class="from">Quiescent ток (sleep)</td><td class="to">~450 мкА — заметно для deep sleep</td></tr>
+                    <tr><td class="from">Boost ток выхода</td><td class="to">5В: 1.2А · 6В: 1А · 9В: 0.66А · 12В: 0.5А</td></tr>
+                    <tr><td class="from">КПД Boost</td><td class="to">78–90%</td></tr>
+                    <tr><td class="from">LED индикаторы</td><td class="to">CR — идёт зарядка, OK — заряжено</td></tr>
+                    <tr><td class="from">Размер</td><td class="to">23 × 15.4 × 5.7 мм</td></tr>
+                </tbody>
+            </table>
+            <div class="tip"><strong>💡 Заряжается и работает одновременно</strong>Можно одновременно подавать 5В на VIN (зарядка идёт) и снимать с VOUT для питания ESP32. Часть тока идёт в банку (заряжается), часть — на нагрузку. Это режим passthrough — работает прекрасно для столовых тестов и солнечных установок.</div>
+            <div class="warn"><strong>⚠️ Защищённые 18650/21700</strong>Используй банки от Samsung / LG / Panasonic / Molicel. «Безымянные» с радиорынка часто врут о ёмкости и могут перегреться. На AS21 нет встроенной защиты глубокого разряда — желательна банка с защитой (или внешний DW01).</div>
+            <div class="tip"><strong>💡 21700 вместо 18650</strong>Можно поставить 21700 на 4500–5000 мА·ч — даёт в 1.5× больше автономии. Размер банки больше (21×70 мм vs 18×65 мм) — обычный держатель 18650 не подойдёт. Решение: припаять провода к банке напрямую (короткими прикосновениями, не более 3 сек паяльником).</div>
+        </div>
+
+        <!-- Резисторы -->
+        <div class="comp-detail" id="detail-resistors" style="display:none">
+            <h2>📐 Резисторы</h2>
+            <table class="conn-table">
+                <thead><tr><th>Номинал</th><th>Кол-во</th><th>Назначение</th><th>Корпус</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">4.7 кОм</td><td>× 1</td><td class="to">Pull-up DS18B20 DATA → 3V3</td><td class="note">1/4W TH или 0805 SMD</td></tr>
+                    <tr><td class="from">100 кОм (R1)</td><td>× 1</td><td class="to">Делитель батареи: BAT+ → midpoint</td><td class="note">1/4W TH или 0805 SMD, точность 1%</td></tr>
+                    <tr><td class="from">100 кОм (R2)</td><td>× 1</td><td class="to">Делитель батареи: midpoint → GND</td><td class="note">1/4W TH или 0805 SMD, точность 1%</td></tr>
+                </tbody>
+            </table>
+            <div class="tip"><strong>💡 Точность 1%</strong>Для делителя батареи бери резисторы 1% (а не обычные 5%) — иначе показания напряжения будут «плыть» в пределах ±0.1В. Стоят те же копейки.</div>
+            <div class="warn"><strong>⚠️ Ток утечки делителя</strong>4.2В / 200кΩ = 21 мкА. Заметно для deep sleep (~7 мА), но в общем балансе ОК.</div>
+        </div>
+
+        <!-- DIP-сокет -->
+        <div class="comp-detail" id="detail-socket" style="display:none">
+            <h2>🔌 DIP-сокет 2×19 (female pin headers)</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">Не паяй ESP32 напрямую в плату — используй сокет. Если что-то пойдёт не так (попалась битая плата, или нужно прошить через другой компьютер), просто вытащил и заменил без перепайки.</p>
+            <table class="conn-table">
+                <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">Тип</td><td class="to">Female pin header, 2.54 мм шаг</td></tr>
+                    <tr><td class="from">Длина</td><td class="to">2 ряда по 19 пинов (или 2×20 snap-off — отрежь лишний пин)</td></tr>
+                    <tr><td class="from">Цена</td><td class="to">~30 ₽ за пару (2 ряда)</td></tr>
+                </tbody>
+            </table>
+            <div class="tip"><strong>💡 Можно заменить</strong>Если нет 2×19 — возьми <b>2×20 snap-off</b> (продаются длинные «гребёнки» которые ломаются по линии). Откуси кусок нужной длины.</div>
+        </div>
+
+        <!-- LittleFS -->
+        <div class="comp-detail" id="detail-littlefs" style="display:none">
+            <h2>💾 LittleFS — встроенное хранилище лога</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">Это <b>не отдельный модуль</b>, а файловая система во внутреннем flash ESP32. В v5 заменила SD-карту из v4.1 — надёжнее, нет окисления контактов, выдерживает мороз/жару.</p>
+            <table class="conn-table">
+                <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">Где живёт</td><td class="to">Внутренний flash ESP32 (раздел SPIFFS, ~1 МБ)</td></tr>
+                    <tr><td class="from">Что хранит</td><td class="to">CSV-лог замеров + index страницы веб-сайта</td></tr>
+                    <tr><td class="from">Формат записи</td><td class="to">datetime, weight_kg, temp_c, bat_v, bat_pct</td></tr>
+                    <tr><td class="from">Когда пишет</td><td class="to">Каждый замер по расписанию + перед уходом в deep sleep</td></tr>
+                    <tr><td class="from">Ротация</td><td class="to">При достижении лимита файл переименовывается, начинается новый</td></tr>
+                </tbody>
+            </table>
+            <h3>Как скачать лог</h3>
+            <table class="conn-table">
+                <thead><tr><th>Действие</th><th>URL</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">CSV для Excel</td><td class="to"><code>http://192.168.4.1/api/log</code></td></tr>
+                    <tr><td class="from">JSON для графика</td><td class="to"><code>http://192.168.4.1/api/log/json</code></td></tr>
+                    <tr><td class="from">Очистить</td><td class="to">POST <code>/api/log/clear</code> (или через сайт)</td></tr>
+                </tbody>
+            </table>
+            <div class="tip"><strong>💡 Почему не SD</strong>В улье SD-карты ржавеют и пропадают. Внутренний flash — паяный, навсегда. Жизнь flash 100 000 циклов записи — для пасеки на годы.</div>
+        </div>
+
+        <!-- CF Worker -->
+        <div class="comp-detail" id="detail-cfworker" style="display:none">
+            <h2>☁️ Cloudflare Worker — релай Telegram</h2>
+            <p style="color:var(--text-muted);margin-bottom:12px">Не железо, а <b>облачный сервис</b>. Бесплатный воркер на Cloudflare (100 000 запросов в день), который форвардит сообщения от ESP32 в <code>api.telegram.org</code>. Нужен потому что российские провайдеры (Beeline, и др.) блокируют прямой доступ к Telegram API.</p>
+            <table class="conn-table">
+                <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+                <tbody>
+                    <tr><td class="from">URL релая</td><td class="to"><code>beehive-relay.darkvolg.workers.dev</code></td></tr>
+                    <tr><td class="from">Метод</td><td class="to">POST <code>/sendMessage</code></td></tr>
+                    <tr><td class="from">Авторизация</td><td class="to">Заголовок <code>X-Beehive-Secret: &lt;общий ключ&gt;</code></td></tr>
+                    <tr><td class="from">Тело запроса</td><td class="to">JSON: <code>{ token, chat_id, text, parse_mode: "HTML" }</code></td></tr>
+                    <tr><td class="from">Лимит</td><td class="to">100 000 запросов в день (бесплатный план Cloudflare)</td></tr>
+                </tbody>
+            </table>
+            <div class="tip"><strong>💡 Уже настроен</strong>Релай развёрнут. В прошивке ESP32 уже зашит URL и секрет. Тебе не нужно ничего настраивать — только Token и Chat ID в разделе «Telegram» на сайте весов. Подробнее → вкладка <b>📱 Telegram</b>.</div>
+            <div class="info-tg"><strong>Хочешь свой релай</strong>Исходник в репо: <code>cloudflare-worker/src/index.js</code>. Деплоится одной командой через wrangler CLI. Можно сделать свой URL чтобы не зависеть от моего.</div>
+        </div>
+
+    </div>
+
+    <div class="warn" style="margin-top:20px"><strong>⚠️ Питание LCD</strong>LCD 1602 работает от 5В. Подключайте к VIN (от AS21 boost), а не к 3V3.</div>
+    <div class="tip"><strong>💡 SD-карта больше не нужна</strong>В v5 лог пишется во внутренний flash ESP32 (LittleFS). Это надёжнее (нет окисления контактов в улье), и освобождает GPIO под другие задачи.</div>
+
+    <style>
+        .comp-card.active { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 0 20px rgba(245,166,35,0.3); }
+        .comp-card { cursor: pointer; }
+    </style>
 </div>
 
 <!-- ===== PINOUT ===== -->
 <div id="pinout" class="section">
     <div class="card">
-        <h2>📌 Распиновка NodeMCU ESP8266MOD</h2>
-        <p style="color:var(--text-muted);margin-bottom:20px">Пины обозначены как <code>GPIOxx (Dx)</code> — аппаратный номер и метка на плате.</p>
+        <h2>📌 Распиновка ESP32-WROOM-32 DevKit V1</h2>
+        <p style="color:var(--text-muted);margin-bottom:20px">На silkscreen платы пины обозначены как <code>Dxx</code> (где xx = номер GPIO). Например, метка <b>D17</b> на плате = <code>GPIO17</code> в коде.</p>
 
         <div class="diagram-wrap">
-            <svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto">
+            <svg viewBox="0 0 760 470" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto">
                 <!-- Board -->
-                <rect x="255" y="20" width="250" height="390" rx="14" fill="#1a2a1a" stroke="#2a4a2a" stroke-width="2"/>
-                <rect x="263" y="28" width="234" height="374" rx="10" fill="#0f1f0f" stroke="#3a6a3a" stroke-width="1"/>
-                <text x="380" y="52" text-anchor="middle" fill="#4a8a4a" font-size="13" font-family="monospace" font-weight="bold">NodeMCU</text>
-                <text x="380" y="68" text-anchor="middle" fill="#3a6a3a" font-size="10" font-family="monospace">ESP8266MOD</text>
-                <!-- USB -->
-                <rect x="343" y="20" width="74" height="12" rx="4" fill="#2a2a5a" stroke="#4a4a8a" stroke-width="1.5"/>
-                <text x="380" y="30" text-anchor="middle" fill="#6a6aaa" font-size="8" font-family="monospace">USB</text>
+                <rect x="255" y="20" width="250" height="430" rx="14" fill="#1a2a3a" stroke="#3a4a6a" stroke-width="2"/>
+                <rect x="263" y="28" width="234" height="414" rx="10" fill="#0f1a2a" stroke="#3a5a8a" stroke-width="1"/>
+                <text x="380" y="52" text-anchor="middle" fill="#5a8aaa" font-size="13" font-family="monospace" font-weight="bold">ESP32-WROOM-32</text>
+                <text x="380" y="68" text-anchor="middle" fill="#3a5a7a" font-size="10" font-family="monospace">DevKit V1 (DOIT)</text>
+                <!-- USB-C -->
+                <rect x="343" y="20" width="74" height="14" rx="4" fill="#2a2a5a" stroke="#4a4a8a" stroke-width="1.5"/>
+                <text x="380" y="31" text-anchor="middle" fill="#6a6aaa" font-size="8" font-family="monospace">USB-C</text>
 
-                <!-- LEFT side pins -->
-                <!-- connector lines -->
-                <line x1="150" y1="100" x2="263" y2="100" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="150" y1="130" x2="263" y2="130" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="150" y1="160" x2="263" y2="160" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="150" y1="190" x2="263" y2="190" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="150" y1="220" x2="263" y2="220" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="150" y1="250" x2="263" y2="250" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="150" y1="280" x2="263" y2="280" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="150" y1="310" x2="263" y2="310" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="150" y1="340" x2="263" y2="340" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="150" y1="370" x2="263" y2="370" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <!-- dots left -->
-                <circle cx="263" cy="100" r="5" fill="#f5a623"/>
-                <circle cx="263" cy="130" r="5" fill="#7fff7f"/>
-                <circle cx="263" cy="160" r="5" fill="#7ec8e3"/>
-                <circle cx="263" cy="190" r="5" fill="#7ec8e3"/>
-                <circle cx="263" cy="220" r="5" fill="#ff9988"/>
-                <circle cx="263" cy="250" r="5" fill="#ff9988"/>
-                <circle cx="263" cy="280" r="5" fill="#ffaa55"/>
-                <circle cx="263" cy="310" r="5" fill="#888"/>
-                <circle cx="263" cy="340" r="5" fill="#4a8f4a"/>
-                <circle cx="263" cy="370" r="5" fill="#4a8f4a"/>
-                <!-- board labels left -->
-                <text x="275" y="104" fill="#f5a623" font-size="10" font-family="monospace" font-weight="bold">A0</text>
-                <text x="275" y="134" fill="#7fff7f" font-size="10" font-family="monospace" font-weight="bold">D0</text>
-                <text x="275" y="164" fill="#7ec8e3" font-size="10" font-family="monospace" font-weight="bold">D1</text>
-                <text x="275" y="194" fill="#7ec8e3" font-size="10" font-family="monospace" font-weight="bold">D2</text>
-                <text x="275" y="224" fill="#ff9988" font-size="10" font-family="monospace" font-weight="bold">D3</text>
-                <text x="275" y="254" fill="#ff9988" font-size="10" font-family="monospace" font-weight="bold">D4</text>
-                <text x="275" y="284" fill="#ffaa55" font-size="10" font-family="monospace" font-weight="bold">3V3</text>
-                <text x="275" y="314" fill="#888"    font-size="10" font-family="monospace" font-weight="bold">GND</text>
-                <text x="275" y="344" fill="#4a8f4a" font-size="10" font-family="monospace" font-weight="bold">VIN</text>
-                <text x="275" y="374" fill="#4a8f4a" font-size="10" font-family="monospace" font-weight="bold">GND</text>
-                <!-- desc left -->
-                <text x="143" y="97"  text-anchor="end" fill="#e8e8e8" font-size="11">ADC — батарея (делитель)</text>
-                <text x="143" y="127" text-anchor="end" fill="#7fff7f" font-size="11">GPIO16 — HX711 DT (данные)</text>
-                <text x="143" y="157" text-anchor="end" fill="#7ec8e3" font-size="11">GPIO5 — I2C SCL</text>
-                <text x="143" y="187" text-anchor="end" fill="#7ec8e3" font-size="11">GPIO4 — I2C SDA</text>
-                <text x="143" y="217" text-anchor="end" fill="#ff9988" font-size="11">GPIO0 — кнопка MAIN ⚡</text>
-                <text x="143" y="247" text-anchor="end" fill="#ff9988" font-size="11">GPIO2 — кнопка MENU</text>
-                <text x="143" y="277" text-anchor="end" fill="#ffaa55" font-size="11">3.3В питание</text>
-                <text x="143" y="307" text-anchor="end" fill="#888"    font-size="11">GND</text>
-                <text x="143" y="337" text-anchor="end" fill="#4a8f4a" font-size="11">5В (USB-питание)</text>
-                <text x="143" y="367" text-anchor="end" fill="#888"    font-size="11">GND</text>
+                <!-- LEFT side pins (top → bottom) -->
+                <!-- connector lines & dots & labels -->
+                <g font-family="monospace" font-size="10" font-weight="bold">
+                    <!-- D34 — Battery ADC -->
+                    <line x1="150" y1="100" x2="263" y2="100" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="263" cy="100" r="5" fill="#f5a623"/>
+                    <text x="275" y="104" fill="#f5a623">D34</text>
+                    <text x="143" y="97" text-anchor="end" fill="#f5a623" font-weight="normal">ADC1_CH6 — батарея (делитель)</text>
+
+                    <!-- D35 — free -->
+                    <circle cx="263" cy="125" r="4" fill="#444"/>
+                    <text x="275" y="129" fill="#666">D35</text>
+                    <text x="258" y="129" text-anchor="end" fill="#444" font-weight="normal">— свободный (input only)</text>
+
+                    <!-- D32 — free -->
+                    <circle cx="263" cy="150" r="4" fill="#444"/>
+                    <text x="275" y="154" fill="#666">D32</text>
+                    <text x="258" y="154" text-anchor="end" fill="#444" font-weight="normal">— свободный</text>
+
+                    <!-- D33 — DS3231 SQW -->
+                    <line x1="150" y1="175" x2="263" y2="175" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="263" cy="175" r="5" fill="#aa88ff"/>
+                    <text x="275" y="179" fill="#aa88ff">D33</text>
+                    <text x="143" y="172" text-anchor="end" fill="#aa88ff" font-weight="normal">DS3231 SQW (alarm wake) ⚡</text>
+
+                    <!-- D25 — free -->
+                    <circle cx="263" cy="200" r="4" fill="#444"/>
+                    <text x="275" y="204" fill="#666">D25</text>
+
+                    <!-- D26 — Button MENU -->
+                    <line x1="150" y1="225" x2="263" y2="225" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="263" cy="225" r="5" fill="#7ec8e3"/>
+                    <text x="275" y="229" fill="#7ec8e3">D26</text>
+                    <text x="143" y="222" text-anchor="end" fill="#7ec8e3" font-weight="normal">Кнопка MENU</text>
+
+                    <!-- D27 — Button MAIN -->
+                    <line x1="150" y1="250" x2="263" y2="250" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="263" cy="250" r="5" fill="#ff9988"/>
+                    <text x="275" y="254" fill="#ff9988">D27</text>
+                    <text x="143" y="247" text-anchor="end" fill="#ff9988" font-weight="normal">Кнопка MAIN ⚡ (RTC GPIO, wake)</text>
+
+                    <!-- D14 — free -->
+                    <circle cx="263" cy="275" r="4" fill="#444"/>
+                    <text x="275" y="279" fill="#666">D14</text>
+
+                    <!-- D12 — strapping, careful -->
+                    <circle cx="263" cy="300" r="4" fill="#666"/>
+                    <text x="275" y="304" fill="#888">D12</text>
+                    <text x="258" y="304" text-anchor="end" fill="#666" font-weight="normal">⚠ strapping</text>
+
+                    <!-- GND -->
+                    <circle cx="263" cy="325" r="4" fill="#888"/>
+                    <text x="275" y="329" fill="#888">GND</text>
+
+                    <!-- D13 — free -->
+                    <circle cx="263" cy="350" r="4" fill="#444"/>
+                    <text x="275" y="354" fill="#666">D13</text>
+
+                    <!-- SD2/SD3/CMD/CLK — flash, do not touch (D9-D11) -->
+                    <circle cx="263" cy="375" r="4" fill="#a44"/>
+                    <text x="275" y="379" fill="#a44">D9-11</text>
+                    <text x="258" y="379" text-anchor="end" fill="#a44" font-weight="normal">SPI flash — НЕ ТРОГАТЬ</text>
+                </g>
 
                 <!-- RIGHT side pins -->
-                <line x1="497" y1="100" x2="610" y2="100" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="497" y1="130" x2="610" y2="130" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="497" y1="160" x2="610" y2="160" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="497" y1="190" x2="610" y2="190" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="497" y1="220" x2="610" y2="220" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="497" y1="250" x2="610" y2="250" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="497" y1="280" x2="610" y2="280" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="497" y1="310" x2="610" y2="310" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="497" y1="340" x2="610" y2="340" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <line x1="497" y1="370" x2="610" y2="370" stroke="#2a3a2a" stroke-width="1" stroke-dasharray="4,3"/>
-                <!-- dots right -->
-                <circle cx="497" cy="100" r="5" fill="#55cc55"/>
-                <circle cx="497" cy="130" r="5" fill="#55cc55"/>
-                <circle cx="497" cy="160" r="5" fill="#aa88ff"/>
-                <circle cx="497" cy="190" r="5" fill="#55cc55"/>
-                <circle cx="497" cy="220" r="5" fill="#555"/>
-                <circle cx="497" cy="250" r="5" fill="#e8e8e8"/>
-                <circle cx="497" cy="280" r="5" fill="#888"/>
-                <circle cx="497" cy="310" r="5" fill="#888"/>
-                <circle cx="497" cy="340" r="5" fill="#555"/>
-                <circle cx="497" cy="370" r="5" fill="#555"/>
-                <!-- board labels right -->
-                <text x="484" y="104" text-anchor="end" fill="#55cc55" font-size="10" font-family="monospace" font-weight="bold">D5</text>
-                <text x="484" y="134" text-anchor="end" fill="#55cc55" font-size="10" font-family="monospace" font-weight="bold">D6</text>
-                <text x="484" y="164" text-anchor="end" fill="#aa88ff" font-size="10" font-family="monospace" font-weight="bold">D7</text>
-                <text x="484" y="194" text-anchor="end" fill="#55cc55" font-size="10" font-family="monospace" font-weight="bold">D8</text>
-                <text x="484" y="224" text-anchor="end" fill="#555"    font-size="10" font-family="monospace">RX</text>
-                <text x="484" y="254" text-anchor="end" fill="#e8e8e8" font-size="10" font-family="monospace" font-weight="bold">TX</text>
-                <text x="484" y="284" text-anchor="end" fill="#888"    font-size="10" font-family="monospace">GND</text>
-                <text x="484" y="314" text-anchor="end" fill="#888"    font-size="10" font-family="monospace">3V3</text>
-                <text x="484" y="344" text-anchor="end" fill="#555"    font-size="10" font-family="monospace">EN</text>
-                <text x="484" y="374" text-anchor="end" fill="#555"    font-size="10" font-family="monospace">RST</text>
-                <!-- desc right -->
-                <text x="617" y="97"  fill="#e8e8e8" font-size="11">GPIO14 — SD SCK (SPI)</text>
-                <text x="617" y="127" fill="#e8e8e8" font-size="11">GPIO12 — SD MISO (SPI)</text>
-                <text x="617" y="157" fill="#aaaaff" font-size="11">GPIO13 — SD MOSI + DS18B20</text>
-                <text x="617" y="187" fill="#e8e8e8" font-size="11">GPIO15 — SD CS (D8)</text>
-                <text x="617" y="217" fill="#555"    font-size="11">GPIO3 — UART RX</text>
-                <text x="617" y="247" fill="#e8e8e8" font-size="11">GPIO1 — HX711 SCK (TX)</text>
-                <text x="617" y="277" fill="#888"    font-size="11">GND</text>
-                <text x="617" y="307" fill="#888"    font-size="11">3.3В (дублирует левый)</text>
-                <text x="617" y="337" fill="#555"    font-size="11">Enable</text>
-                <text x="617" y="367" fill="#555"    font-size="11">Reset</text>
+                <g font-family="monospace" font-size="10" font-weight="bold">
+                    <!-- VIN — 5V from AS21 -->
+                    <line x1="497" y1="100" x2="610" y2="100" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="497" cy="100" r="5" fill="#4a8f4a"/>
+                    <text x="484" y="104" text-anchor="end" fill="#4a8f4a">VIN</text>
+                    <text x="617" y="104" fill="#4a8f4a" font-weight="normal">5В от AS21 → ESP32 + LCD VCC</text>
 
-                <!-- notes -->
-                <text x="380" y="395" text-anchor="middle" fill="#ff9988" font-size="9" font-family="'Segoe UI'">⚡ GPIO0 (D3) = Flash. GPIO1 (TX) = HX711 SCK, Serial отключён</text>
+                    <!-- GND -->
+                    <circle cx="497" cy="125" r="4" fill="#888"/>
+                    <text x="484" y="129" text-anchor="end" fill="#888">GND</text>
+
+                    <!-- 3V3 -->
+                    <line x1="497" y1="150" x2="610" y2="150" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="497" cy="150" r="5" fill="#ffaa55"/>
+                    <text x="484" y="154" text-anchor="end" fill="#ffaa55">3V3</text>
+                    <text x="617" y="154" fill="#ffaa55" font-weight="normal">3.3В → HX711, DS3231, DS18B20</text>
+
+                    <!-- EN -->
+                    <circle cx="497" cy="175" r="4" fill="#666"/>
+                    <text x="484" y="179" text-anchor="end" fill="#888">EN</text>
+
+                    <!-- D15 — strapping -->
+                    <circle cx="497" cy="200" r="4" fill="#666"/>
+                    <text x="484" y="204" text-anchor="end" fill="#888">D15</text>
+                    <text x="503" y="204" fill="#666" font-weight="normal">⚠ strapping</text>
+
+                    <!-- D2 — strapping -->
+                    <circle cx="497" cy="225" r="4" fill="#666"/>
+                    <text x="484" y="229" text-anchor="end" fill="#888">D2</text>
+                    <text x="503" y="229" fill="#666" font-weight="normal">⚠ strapping</text>
+
+                    <!-- D4 — DS18B20 -->
+                    <line x1="497" y1="250" x2="610" y2="250" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="497" cy="250" r="5" fill="#aa88ff"/>
+                    <text x="484" y="254" text-anchor="end" fill="#aa88ff">D4</text>
+                    <text x="617" y="254" fill="#aa88ff" font-weight="normal">DS18B20 DATA (+ 4.7kΩ → 3V3)</text>
+
+                    <!-- RX2/TX2 -->
+                    <circle cx="497" cy="275" r="4" fill="#444"/>
+                    <text x="484" y="279" text-anchor="end" fill="#666">RX2</text>
+                    <circle cx="497" cy="300" r="4" fill="#444"/>
+                    <text x="484" y="304" text-anchor="end" fill="#666">TX2</text>
+
+                    <!-- D5 — free -->
+                    <circle cx="497" cy="325" r="4" fill="#444"/>
+                    <text x="484" y="329" text-anchor="end" fill="#666">D5</text>
+
+                    <!-- D18, D19 — free -->
+                    <circle cx="497" cy="350" r="4" fill="#444"/>
+                    <text x="484" y="354" text-anchor="end" fill="#666">D18</text>
+                    <circle cx="497" cy="375" r="4" fill="#444"/>
+                    <text x="484" y="379" text-anchor="end" fill="#666">D19</text>
+
+                    <!-- D21 — I2C SDA -->
+                    <line x1="497" y1="400" x2="610" y2="400" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="497" cy="400" r="5" fill="#7ec8e3"/>
+                    <text x="484" y="404" text-anchor="end" fill="#7ec8e3">D21</text>
+                    <text x="617" y="404" fill="#7ec8e3" font-weight="normal">I²C SDA → LCD + DS3231</text>
+
+                    <!-- D22 — I2C SCL -->
+                    <line x1="497" y1="425" x2="610" y2="425" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="497" cy="425" r="5" fill="#7ec8e3"/>
+                    <text x="484" y="429" text-anchor="end" fill="#7ec8e3">D22</text>
+                    <text x="617" y="429" fill="#7ec8e3" font-weight="normal">I²C SCL → LCD + DS3231</text>
+                </g>
+
+                <!-- HX711 cluster — middle of right side (drawn separately to highlight pair) -->
+                <g font-family="monospace" font-size="10" font-weight="bold">
+                    <line x1="150" y1="400" x2="263" y2="400" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="263" cy="400" r="5" fill="#7fff7f"/>
+                    <text x="275" y="404" fill="#7fff7f">D16</text>
+                    <text x="143" y="397" text-anchor="end" fill="#7fff7f" font-weight="normal">HX711 DT (данные)</text>
+
+                    <line x1="150" y1="425" x2="263" y2="425" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4,3"/>
+                    <circle cx="263" cy="425" r="5" fill="#7fff7f"/>
+                    <text x="275" y="429" fill="#7fff7f">D17</text>
+                    <text x="143" y="422" text-anchor="end" fill="#7fff7f" font-weight="normal">HX711 SCK (тактирование)</text>
+                </g>
+
+                <text x="380" y="465" text-anchor="middle" fill="#7fff7f" font-size="9">⚡ D27/D33 = RTC GPIO — поддерживают пробуждение из deep sleep</text>
             </svg>
         </div>
 
-        <h3>Таблица пинов проекта</h3>
+        <h3>Таблица пинов проекта v5.0.17</h3>
         <table class="conn-table">
-            <thead><tr><th>Метка</th><th>GPIO</th><th>Направление</th><th>Назначение</th><th>Примечание</th></tr></thead>
+            <thead><tr><th>Метка платы</th><th>GPIO</th><th>Направление</th><th>Назначение</th><th>Цвет провода</th></tr></thead>
             <tbody>
-                <tr><td><span class="col-gpio">A0</span></td><td><span class="col-d">ADC</span></td><td>Вход (аналог)</td><td class="to">Делитель батареи</td><td class="note">0–3.2В, 10-бит (0–1023)</td></tr>
-                <tr><td><span class="col-gpio">D0</span></td><td><span class="col-d">GPIO16</span></td><td>Вход цифровой</td><td class="to">HX711 DT (данные)</td><td class="note">DT_PIN = 16. Перепаяно с D5</td></tr>
-                <tr><td><span class="col-gpio">D1</span></td><td><span class="col-d">GPIO5</span></td><td>I2C SCL</td><td class="to">LCD + DS3231</td><td class="note">Wire.begin(4, <b>5</b>)</td></tr>
-                <tr><td><span class="col-gpio">D2</span></td><td><span class="col-d">GPIO4</span></td><td>I2C SDA</td><td class="to">LCD + DS3231</td><td class="note">Wire.begin(<b>4</b>, 5)</td></tr>
-                <tr><td><span class="col-gpio">D3</span></td><td><span class="col-d">GPIO0</span></td><td>Вход цифровой</td><td class="to">Кнопка MAIN (тара)</td><td class="note">INPUT_PULLUP. Flash-кнопка на плате</td></tr>
-                <tr><td><span class="col-gpio">D4</span></td><td><span class="col-d">GPIO2</span></td><td>Вход цифровой</td><td class="to">Кнопка MENU</td><td class="note">INPUT_PULLUP. Встроенный LED</td></tr>
-                <tr><td><span class="col-gpio">TX</span></td><td><span class="col-d">GPIO1</span></td><td>Цифровой I/O</td><td class="to">HX711 SCK (тактирование)</td><td class="note">SCK_PIN = 1. Перепаяно с D6. Serial отключён!</td></tr>
-                <tr><td><span class="col-gpio">D5</span></td><td><span class="col-d">GPIO14</span></td><td>SPI SCK</td><td class="to">SD-карта SCK</td><td class="note">Аппаратный SPI</td></tr>
-                <tr><td><span class="col-gpio">D6</span></td><td><span class="col-d">GPIO12</span></td><td>SPI MISO</td><td class="to">SD-карта MISO</td><td class="note">Аппаратный SPI</td></tr>
-                <tr><td><span class="col-gpio">D7</span></td><td><span class="col-d">GPIO13</span></td><td>SPI MOSI / 1-Wire</td><td class="to">SD-карта MOSI + DS18B20 DATA</td><td class="note">Общий пин! Резистор 4.7кОм → 3V3</td></tr>
-                <tr><td><span class="col-gpio">D8</span></td><td><span class="col-d">GPIO15</span></td><td>SPI CS</td><td class="to">SD-карта CS</td><td class="note">SD_CS_PIN = 15</td></tr>
-                <tr><td><span class="col-gpio">3V3</span></td><td><span class="col-d">—</span></td><td>Питание 3.3В</td><td class="to">HX711, DS18B20, DS3231</td><td class="note">Макс. ~200 мА</td></tr>
-                <tr><td><span class="col-gpio">VIN</span></td><td><span class="col-d">—</span></td><td>Питание 5В</td><td class="to">LCD 1602 VCC</td><td class="note">От USB</td></tr>
-                <tr><td><span class="col-gpio">GND</span></td><td><span class="col-d">—</span></td><td>Земля</td><td class="to">Все компоненты</td><td class="note">Единая шина GND</td></tr>
+                <tr><td><span class="col-gpio">D16</span></td><td><span class="col-d">GPIO16</span></td><td>Вход</td><td class="to">HX711 DT (данные)</td><td class="note">жёлтый</td></tr>
+                <tr><td><span class="col-gpio">D17</span></td><td><span class="col-d">GPIO17</span></td><td>Выход</td><td class="to">HX711 SCK (тактирование)</td><td class="note">зелёный</td></tr>
+                <tr><td><span class="col-gpio">D21</span></td><td><span class="col-d">GPIO21</span></td><td>I²C SDA</td><td class="to">LCD + DS3231 (общая шина)</td><td class="note">зелёный</td></tr>
+                <tr><td><span class="col-gpio">D22</span></td><td><span class="col-d">GPIO22</span></td><td>I²C SCL</td><td class="to">LCD + DS3231 (общая шина)</td><td class="note">жёлтый</td></tr>
+                <tr><td><span class="col-gpio">D33</span></td><td><span class="col-d">GPIO33</span></td><td>Вход (RTC GPIO)</td><td class="to">DS3231 SQW <span style="color:var(--warning)">(опц., задел на P3)</span></td><td class="note">фиолетовый</td></tr>
+                <tr><td><span class="col-gpio">D4</span></td><td><span class="col-d">GPIO4</span></td><td>1-Wire</td><td class="to">DS18B20 DATA + 4.7kΩ pullup</td><td class="note">белый</td></tr>
+                <tr><td><span class="col-gpio">D27</span></td><td><span class="col-d">GPIO27</span></td><td>INPUT_PULLUP</td><td class="to">Кнопка MAIN (RTC GPIO ⚡)</td><td class="note">синий</td></tr>
+                <tr><td><span class="col-gpio">D26</span></td><td><span class="col-d">GPIO26</span></td><td>INPUT_PULLUP</td><td class="to">Кнопка MENU</td><td class="note">голубой</td></tr>
+                <tr><td><span class="col-gpio">D34</span></td><td><span class="col-d">GPIO34</span></td><td>ADC1_CH6 (input only)</td><td class="to">Делитель батареи (midpoint)</td><td class="note">серый</td></tr>
+                <tr><td><span class="col-gpio">3V3</span></td><td><span class="col-d">—</span></td><td>Питание 3.3В</td><td class="to">HX711, DS3231, DS18B20, R-pullup</td><td class="note">красный</td></tr>
+                <tr><td><span class="col-gpio">VIN</span></td><td><span class="col-d">—</span></td><td>Питание 5В</td><td class="to">LCD VCC (от AS21)</td><td class="note">оранжевый</td></tr>
+                <tr><td><span class="col-gpio">GND</span></td><td><span class="col-d">—</span></td><td>Земля</td><td class="to">Общая для всех</td><td class="note">чёрный</td></tr>
+            </tbody>
+        </table>
+
+        <h3>⚠️ Запрещённые пины ESP32</h3>
+        <table class="conn-table">
+            <thead><tr><th>GPIO</th><th>Почему</th></tr></thead>
+            <tbody>
+                <tr><td><span class="col-gpio">6, 7, 8, 9, 10, 11</span></td><td class="note">Внутренняя SPI flash ESP32 — плата перестанет загружаться</td></tr>
+                <tr><td><span class="col-gpio">0, 2, 12, 15</span></td><td class="note">Strapping pins — могут влиять на boot. Можно использовать осторожно</td></tr>
+                <tr><td><span class="col-gpio">1 (TX0), 3 (RX0)</span></td><td class="note">UART0 — занят USB-сериал. Конфликт с прошивкой</td></tr>
+                <tr><td><span class="col-gpio">34, 35, 36, 39</span></td><td class="note">Input only — нельзя выводить как OUTPUT</td></tr>
             </tbody>
         </table>
     </div>
@@ -429,138 +826,145 @@
     <div class="card">
         <h2>🔌 Общая схема подключения</h2>
         <div class="diagram-wrap">
-            <svg viewBox="0 0 820 650" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;display:block;margin:0 auto">
-                <!-- ---- NodeMCU ---- -->
-                <rect x="300" y="180" width="140" height="280" rx="10" fill="#0f1f0f" stroke="#3a6a3a" stroke-width="2"/>
-                <text x="370" y="200" text-anchor="middle" fill="#4a8a4a" font-size="12" font-weight="bold" font-family="monospace">NodeMCU</text>
-                <text x="370" y="214" text-anchor="middle" fill="#2a5a2a" font-size="9" font-family="monospace">ESP8266MOD</text>
-                <!-- Left pins MCU -->
-                <circle cx="300" cy="235" r="4" fill="#f5a623"/><text x="308" y="239" fill="#f5a623" font-size="9" font-family="monospace" font-weight="bold">A0</text>
-                <circle cx="300" cy="255" r="4" fill="#7fff7f"/><text x="308" y="259" fill="#7fff7f" font-size="9" font-family="monospace" font-weight="bold">D0(16)</text>
-                <circle cx="300" cy="275" r="4" fill="#7ec8e3"/><text x="308" y="279" fill="#7ec8e3" font-size="9" font-family="monospace" font-weight="bold">D1(5)</text>
-                <circle cx="300" cy="295" r="4" fill="#7ec8e3"/><text x="308" y="299" fill="#7ec8e3" font-size="9" font-family="monospace" font-weight="bold">D2(4)</text>
-                <circle cx="300" cy="315" r="4" fill="#ff9988"/><text x="308" y="319" fill="#ff9988" font-size="9" font-family="monospace" font-weight="bold">D3(0)</text>
-                <circle cx="300" cy="335" r="4" fill="#ff9988"/><text x="308" y="339" fill="#ff9988" font-size="9" font-family="monospace" font-weight="bold">D4(2)</text>
-                <circle cx="300" cy="355" r="4" fill="#ffaa55"/><text x="308" y="359" fill="#ffaa55" font-size="9" font-family="monospace" font-weight="bold">3V3</text>
-                <circle cx="300" cy="375" r="4" fill="#888"/><text x="308" y="379" fill="#888" font-size="9" font-family="monospace" font-weight="bold">GND</text>
-                <!-- Right pins MCU -->
-                <circle cx="440" cy="235" r="4" fill="#55cc55"/><text x="430" y="239" text-anchor="end" fill="#55cc55" font-size="9" font-family="monospace" font-weight="bold">D5(14)</text>
-                <circle cx="440" cy="255" r="4" fill="#55cc55"/><text x="430" y="259" text-anchor="end" fill="#55cc55" font-size="9" font-family="monospace" font-weight="bold">D6(12)</text>
-                <circle cx="440" cy="275" r="4" fill="#aa88ff"/><text x="430" y="279" text-anchor="end" fill="#aa88ff" font-size="9" font-family="monospace" font-weight="bold">D7(13)</text>
-                <circle cx="440" cy="295" r="4" fill="#55cc55"/><text x="430" y="299" text-anchor="end" fill="#55cc55" font-size="9" font-family="monospace" font-weight="bold">D8(15)</text>
-                <circle cx="440" cy="315" r="4" fill="#4a8f4a"/><text x="430" y="319" text-anchor="end" fill="#4a8f4a" font-size="9" font-family="monospace" font-weight="bold">VIN</text>
-                <circle cx="440" cy="335" r="4" fill="#888"/><text x="430" y="339" text-anchor="end" fill="#888" font-size="9" font-family="monospace" font-weight="bold">GND</text>
-                <circle cx="440" cy="395" r="4" fill="#e8e8e8"/><text x="430" y="399" text-anchor="end" fill="#e8e8e8" font-size="9" font-family="monospace" font-weight="bold">TX(1)</text>
+            <svg viewBox="0 0 820 700" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;display:block;margin:0 auto">
+                <!-- ---- ESP32 ---- -->
+                <rect x="300" y="180" width="160" height="340" rx="10" fill="#0f1a2a" stroke="#3a5a8a" stroke-width="2"/>
+                <text x="380" y="200" text-anchor="middle" fill="#5a8aaa" font-size="12" font-weight="bold" font-family="monospace">ESP32-WROOM-32</text>
+                <text x="380" y="214" text-anchor="middle" fill="#2a4a6a" font-size="9" font-family="monospace">DevKit V1</text>
+
+                <!-- Left pins -->
+                <g font-family="monospace" font-size="9" font-weight="bold">
+                    <circle cx="300" cy="240" r="4" fill="#f5a623"/><text x="308" y="244" fill="#f5a623">D34</text>
+                    <circle cx="300" cy="265" r="4" fill="#aa88ff"/><text x="308" y="269" fill="#aa88ff">D33</text>
+                    <circle cx="300" cy="290" r="4" fill="#7ec8e3"/><text x="308" y="294" fill="#7ec8e3">D26</text>
+                    <circle cx="300" cy="315" r="4" fill="#ff9988"/><text x="308" y="319" fill="#ff9988">D27</text>
+                    <circle cx="300" cy="455" r="4" fill="#7fff7f"/><text x="308" y="459" fill="#7fff7f">D16</text>
+                    <circle cx="300" cy="480" r="4" fill="#7fff7f"/><text x="308" y="484" fill="#7fff7f">D17</text>
+                </g>
+
+                <!-- Right pins -->
+                <g font-family="monospace" font-size="9" font-weight="bold">
+                    <circle cx="460" cy="240" r="4" fill="#4a8f4a"/><text x="450" y="244" text-anchor="end" fill="#4a8f4a">VIN</text>
+                    <circle cx="460" cy="265" r="4" fill="#888"/><text x="450" y="269" text-anchor="end" fill="#888">GND</text>
+                    <circle cx="460" cy="290" r="4" fill="#ffaa55"/><text x="450" y="294" text-anchor="end" fill="#ffaa55">3V3</text>
+                    <circle cx="460" cy="345" r="4" fill="#aa88ff"/><text x="450" y="349" text-anchor="end" fill="#aa88ff">D4</text>
+                    <circle cx="460" cy="430" r="4" fill="#7ec8e3"/><text x="450" y="434" text-anchor="end" fill="#7ec8e3">D21</text>
+                    <circle cx="460" cy="455" r="4" fill="#7ec8e3"/><text x="450" y="459" text-anchor="end" fill="#7ec8e3">D22</text>
+                </g>
 
                 <!-- ---- HX711 ---- -->
-                <rect x="60" y="60" width="110" height="100" rx="8" fill="#1a2a1a" stroke="#3a5a3a" stroke-width="1.5"/>
-                <text x="115" y="82" text-anchor="middle" fill="#7fff7f" font-size="12" font-weight="bold" font-family="monospace">HX711</text>
-                <text x="115" y="97" text-anchor="middle" fill="#2a5a2a" font-size="9" font-family="monospace">D0 + TX</text>
-                <circle cx="170" cy="117" r="3" fill="#7fff7f"/><text x="164" y="121" text-anchor="end" fill="#7fff7f" font-size="9" font-family="monospace">DT</text>
-                <circle cx="170" cy="132" r="3" fill="#e8e8e8"/><text x="164" y="136" text-anchor="end" fill="#e8e8e8" font-size="9" font-family="monospace">SCK</text>
-                <circle cx="170" cy="147" r="3" fill="#ffaa55"/><text x="164" y="151" text-anchor="end" fill="#ffaa55" font-size="9" font-family="monospace">VCC</text>
-                <circle cx="60" cy="117" r="3" fill="#888"/><text x="67" y="121" fill="#888" font-size="9" font-family="monospace">GND</text>
-                <!-- wires HX711: DT→D0(16), SCK→TX(1) -->
-                <path d="M170,117 L240,117 L240,255 L300,255" stroke="#7fff7f" stroke-width="1.8" fill="none"/>
-                <path d="M170,132 L245,132 L245,395 L440,395" stroke="#e8e8e8" stroke-width="1.8" fill="none"/>
-                <path d="M170,147 L250,147 L250,355 L300,355" stroke="#ffaa55" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
-                <path d="M60,117 L40,117 L40,615" stroke="#555" stroke-width="1.5" fill="none" stroke-dasharray="6,4"/>
-
-                <!-- ---- SD-карта ---- -->
-                <rect x="560" y="60" width="120" height="110" rx="8" fill="#1a2a2a" stroke="#3a6a5a" stroke-width="1.5"/>
-                <text x="620" y="82" text-anchor="middle" fill="#55cc55" font-size="12" font-weight="bold" font-family="monospace">SD-карта</text>
-                <text x="620" y="97" text-anchor="middle" fill="#2a5a4a" font-size="9" font-family="monospace">SPI  FAT32</text>
-                <circle cx="560" cy="115" r="3" fill="#55cc55"/><text x="566" y="119" fill="#55cc55" font-size="9" font-family="monospace">CS</text>
-                <circle cx="560" cy="130" r="3" fill="#55cc55"/><text x="566" y="134" fill="#55cc55" font-size="9" font-family="monospace">SCK</text>
-                <circle cx="560" cy="145" r="3" fill="#55cc55"/><text x="566" y="149" fill="#55cc55" font-size="9" font-family="monospace">MISO</text>
-                <circle cx="560" cy="160" r="3" fill="#aa88ff"/><text x="566" y="164" fill="#aa88ff" font-size="9" font-family="monospace">MOSI</text>
-                <circle cx="680" cy="115" r="3" fill="#ffaa55"/><text x="674" y="119" text-anchor="end" fill="#ffaa55" font-size="9" font-family="monospace">VCC(3V3)</text>
-                <circle cx="680" cy="130" r="3" fill="#888"/><text x="674" y="134" text-anchor="end" fill="#888" font-size="9" font-family="monospace">GND</text>
-                <!-- wires SD: CS→D8(15), SCK→D5(14), MISO→D6(12), MOSI→D7(13) -->
-                <path d="M560,115 L500,115 L500,295 L440,295" stroke="#55cc55" stroke-width="1.8" fill="none"/>
-                <path d="M560,130 L505,130 L505,235 L440,235" stroke="#55cc55" stroke-width="1.8" fill="none"/>
-                <path d="M560,145 L510,145 L510,255 L440,255" stroke="#55cc55" stroke-width="1.8" fill="none"/>
-                <path d="M560,160 L515,160 L515,275 L440,275" stroke="#aa88ff" stroke-width="1.8" fill="none"/>
-                <path d="M680,115 L700,115 L700,175 L370,175 L370,180" stroke="#ffaa55" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
-                <path d="M680,130 L710,130 L710,615" stroke="#555" stroke-width="1.5" fill="none" stroke-dasharray="6,4"/>
+                <rect x="60" y="430" width="120" height="105" rx="8" fill="#1a2a1a" stroke="#3a5a3a" stroke-width="1.5"/>
+                <text x="120" y="452" text-anchor="middle" fill="#7fff7f" font-size="12" font-weight="bold" font-family="monospace">HX711</text>
+                <text x="120" y="467" text-anchor="middle" fill="#2a5a2a" font-size="9" font-family="monospace">D16/D17 (3V3)</text>
+                <circle cx="180" cy="487" r="3" fill="#7fff7f"/><text x="174" y="491" text-anchor="end" fill="#7fff7f" font-size="9" font-family="monospace">DT</text>
+                <circle cx="180" cy="502" r="3" fill="#7fff7f"/><text x="174" y="506" text-anchor="end" fill="#7fff7f" font-size="9" font-family="monospace">SCK</text>
+                <circle cx="180" cy="517" r="3" fill="#ffaa55"/><text x="174" y="521" text-anchor="end" fill="#ffaa55" font-size="9" font-family="monospace">VCC</text>
+                <circle cx="60" cy="487" r="3" fill="#888"/><text x="67" y="491" fill="#888" font-size="9" font-family="monospace">GND</text>
+                <!-- wires -->
+                <path d="M180,487 L240,487 L240,455 L300,455" stroke="#7fff7f" stroke-width="1.8" fill="none"/>
+                <path d="M180,502 L235,502 L235,480 L300,480" stroke="#7fff7f" stroke-width="1.8" fill="none"/>
+                <path d="M180,517 L260,517 L260,290 L460,290" stroke="#ffaa55" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+                <path d="M60,487 L40,487 L40,665" stroke="#555" stroke-width="1.5" fill="none" stroke-dasharray="6,4"/>
 
                 <!-- ---- LCD 1602 ---- -->
-                <rect x="560" y="210" width="120" height="90" rx="8" fill="#1a1a2a" stroke="#3a3a6a" stroke-width="1.5"/>
-                <text x="620" y="232" text-anchor="middle" fill="#7ec8e3" font-size="12" font-weight="bold" font-family="monospace">LCD 1602</text>
-                <text x="620" y="248" text-anchor="middle" fill="#5a6a8a" font-size="9" font-family="monospace">I2C  0x27  5В</text>
-                <circle cx="560" cy="268" r="3" fill="#7ec8e3"/><text x="566" y="272" fill="#7ec8e3" font-size="9" font-family="monospace">SCL</text>
-                <circle cx="560" cy="283" r="3" fill="#7ec8e3"/><text x="566" y="287" fill="#7ec8e3" font-size="9" font-family="monospace">SDA</text>
-                <circle cx="560" cy="298" r="3" fill="#4a8f4a"/><text x="566" y="302" fill="#4a8f4a" font-size="9" font-family="monospace">VCC (5В)</text>
-                <!-- wires LCD -->
-                <path d="M560,268 L470,268 L470,275 L300,275" stroke="#7ec8e3" stroke-width="1.8" fill="none"/>
-                <path d="M560,283 L475,283 L475,295 L300,295" stroke="#5ab8d3" stroke-width="1.8" fill="none"/>
-                <path d="M560,298 L520,298 L520,315 L440,315" stroke="#4a8f4a" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+                <rect x="560" y="60" width="130" height="100" rx="8" fill="#1a1a2a" stroke="#3a3a6a" stroke-width="1.5"/>
+                <text x="625" y="82" text-anchor="middle" fill="#7ec8e3" font-size="12" font-weight="bold" font-family="monospace">LCD 1602</text>
+                <text x="625" y="97" text-anchor="middle" fill="#5a6a8a" font-size="9" font-family="monospace">I²C  0x27  5В</text>
+                <circle cx="560" cy="115" r="3" fill="#7ec8e3"/><text x="566" y="119" fill="#7ec8e3" font-size="9" font-family="monospace">SCL</text>
+                <circle cx="560" cy="130" r="3" fill="#7ec8e3"/><text x="566" y="134" fill="#7ec8e3" font-size="9" font-family="monospace">SDA</text>
+                <circle cx="560" cy="145" r="3" fill="#4a8f4a"/><text x="566" y="149" fill="#4a8f4a" font-size="9" font-family="monospace">VCC (5В)</text>
+                <circle cx="690" cy="115" r="3" fill="#888"/><text x="684" y="119" text-anchor="end" fill="#888" font-size="9" font-family="monospace">GND</text>
+                <!-- wires LCD: SCL→D22, SDA→D21 -->
+                <path d="M560,115 L500,115 L500,455 L460,455" stroke="#7ec8e3" stroke-width="1.8" fill="none"/>
+                <path d="M560,130 L505,130 L505,430 L460,430" stroke="#5ab8d3" stroke-width="1.8" fill="none"/>
+                <path d="M560,145 L520,145 L520,240 L460,240" stroke="#4a8f4a" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+                <path d="M690,115 L710,115 L710,665" stroke="#555" stroke-width="1.5" fill="none" stroke-dasharray="6,4"/>
 
                 <!-- ---- DS3231 ---- -->
-                <rect x="560" y="340" width="110" height="90" rx="8" fill="#2a1a1a" stroke="#6a3a3a" stroke-width="1.5"/>
-                <text x="615" y="362" text-anchor="middle" fill="#ffaa77" font-size="12" font-weight="bold" font-family="monospace">DS3231</text>
-                <text x="615" y="377" text-anchor="middle" fill="#6a4a4a" font-size="9" font-family="monospace">RTC  I2C  0x68</text>
-                <circle cx="560" cy="393" r="3" fill="#7ec8e3"/><text x="566" y="397" fill="#7ec8e3" font-size="9" font-family="monospace">SCL</text>
-                <circle cx="560" cy="408" r="3" fill="#7ec8e3"/><text x="566" y="412" fill="#7ec8e3" font-size="9" font-family="monospace">SDA</text>
-                <circle cx="560" cy="423" r="3" fill="#ffaa55"/><text x="566" y="427" fill="#ffaa55" font-size="9" font-family="monospace">VCC (3V3)</text>
-                <!-- wires DS3231 (shared I2C bus) -->
-                <path d="M560,393 L468,393 L468,275" stroke="#7ec8e3" stroke-width="1.8" fill="none"/>
-                <path d="M560,408 L472,408 L472,295" stroke="#5ab8d3" stroke-width="1.8" fill="none"/>
-                <path d="M560,423 L525,423 L525,355 L300,355" stroke="#ffaa55" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+                <rect x="560" y="200" width="130" height="100" rx="8" fill="#2a1a1a" stroke="#6a3a3a" stroke-width="1.5"/>
+                <text x="625" y="222" text-anchor="middle" fill="#ffaa77" font-size="12" font-weight="bold" font-family="monospace">DS3231</text>
+                <text x="625" y="237" text-anchor="middle" fill="#6a4a4a" font-size="9" font-family="monospace">RTC I²C 0x68 (3V3)</text>
+                <circle cx="560" cy="257" r="3" fill="#7ec8e3"/><text x="566" y="261" fill="#7ec8e3" font-size="9" font-family="monospace">SCL</text>
+                <circle cx="560" cy="272" r="3" fill="#7ec8e3"/><text x="566" y="276" fill="#7ec8e3" font-size="9" font-family="monospace">SDA</text>
+                <circle cx="560" cy="287" r="3" fill="#aa88ff"/><text x="566" y="291" fill="#aa88ff" font-size="9" font-family="monospace">SQW</text>
+                <circle cx="690" cy="257" r="3" fill="#ffaa55"/><text x="684" y="261" text-anchor="end" fill="#ffaa55" font-size="9" font-family="monospace">VCC</text>
+                <!-- wires DS3231 (общая I²C шина с LCD) -->
+                <path d="M560,257 L498,257 L498,455 L460,455" stroke="#7ec8e3" stroke-width="1.5" fill="none"/>
+                <path d="M560,272 L502,272 L502,430 L460,430" stroke="#5ab8d3" stroke-width="1.5" fill="none"/>
+                <!-- SQW → D33 (wake) -->
+                <path d="M560,287 L530,287 L530,265 L300,265" stroke="#aa88ff" stroke-width="1.8" fill="none"/>
+                <path d="M690,257 L730,257 L730,290 L460,290" stroke="#ffaa55" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
 
                 <!-- ---- DS18B20 ---- -->
-                <rect x="560" y="470" width="120" height="80" rx="8" fill="#1a1a2a" stroke="#4a4a6a" stroke-width="1.5"/>
-                <text x="620" y="492" text-anchor="middle" fill="#aa88ff" font-size="12" font-weight="bold" font-family="monospace">DS18B20</text>
-                <text x="620" y="507" text-anchor="middle" fill="#5a5a8a" font-size="9" font-family="monospace">OneWire  D7(13) общий</text>
-                <circle cx="560" cy="527" r="3" fill="#aa88ff"/><text x="566" y="531" fill="#aa88ff" font-size="9" font-family="monospace">DATA</text>
-                <circle cx="560" cy="542" r="3" fill="#ffaa55"/><text x="566" y="546" fill="#ffaa55" font-size="9" font-family="monospace">VCC</text>
+                <rect x="560" y="335" width="130" height="80" rx="8" fill="#1a1a2a" stroke="#4a4a6a" stroke-width="1.5"/>
+                <text x="625" y="357" text-anchor="middle" fill="#aa88ff" font-size="12" font-weight="bold" font-family="monospace">DS18B20</text>
+                <text x="625" y="372" text-anchor="middle" fill="#5a5a8a" font-size="9" font-family="monospace">1-Wire D4 (3V3)</text>
+                <circle cx="560" cy="390" r="3" fill="#aa88ff"/><text x="566" y="394" fill="#aa88ff" font-size="9" font-family="monospace">DATA</text>
+                <circle cx="560" cy="405" r="3" fill="#ffaa55"/><text x="566" y="409" fill="#ffaa55" font-size="9" font-family="monospace">VCC</text>
                 <!-- 4.7k pull-up -->
-                <rect x="520" y="518" width="36" height="16" rx="4" fill="#0f1f0f" stroke="#3a6a3a" stroke-width="1"/>
-                <text x="538" y="530" text-anchor="middle" fill="#7fff7f" font-size="7" font-family="monospace">4.7k</text>
-                <!-- wire DS18B20 data → D7 (shared with SD MOSI) -->
-                <line x1="560" y1="527" x2="556" y2="527" stroke="#aa88ff" stroke-width="1.5"/>
-                <path d="M520,527 L515,527 L515,275 L440,275" stroke="#aa88ff" stroke-width="1.5" fill="none"/>
-                <!-- pull-up to 3v3 -->
-                <line x1="538" y1="518" x2="538" y2="510" stroke="#ffaa55" stroke-width="1.2" stroke-dasharray="4,2"/>
-                <path d="M538,510 L525,510 L525,355" stroke="#ffaa55" stroke-width="1.2" fill="none" stroke-dasharray="4,2"/>
-                <!-- wire DS18B20 vcc -->
-                <path d="M560,542 L525,542 L525,423" stroke="#ffaa55" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+                <rect x="520" y="380" width="36" height="16" rx="4" fill="#0f1f0f" stroke="#3a6a3a" stroke-width="1"/>
+                <text x="538" y="392" text-anchor="middle" fill="#7fff7f" font-size="7" font-family="monospace">4.7k</text>
+                <line x1="560" y1="390" x2="556" y2="390" stroke="#aa88ff" stroke-width="1.5"/>
+                <path d="M520,390 L490,390 L490,345 L460,345" stroke="#aa88ff" stroke-width="1.5" fill="none"/>
+                <line x1="538" y1="380" x2="538" y2="370" stroke="#ffaa55" stroke-width="1.2" stroke-dasharray="4,2"/>
+                <path d="M538,370 L545,370 L545,290 L460,290" stroke="#ffaa55" stroke-width="1.2" fill="none" stroke-dasharray="4,2"/>
+                <path d="M560,405 L515,405 L515,290 L460,290" stroke="#ffaa55" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
 
                 <!-- ---- BUTTONS ---- -->
-                <rect x="60" y="220" width="110" height="55" rx="8" fill="#2a1a1a" stroke="#6a3a3a" stroke-width="1.5"/>
-                <text x="115" y="242" text-anchor="middle" fill="#ff9988" font-size="11" font-weight="bold" font-family="monospace">BTN MAIN</text>
-                <text x="115" y="258" text-anchor="middle" fill="#5a3a3a" font-size="9" font-family="monospace">D3 / GPIO0</text>
-                <path d="M170,235 L210,235 L210,315 L300,315" stroke="#ff9988" stroke-width="1.8" fill="none"/>
-                <path d="M170,248 L215,248 L215,375 L300,375" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="5,3"/>
+                <rect x="60" y="270" width="120" height="50" rx="8" fill="#2a1a1a" stroke="#6a3a3a" stroke-width="1.5"/>
+                <text x="120" y="290" text-anchor="middle" fill="#ff9988" font-size="11" font-weight="bold" font-family="monospace">BTN MAIN</text>
+                <text x="120" y="305" text-anchor="middle" fill="#5a3a3a" font-size="9" font-family="monospace">D27 (RTC ⚡)</text>
+                <path d="M180,285 L220,285 L220,315 L300,315" stroke="#ff9988" stroke-width="1.8" fill="none"/>
+                <path d="M180,300 L218,300 L218,665" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="5,3"/>
 
-                <rect x="60" y="300" width="110" height="55" rx="8" fill="#2a1a1a" stroke="#6a3a3a" stroke-width="1.5"/>
-                <text x="115" y="322" text-anchor="middle" fill="#ff9988" font-size="11" font-weight="bold" font-family="monospace">BTN MENU</text>
-                <text x="115" y="338" text-anchor="middle" fill="#5a3a3a" font-size="9" font-family="monospace">D4 / GPIO2</text>
-                <path d="M170,315 L220,315 L220,335 L300,335" stroke="#ff9988" stroke-width="1.8" fill="none"/>
-                <path d="M170,328 L218,328 L218,380 L300,380" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="5,3"/>
+                <rect x="60" y="335" width="120" height="50" rx="8" fill="#2a1a1a" stroke="#6a3a3a" stroke-width="1.5"/>
+                <text x="120" y="355" text-anchor="middle" fill="#7ec8e3" font-size="11" font-weight="bold" font-family="monospace">BTN MENU</text>
+                <text x="120" y="370" text-anchor="middle" fill="#5a4a5a" font-size="9" font-family="monospace">D26</text>
+                <path d="M180,350 L225,350 L225,290 L300,290" stroke="#7ec8e3" stroke-width="1.8" fill="none"/>
+                <path d="M180,365 L223,365 L223,665" stroke="#555" stroke-width="1.2" fill="none" stroke-dasharray="5,3"/>
 
-                <!-- ---- Battery divider ---- -->
-                <rect x="60" y="400" width="140" height="80" rx="8" fill="#2a2a1a" stroke="#6a6a3a" stroke-width="1.5"/>
-                <text x="130" y="420" text-anchor="middle" fill="#f5a623" font-size="11" font-weight="bold" font-family="monospace">BAT+ → делитель</text>
-                <text x="130" y="435" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">R1=100k  R2=100k</text>
-                <text x="130" y="450" text-anchor="middle" fill="#f5a623" font-size="9" font-family="monospace">BAT+ → R1 → A0 → R2 → GND</text>
-                <text x="130" y="465" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">4.2В → 2.1В на A0</text>
-                <path d="M200,435 L250,435 L250,235 L300,235" stroke="#f5a623" stroke-width="1.8" fill="none"/>
+                <!-- ---- AS21 + Battery divider ---- -->
+                <rect x="60" y="60" width="180" height="170" rx="10" fill="#2a2a1a" stroke="#6a6a3a" stroke-width="2"/>
+                <text x="150" y="82" text-anchor="middle" fill="#f5a623" font-size="13" font-weight="bold" font-family="monospace">AS21 V6.0</text>
+                <text x="150" y="98" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">TP4056 + DW01 + Boost</text>
+                <!-- microUSB -->
+                <rect x="105" y="105" width="90" height="14" rx="3" fill="#2a2a5a" stroke="#4a4a8a"/>
+                <text x="150" y="116" text-anchor="middle" fill="#6a6aaa" font-size="8" font-family="monospace">microUSB зарядка</text>
+                <!-- 18650 -->
+                <rect x="80" y="130" width="140" height="36" rx="6" fill="#5a3a1a" stroke="#aa6a3a" stroke-width="1.5"/>
+                <text x="150" y="153" text-anchor="middle" fill="#ffcc88" font-size="11" font-weight="bold" font-family="monospace">18650 Li-Ion</text>
+                <!-- Outputs -->
+                <circle cx="240" cy="180" r="4" fill="#4a8f4a"/><text x="248" y="184" fill="#4a8f4a" font-size="9" font-family="monospace">5V_OUT</text>
+                <circle cx="240" cy="200" r="4" fill="#888"/><text x="248" y="204" fill="#888" font-size="9" font-family="monospace">GND</text>
+                <circle cx="240" cy="220" r="4" fill="#f5a623"/><text x="248" y="224" fill="#f5a623" font-size="9" font-family="monospace">BAT+ (raw)</text>
+                <!-- AS21 → ESP32 wires -->
+                <path d="M240,180 L280,180 L280,240 L460,240" stroke="#4a8f4a" stroke-width="2" fill="none"/>
+                <path d="M240,200 L275,200 L275,265 L460,265" stroke="#888" stroke-width="1.5" fill="none"/>
+                <!-- BAT+ → divider -->
+                <line x1="240" y1="220" x2="290" y2="220" stroke="#f5a623" stroke-width="2"/>
+                <rect x="290" y="208" width="50" height="20" rx="4" fill="#1a2a1a" stroke="#3a6a3a"/>
+                <text x="315" y="222" text-anchor="middle" fill="#7fff7f" font-size="9" font-family="monospace">R1 100k</text>
+                <line x1="340" y1="218" x2="380" y2="218" stroke="#f5a623" stroke-width="2"/>
+                <circle cx="365" cy="218" r="4" fill="#f5a623"/>
+                <line x1="365" y1="218" x2="365" y2="240" stroke="#f5a623" stroke-width="2"/>
+                <path d="M365,240 L300,240" stroke="#f5a623" stroke-width="2" fill="none"/>
+                <text x="370" y="248" fill="#f5a623" font-size="9" font-family="monospace">→ D34 (ADC)</text>
+                <line x1="380" y1="218" x2="430" y2="218" stroke="#f5a623" stroke-width="2"/>
+                <rect x="380" y="208" width="50" height="20" rx="4" fill="#1a2a1a" stroke="#3a6a3a"/>
+                <text x="405" y="222" text-anchor="middle" fill="#7fff7f" font-size="9" font-family="monospace">R2 100k</text>
+                <path d="M430,218 L450,218 L450,665" stroke="#888" stroke-width="1.5" fill="none" stroke-dasharray="6,4"/>
 
                 <!-- GND bus at bottom -->
-                <line x1="40" y1="615" x2="740" y2="615" stroke="#444" stroke-width="2" stroke-dasharray="8,4"/>
-                <text x="750" y="619" fill="#666" font-size="10" font-family="monospace">GND</text>
-                <line x1="300" y1="375" x2="300" y2="615" stroke="#444" stroke-width="1.2" stroke-dasharray="4,3"/>
+                <line x1="40" y1="665" x2="740" y2="665" stroke="#444" stroke-width="2" stroke-dasharray="8,4"/>
+                <text x="750" y="669" fill="#666" font-size="10" font-family="monospace">GND</text>
 
                 <!-- Legend box -->
-                <rect x="60" y="530" width="360" height="65" rx="8" fill="rgba(0,0,0,0.4)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-                <text x="240" y="547" text-anchor="middle" fill="#888" font-size="10" font-weight="bold">Легенда проводов</text>
-                <line x1="75" y1="561" x2="115" y2="561" stroke="#7ec8e3" stroke-width="2"/><text x="123" y="565" fill="#7ec8e3" font-size="10">I2C (SCL/SDA)</text>
-                <line x1="75" y1="579" x2="115" y2="579" stroke="#ffaa55" stroke-width="2" stroke-dasharray="5,3"/><text x="123" y="583" fill="#ffaa55" font-size="10">Питание 3.3В/5В</text>
-                <line x1="230" y1="561" x2="270" y2="561" stroke="#55cc55" stroke-width="2"/><text x="278" y="565" fill="#55cc55" font-size="10">SD SPI</text>
-                <line x1="230" y1="579" x2="270" y2="579" stroke="#ff9988" stroke-width="2"/><text x="278" y="583" fill="#ff9988" font-size="10">Кнопки</text>
-                <line x1="340" y1="561" x2="380" y2="561" stroke="#7fff7f" stroke-width="2"/><text x="388" y="565" fill="#7fff7f" font-size="10">HX711</text>
-                <line x1="340" y1="579" x2="380" y2="579" stroke="#aa88ff" stroke-width="2"/><text x="388" y="583" fill="#aa88ff" font-size="10">DS18B20/MOSI</text>
+                <rect x="60" y="595" width="380" height="55" rx="8" fill="rgba(0,0,0,0.4)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                <text x="250" y="612" text-anchor="middle" fill="#888" font-size="10" font-weight="bold">Легенда проводов</text>
+                <line x1="75" y1="626" x2="115" y2="626" stroke="#7ec8e3" stroke-width="2"/><text x="123" y="630" fill="#7ec8e3" font-size="10">I²C (SCL/SDA)</text>
+                <line x1="230" y1="626" x2="270" y2="626" stroke="#7fff7f" stroke-width="2"/><text x="278" y="630" fill="#7fff7f" font-size="10">HX711 (D16/D17)</text>
+                <line x1="75" y1="644" x2="115" y2="644" stroke="#ffaa55" stroke-width="2" stroke-dasharray="5,3"/><text x="123" y="648" fill="#ffaa55" font-size="10">3.3В/5В питание</text>
+                <line x1="230" y1="644" x2="270" y2="644" stroke="#aa88ff" stroke-width="2"/><text x="278" y="648" fill="#aa88ff" font-size="10">DS18B20 / SQW (wake)</text>
             </svg>
         </div>
     </div>
@@ -569,99 +973,83 @@
     <div class="card">
         <h2>⚖️ HX711 — подключение тензодатчика</h2>
         <table class="conn-table">
-            <thead><tr><th>HX711</th><th></th><th>NodeMCU</th><th>Описание</th></tr></thead>
+            <thead><tr><th>HX711</th><th></th><th>ESP32</th><th>Описание</th></tr></thead>
             <tbody>
-                <tr><td class="from">VCC</td><td class="arrow">→</td><td class="to">3V3</td><td class="note">Питание 3.3В</td></tr>
+                <tr><td class="from">VCC</td><td class="arrow">→</td><td class="to">3V3</td><td class="note">Питание 3.3В (стабильнее показания, чем 5В)</td></tr>
                 <tr><td class="from">GND</td><td class="arrow">→</td><td class="to">GND</td><td class="note">Общая земля</td></tr>
-                <tr><td class="from">DT (DATA)</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D0</span> <span class="col-d">GPIO16</span></td><td class="note">Линия данных. DT_PIN = 16. Перепаяно с D5 под SD-карту</td></tr>
-                <tr><td class="from">SCK (CLK)</td><td class="arrow">→</td><td class="to"><span class="col-gpio">TX</span> <span class="col-d">GPIO1</span></td><td class="note">Тактирование. SCK_PIN = 1. Serial отключён в прошивке</td></tr>
+                <tr><td class="from">DT (DATA)</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D16</span> <span class="col-d">GPIO16</span></td><td class="note">DT_PIN = 16. Не strapping pin, безопасно</td></tr>
+                <tr><td class="from">SCK (CLK)</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D17</span> <span class="col-d">GPIO17</span></td><td class="note">SCK_PIN = 17. Сосед с D16, удобно паять шлейфом</td></tr>
             </tbody>
         </table>
-        <div class="tip"><strong>💡 Подключение 4 тензодатчиков</strong>Красный → E+, Чёрный → E−, Зелёный → A+, Белый → A−. Для одиночного датчика: E+/E−=питание, A+/A−=сигнал.</div>
-        <div class="warn"><strong>⚠️ HX711 перепаян на D0/TX</strong>Пины D5/D6 (GPIO14/GPIO12) освобождены под SPI SD-карты. HX711 перенесён на D0 (GPIO16) и TX (GPIO1). Serial Monitor через USB не работает — GPIO1 занят HX711.</div>
+        <div class="tip"><strong>💡 Подключение тензодатчика к HX711</strong>Красный → E+, Чёрный → E−, Зелёный → A+, Белый → A−. Для одиночного датчика TAL220: E+/E− = питание, A+/A− = сигнал.</div>
     </div>
 
     <!-- LCD -->
     <div class="card">
-        <h2>📺 LCD 1602 I2C (адрес 0x27)</h2>
+        <h2>📺 LCD 1602 I²C (адрес 0x27)</h2>
         <table class="conn-table">
-            <thead><tr><th>LCD</th><th></th><th>NodeMCU</th><th>Описание</th></tr></thead>
+            <thead><tr><th>LCD</th><th></th><th>ESP32</th><th>Описание</th></tr></thead>
             <tbody>
                 <tr><td class="from">VCC</td><td class="arrow">→</td><td class="to">VIN (5В)</td><td class="note">Обязательно 5В — от VIN, не 3V3</td></tr>
                 <tr><td class="from">GND</td><td class="arrow">→</td><td class="to">GND</td><td class="note">Земля</td></tr>
-                <tr><td class="from">SCL</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D1</span> <span class="col-d">GPIO5</span></td><td class="note">I2C тактирование</td></tr>
-                <tr><td class="from">SDA</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D2</span> <span class="col-d">GPIO4</span></td><td class="note">I2C данные</td></tr>
+                <tr><td class="from">SDA</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D21</span> <span class="col-d">GPIO21</span></td><td class="note">I²C данные (общая шина с DS3231)</td></tr>
+                <tr><td class="from">SCL</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D22</span> <span class="col-d">GPIO22</span></td><td class="note">I²C тактирование (общая шина с DS3231)</td></tr>
             </tbody>
         </table>
-        <div class="warn"><strong>⚠️ Адрес I2C</strong>По умолчанию LCD_ADDR = 0x27. Если не работает — попробуйте 0x3F. Проверьте адрес I2C-сканером.</div>
+        <div class="warn"><strong>⚠️ Адрес I²C</strong>По умолчанию LCD_ADDR = 0x27. Если не работает — попробуйте 0x3F. Проверьте I²C-сканером.</div>
     </div>
 
     <!-- DS3231 -->
     <div class="card">
         <h2>🕐 DS3231 RTC (адрес 0x68)</h2>
         <table class="conn-table">
-            <thead><tr><th>DS3231</th><th></th><th>NodeMCU</th><th>Описание</th></tr></thead>
+            <thead><tr><th>DS3231</th><th></th><th>ESP32</th><th>Описание</th></tr></thead>
             <tbody>
-                <tr><td class="from">VCC</td><td class="arrow">→</td><td class="to">3V3</td><td class="note">Питание 3.3В</td></tr>
+                <tr><td class="from">VCC</td><td class="arrow">→</td><td class="to">3V3</td><td class="note">3.3В — НЕ 5В (CR2032 не должна заряжаться)</td></tr>
                 <tr><td class="from">GND</td><td class="arrow">→</td><td class="to">GND</td><td class="note">Земля</td></tr>
-                <tr><td class="from">SCL</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D1</span> <span class="col-d">GPIO5</span></td><td class="note">Та же шина I2C что и LCD</td></tr>
-                <tr><td class="from">SDA</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D2</span> <span class="col-d">GPIO4</span></td><td class="note">Та же шина I2C что и LCD</td></tr>
+                <tr><td class="from">SDA</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D21</span> <span class="col-d">GPIO21</span></td><td class="note">Та же шина I²C что и LCD</td></tr>
+                <tr><td class="from">SCL</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D22</span> <span class="col-d">GPIO22</span></td><td class="note">Та же шина I²C что и LCD</td></tr>
+                <tr><td class="from">SQW (INT) <span style="color:var(--warning)">опц.</span></td><td class="arrow">→</td><td class="to"><span class="col-gpio">D33</span> <span class="col-d">GPIO33</span></td><td class="note">Alarm output → ESP32 RTC GPIO. <b>Задел на P3</b> — в v5.0.17 не используется (расписание идёт через timer wakeup ESP32). Паяем сейчас, чтобы потом не перепаивать</td></tr>
             </tbody>
         </table>
-        <div class="tip"><strong>💡 CR2032</strong>Установите батарейку CR2032 в держатель DS3231 — часы не сбросятся при отключении питания.</div>
+        <div class="tip"><strong>💡 CR2032</strong>Установите батарейку в держатель DS3231 — часы не сбросятся при выключении весов. Хватает на 5–10 лет.</div>
+        <div class="warn"><strong>⚠️ Power LED и R5 на модуле</strong>На большинстве модулей DS3231 есть Power LED (жжёт ~200 мкА) и SMD-резистор R5 в цепи зарядки CR2032. <b>Выпаять оба</b> для не-перезаряжаемой CR2032 и долгой жизни батарейки.</div>
     </div>
 
     <!-- DS18B20 -->
     <div class="card">
         <h2>🌡️ DS18B20 — датчик температуры</h2>
         <table class="conn-table">
-            <thead><tr><th>DS18B20</th><th></th><th>NodeMCU / Схема</th><th>Описание</th></tr></thead>
+            <thead><tr><th>DS18B20 (вид плоской стороной)</th><th></th><th>ESP32</th><th>Описание</th></tr></thead>
             <tbody>
-                <tr><td class="from">VCC (красный)</td><td class="arrow">→</td><td class="to">3V3</td><td class="note">Питание 3.3В</td></tr>
-                <tr><td class="from">GND (чёрный)</td><td class="arrow">→</td><td class="to">GND</td><td class="note">Земля</td></tr>
-                <tr><td class="from">DATA (жёлтый)</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D7</span> <span class="col-d">GPIO13</span></td><td class="note">OneWire. TEMP_PIN = 13</td></tr>
-                <tr><td class="from">DATA (жёлтый)</td><td class="arrow">также</td><td class="to">3V3 через 4.7 кОм</td><td class="note">Подтягивающий резистор обязателен!</td></tr>
+                <tr><td class="from">GND (левая ножка)</td><td class="arrow">→</td><td class="to">GND</td><td class="note">Земля</td></tr>
+                <tr><td class="from">DATA (центральная)</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D4</span> <span class="col-d">GPIO4</span></td><td class="note">1-Wire. TEMP_PIN = 4</td></tr>
+                <tr><td class="from">VCC (правая ножка)</td><td class="arrow">→</td><td class="to">3V3</td><td class="note">Питание 3.3В</td></tr>
+                <tr><td class="from">DATA</td><td class="arrow">также</td><td class="to">3V3 через 4.7 кОм</td><td class="note">Pull-up резистор обязателен!</td></tr>
             </tbody>
         </table>
-        <div class="danger"><strong>❌ Без резистора датчик не работает!</strong>Резистор 4.7 кОм между DATA и VCC (3.3В) обязателен для OneWire. Без него — ошибка или −127°C.</div>
-    </div>
-
-    <!-- SD Card -->
-    <div class="card">
-        <h2>💾 SD-карта (MicroSD SPI-модуль)</h2>
-        <table class="conn-table">
-            <thead><tr><th>SD-модуль</th><th></th><th>NodeMCU</th><th>Описание</th></tr></thead>
-            <tbody>
-                <tr><td class="from">VCC</td><td class="arrow">→</td><td class="to">3V3</td><td class="note">Питание 3.3В</td></tr>
-                <tr><td class="from">GND</td><td class="arrow">→</td><td class="to">GND</td><td class="note">Земля</td></tr>
-                <tr><td class="from">CS</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D8</span> <span class="col-d">GPIO15</span></td><td class="note">Chip Select. SD_CS_PIN = 15</td></tr>
-                <tr><td class="from">SCK</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D5</span> <span class="col-d">GPIO14</span></td><td class="note">SPI Clock (аппаратный)</td></tr>
-                <tr><td class="from">MISO</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D6</span> <span class="col-d">GPIO12</span></td><td class="note">Master In, Slave Out</td></tr>
-                <tr><td class="from">MOSI</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D7</span> <span class="col-d">GPIO13</span></td><td class="note">Master Out, Slave In. Общий с DS18B20!</td></tr>
-            </tbody>
-        </table>
-        <div class="warn"><strong>⚠️ GPIO13 (D7) — общий пин!</strong>MOSI SD-карты и DATA DS18B20 подключены к одному GPIO13. Это работает, т.к. SPI и OneWire не используются одновременно. Резистор 4.7 кОм (pull-up DS18B20) остаётся на месте.</div>
-        <div class="tip"><strong>💡 Формат карты</strong>MicroSD должна быть отформатирована в <strong>FAT32</strong>. Карты до 32 ГБ. Перед установкой — отформатировать на компьютере.</div>
+        <div class="danger"><strong>❌ Без резистора датчик не работает!</strong>Резистор 4.7 кОм между DATA и VCC (3.3В) обязателен для 1-Wire. Без него — −127°C / ошибка.</div>
+        <div class="tip"><strong>💡 Длинный кабель в улей</strong>Если выносишь датчик на ~1+ м — поставь pullup ближе к датчику, не к ESP32.</div>
     </div>
 
     <!-- Buttons -->
     <div class="card">
         <h2>🔘 Кнопки управления</h2>
-        <div class="tip"><strong>💡 Внешние резисторы не нужны</strong>Используется INPUT_PULLUP — встроенные резисторы NodeMCU. Кнопки подключаются напрямую: пин → GND.</div>
+        <div class="tip"><strong>💡 Внешние резисторы не нужны</strong>Используется INPUT_PULLUP — встроенные резисторы ESP32. Кнопки подключаются напрямую: пин → GND.</div>
         <table class="conn-table">
             <thead><tr><th>Кнопка</th><th>Пин 1</th><th>Пин 2</th><th>Функция</th></tr></thead>
             <tbody>
-                <tr><td class="from">MAIN (тара)</td><td><span class="col-gpio">D3</span> <span class="col-d">GPIO0</span></td><td>GND</td><td class="note">4× короткое = тара; длинное = калибровка</td></tr>
-                <tr><td class="from">MENU (навигация)</td><td><span class="col-gpio">D4</span> <span class="col-d">GPIO2</span></td><td>GND</td><td class="note">1× = смена экрана; 2× быстро = отмена тары</td></tr>
+                <tr><td class="from">MAIN (тара / калибровка)</td><td><span class="col-gpio">D27</span> <span class="col-d">GPIO27</span></td><td>GND</td><td class="note">3 сек = ТАРА (диалог), 6 сек = КАЛИБРОВКА. RTC GPIO ⚡</td></tr>
+                <tr><td class="from">MENU (навигация / OK)</td><td><span class="col-gpio">D26</span> <span class="col-d">GPIO26</span></td><td>GND</td><td class="note">короткое = следующий экран, 2.5 сек = OK / на главную</td></tr>
             </tbody>
         </table>
-        <div class="warn"><strong>⚠️ GPIO0 (D3) = Flash-кнопка</strong>При загрузке прошивки убедитесь что кнопка MAIN НЕ нажата — иначе плата войдёт в режим прошивки.</div>
+        <div class="tip"><strong>💡 MAIN на RTC GPIO</strong>D27 — RTC GPIO, поэтому кнопка MAIN может разбудить ESP32 из deep sleep (через <code>esp_sleep_enable_ext0_wakeup</code>).</div>
     </div>
 
     <!-- Battery -->
     <div class="card">
         <h2>🔋 Делитель напряжения батареи</h2>
-        <p style="color:var(--text-muted);margin-bottom:15px">Li-Ion макс. 4.2В делится пополам двумя резисторами 100 кОм. На A0 попадает 2.1В — в пределах диапазона NodeMCU (0–3.2В).</p>
+        <p style="color:var(--text-muted);margin-bottom:15px">18650/21700 макс. 4.2В делится пополам двумя резисторами 100 кОм. На GPIO34 (ADC1_CH6) попадает ~2.1В — в пределах диапазона ESP32 ADC (с ADC_11db = 0–3.3В).<br><b>Куда подключать «BAT+»</b>: к пину <code>BAT</code> на модуле AS21 (это плюс банки 18650 напрямую, до Boost-преобразователя). Не путать с <code>VOUT</code> (5В после Boost) и <code>VIN</code> (вход зарядки).</p>
         <div class="diagram-wrap">
             <svg viewBox="0 0 520 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:520px;display:block;margin:0 auto">
                 <text x="25" y="45" fill="#f5a623" font-size="13" font-family="monospace" font-weight="bold">BAT+</text>
@@ -673,7 +1061,7 @@
                 <circle cx="230" cy="50" r="6" fill="#f5a623"/>
                 <line x1="230" y1="50" x2="230" y2="80" stroke="#f5a623" stroke-width="2"/>
                 <rect x="200" y="78" width="60" height="24" rx="5" fill="rgba(245,166,35,0.2)" stroke="#f5a623" stroke-width="2"/>
-                <text x="230" y="94" text-anchor="middle" fill="#f5a623" font-size="13" font-family="monospace" font-weight="bold">A0</text>
+                <text x="230" y="94" text-anchor="middle" fill="#f5a623" font-size="13" font-family="monospace" font-weight="bold">D34</text>
                 <text x="230" y="115" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">2.1В</text>
                 <rect x="270" y="38" width="70" height="24" rx="5" fill="#1a2a1a" stroke="#3a6a3a" stroke-width="1.5"/>
                 <text x="305" y="54" text-anchor="middle" fill="#7fff7f" font-size="11" font-family="monospace">R2  100k</text>
@@ -684,21 +1072,20 @@
                 <text x="345" y="35" fill="#888" font-size="9" font-family="monospace">0В</text>
             </svg>
         </div>
-        <div class="tip"><strong>💡 BAT− тоже на GND</strong>Отрицательный полюс батареи подключается к общей шине GND устройства.</div>
+        <div class="tip"><strong>💡 BAT+ берётся с AS21</strong>Прямое напряжение банки 18650 (3.0–4.2В), не выход 5V Boost. Ток утечки делителя: 4.2В / 200кΩ = 21 мкА — заметно для deep sleep, но ОК.</div>
     </div>
 
     <!-- Deep Sleep -->
     <div class="card">
         <h2>💤 Пробуждение из Deep Sleep</h2>
-        <div class="warn"><strong>⚠️ D0 (GPIO16) занят HX711</strong>Перемычка D0→RST для автоматического пробуждения по таймеру <strong>невозможна</strong> — GPIO16 используется для HX711 DT. Пробуждение — только кнопкой RST на плате.</div>
+        <div class="ok" style="background:rgba(76,175,80,0.08);border-left:4px solid var(--success);padding:14px;border-radius:0 10px 10px 0;margin:14px 0;color:var(--text-muted)"><strong style="color:var(--success);display:block;margin-bottom:4px">✓ ESP32 пробуждается полноценно</strong>В отличие от ESP8266 (где пришлось перейти на ESP32 как раз из-за этого), ESP32 умеет:</div>
         <table class="conn-table">
-            <thead><tr><th>Способ</th><th>Как</th><th>Описание</th></tr></thead>
+            <thead><tr><th>Способ</th><th>Триггер</th><th>Описание</th></tr></thead>
             <tbody>
-                <tr>
-                    <td class="from">Кнопка RST</td>
-                    <td class="arrow">→</td>
-                    <td class="note">Нажмите кнопку Reset на плате NodeMCU. Устройство перезагрузится и начнёт работу</td>
-                </tr>
+                <tr><td class="from">Timer wakeup</td><td><span class="col-gpio">esp_sleep_enable_timer_wakeup()</span></td><td class="note">Просыпается через N секунд. Для расписания (например, через 8 часов до 09:00)</td></tr>
+                <tr><td class="from">EXT0 wake (DS3231) <span style="color:var(--warning)">опц.</span></td><td><span class="col-gpio">D33 = LOW</span></td><td class="note">DS3231 alarm подтягивает SQW в LOW → ESP32 просыпается. <b>Не реализовано в v5.0.17</b> — задел на P3</td></tr>
+                <tr><td class="from">Кнопка MAIN</td><td><span class="col-gpio">D27 = LOW</span></td><td class="note">Можно настроить ext0/ext1 wake для ручного пробуждения</td></tr>
+                <tr><td class="from">Кнопка RST на плате</td><td><span class="col-gpio">RST = 0</span></td><td class="note">Полная перезагрузка (теряется RTC RAM, но не EEPROM)</td></tr>
             </tbody>
         </table>
     </div>
@@ -707,38 +1094,40 @@
 <!-- ===== FIRMWARE ===== -->
 <div id="firmware" class="section">
     <div class="card">
-        <h2>💾 Прошивка</h2>
+        <h2>💾 Прошивка ESP32</h2>
         <h3>Библиотеки Arduino (установить через Менеджер библиотек)</h3>
         <table class="conn-table">
             <thead><tr><th>Библиотека</th><th>Версия</th><th>Для чего</th></tr></thead>
             <tbody>
-                <tr><td class="from">ESP8266 Arduino Core</td><td>3.x</td><td class="note">Добавить URL в Менеджер плат</td></tr>
-                <tr><td class="from">LiquidCrystal_I2C</td><td>1.1.2+</td><td class="note">LCD 16×2 I2C</td></tr>
+                <tr><td class="from">arduino-esp32 (Espressif)</td><td>2.0.x / 3.0.x</td><td class="note">Основной core ESP32</td></tr>
+                <tr><td class="from">LiquidCrystal_I2C</td><td>1.1.2+</td><td class="note">LCD 16×2 I²C</td></tr>
                 <tr><td class="from">HX711 by bogde</td><td>0.7.5+</td><td class="note">АЦП тензодатчика</td></tr>
                 <tr><td class="from">OneWire</td><td>2.3+</td><td class="note">Шина DS18B20</td></tr>
                 <tr><td class="from">DallasTemperature</td><td>3.9+</td><td class="note">Датчик DS18B20</td></tr>
                 <tr><td class="from">RTClib by Adafruit</td><td>2.1+</td><td class="note">DS3231 RTC</td></tr>
+                <tr><td class="from">ArduinoJson</td><td><strong>6.x</strong></td><td class="note">Не 7.x! Web API использует API v6</td></tr>
             </tbody>
         </table>
 
-        <h3>Настройки Arduino IDE для NodeMCU</h3>
+        <h3>Настройки Arduino IDE для ESP32</h3>
         <div class="steps">
             <div class="step">
                 <div class="step-content">
-                    <h4>Добавить поддержку ESP8266</h4>
+                    <h4>Добавить поддержку ESP32</h4>
                     <p>Файл → Настройки → Дополнительные URL менеджера плат:</p>
-                    <p style="margin-top:8px"><code>https://arduino.esp8266.com/stable/package_esp8266com_index.json</code></p>
-                    <p style="margin-top:8px">Затем: Инструменты → Плата → Менеджер плат → найти «esp8266» → Установить</p>
+                    <p style="margin-top:8px"><code>https://espressif.github.io/arduino-esp32/package_esp32_index.json</code></p>
+                    <p style="margin-top:8px">Затем: Инструменты → Плата → Менеджер плат → найти «esp32» → Установить</p>
                 </div>
             </div>
             <div class="step">
                 <div class="step-content">
                     <h4>Выбрать плату</h4>
-                    <p>Инструменты → Плата → ESP8266 Boards → <strong>NodeMCU 1.0 (ESP-12E Module)</strong></p>
+                    <p>Инструменты → Плата → ESP32 Arduino → <strong>DOIT ESP32 DEVKIT V1</strong></p>
                     <ul>
-                        <li>CPU Frequency: 80 MHz</li>
-                        <li>Flash Size: 4MB (FS:2MB OTA:1019KB)</li>
-                        <li>Upload Speed: 115200</li>
+                        <li>CPU Frequency: 240 MHz</li>
+                        <li><strong>Partition Scheme: Huge APP (3MB No OTA / 1MB SPIFFS)</strong> — обязательно, без него прошивка не влезает</li>
+                        <li>Flash Size: 4MB</li>
+                        <li>Upload Speed: 921600</li>
                     </ul>
                 </div>
             </div>
@@ -746,11 +1135,21 @@
                 <div class="step-content">
                     <h4>Открыть скетч и загрузить</h4>
                     <p>Файл → Открыть → <code>BeehiveScale/BeehiveScale.ino</code><br>
-                    Инструменты → Порт → выбрать COM-порт → нажать «Загрузить» (→)</p>
-                    <div class="tip" style="margin-top:10px"><strong>💡 Кнопка Flash</strong>Если загрузка не начинается: зажмите D3 (Flash), нажмите RST, отпустите обе.</div>
+                    Инструменты → Порт → выбрать COM-порт ESP32 → нажать «Загрузить» (→)</p>
+                    <div class="tip" style="margin-top:10px"><strong>💡 Авто-прошивка</strong>ESP32 DevKit V1 поддерживает auto-reset через DTR/RTS — никаких кнопок зажимать не надо.</div>
                 </div>
             </div>
         </div>
+
+        <h3>PlatformIO (альтернатива)</h3>
+        <p style="color:var(--text-muted)">В корне проекта есть <code>platformio.ini</code> с готовым окружением:</p>
+        <pre style="background:#0a0f1e;padding:12px;border-radius:8px;font-size:0.85em;margin-top:8px;color:#e8e8e8;overflow-x:auto;border:1px solid var(--border)">[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+board_build.partitions = huge_app.csv
+monitor_speed = 115200</pre>
+        <p style="margin-top:10px;color:var(--text-muted)">Команда: <code>pio run -e esp32dev -t upload</code></p>
     </div>
 </div>
 
@@ -759,60 +1158,45 @@
     <div class="card">
         <h2>🖥️ Управление кнопками</h2>
         <div class="btn-grid">
-            <div class="btn-card"><div class="btn-icon">🔘</div><h4>MAIN — 4× короткое</h4><p>Тарирование. Обнуляет вес. Сохраняет offset в EEPROM.</p><span class="btn-tag">4 нажатия за 3 сек</span></div>
-            <div class="btn-card"><div class="btn-icon">⏱️</div><h4>MAIN — долгое (&gt;1с)</h4><p>Запуск полной калибровки по эталонному грузу.</p><span class="btn-tag">удержание</span></div>
-            <div class="btn-card"><div class="btn-icon">📋</div><h4>MENU — 1×</h4><p>Переключение между 7 экранами LCD.</p><span class="btn-tag">короткое нажатие</span></div>
-            <div class="btn-card"><div class="btn-icon">↩️</div><h4>MENU — 2× быстро</h4><p>Отмена тарирования. Восстанавливает предыдущий offset.</p><span class="btn-tag">2 нажатия &lt;500 мс</span></div>
-            <div class="btn-card"><div class="btn-icon">🔧</div><h4>Экран #6 + MAIN</h4><p>Режим ручной подстройки CF с живым весом.</p><span class="btn-tag">из меню #6</span></div>
+            <div class="btn-card"><div class="btn-icon">📋</div><h4>MENU — короткое</h4><p>Переключение между 8 экранами LCD по кругу.</p><span class="btn-tag">«чик»</span></div>
+            <div class="btn-card"><div class="btn-icon">↩️</div><h4>MENU — 2.5 сек</h4><p>OK / возврат на Экран 1. В диалогах — подтверждение.</p><span class="btn-tag">удержание</span></div>
+            <div class="btn-card"><div class="btn-icon">🔘</div><h4>MAIN — 3 сек</h4><p>ТАРА (сброс веса в 0). После отпуска — диалог подтверждения через MENU=OK.</p><span class="btn-tag">MEDIUM</span></div>
+            <div class="btn-card"><div class="btn-icon">⚖️</div><h4>MAIN — 6 сек</h4><p>КАЛИБРОВКА. Запуск мастера калибровки по эталонной гире.</p><span class="btn-tag danger">LONG</span></div>
+            <div class="btn-card"><div class="btn-icon">🔧</div><h4>Экран 7 + MAIN</h4><p>Войти в режим ручной подстройки CF (для опытных). Обычным пасечникам не нужно.</p><span class="btn-tag">из Меню CF</span></div>
+            <div class="btn-card"><div class="btn-icon">🩺</div><h4>Экран 8 + MAIN</h4><p>Запустить самопроверку (HX711, DS18B20, RTC, батарея).</p><span class="btn-tag">из Диагностики</span></div>
+            <div class="btn-card"><div class="btn-icon">😴</div><h4>Wake-press guard</h4><p>После пробуждения LCD первое нажатие MAIN не открывает тару — только зажигает экран. Защита от случайного тарирования.</p><span class="btn-tag">авто</span></div>
         </div>
 
-        <h3 style="margin-top:25px">Ручная калибровка (Экран #6)</h3>
-        <table class="conn-table">
-            <thead><tr><th>Кнопка</th><th>Действие</th></tr></thead>
-            <tbody>
-                <tr><td class="from">MAIN короткое</td><td class="note">Сменить шаг: 10 → 1 → 0.1 → 10 ...</td></tr>
-                <tr><td class="from">MENU короткое</td><td class="note">CF + шаг (увеличить)</td></tr>
-                <tr><td class="from">MENU длинное</td><td class="note">CF − шаг (уменьшить)</td></tr>
-                <tr><td class="from">MAIN длинное</td><td class="note">Сохранить CF в EEPROM и выйти</td></tr>
-            </tbody>
-        </table>
-        <div class="tip" style="margin-top:15px"><strong>💡 Символ * на экране #0</strong>Появляется когда разброс веса за 6 измерений &lt;0.02 кг. Значение автоматически сохраняется.</div>
+        <div class="tip" style="margin-top:15px"><strong>💡 Символ * на Экране 1</strong>Появляется когда разброс веса за несколько измерений мал — показания стабильны. Используется для авто-фиксации значения.</div>
     </div>
 
     <div class="card">
-        <h2>📊 Экран #1 — Дельта веса</h2>
-        <p style="color:var(--text-muted);margin-bottom:15px">Показывает разницу между текущим и <strong>предыдущим</strong> весом. Удобно отслеживать прирост или убыль мёда за период.</p>
-        <div class="lcd-screen" style="margin-bottom:20px">
-            <div class="lcd-row">D:<span class="hl">+01.60</span>kg   </div>
-            <div class="lcd-row">Pred:<span class="hl">23.80</span>kg </div>
-        </div>
+        <h2>📊 Дельта веса (две точки отсчёта)</h2>
+        <p style="color:var(--text-muted);margin-bottom:15px">В v5.0.x появились <strong>две</strong> дельты — гибкость для пасечника:</p>
         <table class="conn-table">
-            <thead><tr><th>Строка LCD</th><th>Значение</th></tr></thead>
+            <thead><tr><th>Где видно</th><th>Что считается</th><th>Как сбросить</th></tr></thead>
             <tbody>
-                <tr><td class="from">D: +1.60kg</td><td class="note">Текущий вес − предыдущий вес (со знаком + или −)</td></tr>
-                <tr><td class="from">Pred: 23.80kg</td><td class="note">Предыдущий (опорный) вес — точка отсчёта</td></tr>
+                <tr><td class="from">📈 «С прошлого замера»</td><td class="to">Δ от <code>lastReportWeight</code></td><td class="note">Авто после каждого Telegram-отчёта</td></tr>
+                <tr><td class="from">🎯 «От зафиксированной точки»</td><td class="to">Δ от <code>prevWeight</code></td><td class="note">Только вручную: сайт → «📍 Зафиксировать» (с датой!)</td></tr>
             </tbody>
         </table>
-        <h3 style="margin-top:20px">Когда обновляется опорный вес</h3>
-        <table class="conn-table">
-            <thead><tr><th>Событие</th><th>Результат</th></tr></thead>
-            <tbody>
-                <tr><td class="from">Загрузка устройства</td><td class="note">Читается из EEPROM (адрес 30) — значение сохраняется между перезагрузками</td></tr>
-                <tr><td class="from">Кнопка «Save» в веб-интерфейсе</td><td class="note">Текущий вес становится новым опорным, дельта обнуляется</td></tr>
-                <tr><td class="from">Отправка Telegram-алерта</td><td class="note">Сбрасывается на текущий вес — следующая дельта считается от нуля</td></tr>
-            </tbody>
-        </table>
-        <div class="tip" style="margin-top:15px"><strong>💡 Пример использования</strong>После установки улья нажмите «Save» в веб-интерфейсе — зафиксируется начальный вес. Через неделю Экран #2 покажет точный прирост мёда за это время.</div>
+        <div class="tip"><strong>💡 Пример</strong>Поставил улей → нажал «📍 Зафиксировать» → началась запись эталона. Через неделю Δ покажет точный прирост мёда. Параллельно «С прошлого замера» показывает дневное изменение для оперативного контроля.</div>
+        <div class="tip"><strong>💡 Переживает reset</strong>Эталон + дата фиксации хранятся в EEPROM (адреса 313–325 + magic 0xA9). Не теряется при перезагрузке/прошивке.</div>
     </div>
 
     <div class="card">
         <h2>💤 Авто-сон (Deep Sleep)</h2>
-        <p style="color:var(--text-muted)">После 3 минут бездействия — автоматический переход в глубокий сон:</p>
+        <p style="color:var(--text-muted)">После 3 минут бездействия (никто не нажимает кнопки и не открывает сайт) — автоматический переход в глубокий сон.</p>
         <div class="steps" style="margin-top:15px">
-            <div class="step"><div class="step-content"><h4>LCD покажет сообщение</h4><div class="lcd-screen"><div class="lcd-row">Auto sleep...   </div><div class="lcd-row">Btn to wake up  </div></div></div></div>
-            <div class="step"><div class="step-content"><h4>Запись лога и отключение</h4><p>Лог записывается на SD-карту. Данные сохраняются в RTC-память и EEPROM. Wi-Fi и LCD отключаются.</p></div></div>
-            <div class="step"><div class="step-content"><h4>Пробуждение</h4><p>Нажмите кнопку <strong>RST</strong> на плате NodeMCU.</p></div></div>
+            <div class="step"><div class="step-content"><h4>Sleep guard 60 сек</h4><p>Если до следующего расписания меньше 60 сек, ESP32 не уходит в сон (избегаем цикла «проснулся-уснул»).</p></div></div>
+            <div class="step"><div class="step-content"><h4>Запись лога и отключение</h4><p>Лог пишется в LittleFS. <code>lastReportWeight</code>, <code>lastTempC</code>, эталон сохраняются в EEPROM. Wi-Fi и LCD отключаются. HX711 → power_down (1.5 мА → 1 мкА).</p></div></div>
+            <div class="step"><div class="step-content"><h4>Пробуждение</h4><p>Способов сейчас два:<br>• <b>По таймеру</b> (расписание) → новый замер + Telegram-отчёт. ESP32 сама считает сколько спать.<br>• <b>По кнопке MAIN</b> (D27 — RTC GPIO).<br>• Кнопкой RST на плате (полная перезагрузка).<br><br><span style="color:var(--warning)">Опционально (P3): по alarm DS3231 (D33 — RTC GPIO)</span> — задел на будущее, сейчас не задействовано. Подведено физически чтобы потом не перепаивать.</p></div></div>
         </div>
+
+        <h3>Кнопка ☕ Продлить +10 мин</h3>
+        <p style="color:var(--text-muted)">На главной странице сайта есть кнопка «Продлить +10 мин» — отодвигает auto-sleep если ты сидишь и смотришь графики. В <code>/api/data</code> приходит поле <code>keepLeftSec</code> с обратным отсчётом.</p>
+
+        <div class="tip"><strong>💡 Настройка авто-сна</strong>Через сайт «Настройки → Авто-сон» можно поставить от 0 (не засыпать, отладка) до 600 секунд. По умолчанию 180 сек (3 мин).</div>
     </div>
 </div>
 
@@ -820,68 +1204,313 @@
 <div id="calibration" class="section">
     <div class="card">
         <h2>⚖️ Первичная калибровка</h2>
+        <p style="color:var(--text-muted);margin-bottom:15px">Делается <strong>один раз</strong> при сборке весов и потом раз в сезон (весной). Понадобится <strong>гиря известного веса</strong>: 1 кг (5-литровая бутылка воды), лучше 5–10 кг для точности под рабочий диапазон улья.</p>
         <div class="steps">
-            <div class="step"><div class="step-content"><h4>Снять нагрузку</h4><p>Убедитесь, что платформа пустая. Включите устройство.</p></div></div>
+            <div class="step"><div class="step-content"><h4>Снять нагрузку</h4><p>Платформа должна быть пустой и горизонтальной.</p></div></div>
             <div class="step">
                 <div class="step-content">
-                    <h4>Запустить калибровку (MAIN долгое)</h4>
+                    <h4>Запустить калибровку (MAIN 6 сек)</h4>
+                    <p>Зажми MAIN. Через 3 сек на LCD: «Otpust = TARA!» — НЕ отпускай. Через 6 сек сменится на «Otpust = KALIBR» — теперь отпускай.</p>
                     <div class="lcd-screen"><div class="lcd-row">Ubrat gruz!     </div><div class="lcd-row">Zhmi knopku...  </div></div>
                 </div>
             </div>
             <div class="step">
                 <div class="step-content">
-                    <h4>Нажать MAIN — тара пустых весов</h4>
-                    <div class="lcd-screen"><div class="lcd-row">Polozh. 1 kg    </div><div class="lcd-row">Zhmi knopku...  </div></div>
+                    <h4>Нажать MENU — тара пустых весов</h4>
+                    <div class="lcd-screen"><div class="lcd-row">Postav gruz     </div><div class="lcd-row">Zhmi knopku...  </div></div>
                 </div>
             </div>
-            <div class="step"><div class="step-content"><h4>Положить эталонный груз</h4><p>По умолчанию 1 кг. Масса настраивается в веб-интерфейсе (поле «Калибровочный груз, г»).</p></div></div>
+            <div class="step"><div class="step-content"><h4>Положить эталонный груз</h4><p>Поставь гирю на платформу, подожди 2–3 секунды чтобы показания устаканились.</p></div></div>
             <div class="step">
                 <div class="step-content">
-                    <h4>Нажать MAIN — сохранить</h4>
-                    <div class="lcd-screen"><div class="lcd-row">OK! Factor:     </div><div class="lcd-row"><span class="hl">2280.000</span>       </div></div>
+                    <h4>Нажать MENU — сохранить</h4>
+                    <div class="lcd-screen"><div class="lcd-row">OK! Factor:     </div><div class="lcd-row"><span class="hl">20534</span>          </div></div>
+                    <p style="margin-top:8px">Калибровочный коэффициент сохраняется в EEPROM навсегда.</p>
                 </div>
             </div>
         </div>
+
+        <div class="tip"><strong>💡 Удобнее через сайт</strong>Зайди на сайт весов, вкладка «Калибровка». Поставь гирю, в поле введи её точный вес (например, 5.0) и нажми «Сохранить» — без танцев с кнопками. Можно с любым весом.</div>
+        <div class="warn"><strong>⚠️ Не калибруй в улье</strong>Пчёлы летают, машут крыльями — это вибрация, портит точность. Калибровать в гараже на ровной поверхности.</div>
+    </div>
+</div>
+
+<!-- ===== SCHEDULE ===== -->
+<div id="schedule" class="section">
+    <div class="card">
+        <h2>⏰ Расписание замеров и отчётов</h2>
+        <p>В v5.0.x ESP32 умеет <strong>просыпаться по расписанию</strong>, делать замер, слать отчёт в Telegram и снова уходить в сон. Это даёт автономию <strong>30–40 дней</strong> на одной зарядке 18650 (3000 мА·ч).</p>
+
+        <div class="comp-grid" style="margin-top:20px">
+            <div class="comp-card"><div class="comp-icon">⏰</div><h4>Время замера</h4><p>Через сайт ставишь время, например 09:00 — каждый день в это время замер</p></div>
+            <div class="comp-card"><div class="comp-icon">📨</div><h4>Отчёт Telegram</h4><p>После замера автоматически шлётся в Telegram с весом, Δ, температурой</p></div>
+            <div class="comp-card"><div class="comp-icon">💾</div><h4>Запись в лог</h4><p>Замер записывается в LittleFS (CSV). Виден на графике сайта</p></div>
+            <div class="comp-card"><div class="comp-icon">💤</div><h4>Снова в сон</h4><p>До следующего часа из расписания. Sleep guard 60 сек защищает от циклов</p></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🌐 Как настроить расписание</h2>
+        <div class="steps">
+            <div class="step"><div class="step-content"><h4>Зайти на сайт весов</h4><p>См. вкладку «Веб» — раздел «Как зайти». Открой <b>«Настройки»</b> — там внутри блок «Расписание замеров».</p></div></div>
+            <div class="step"><div class="step-content"><h4>Выбрать время замера</h4><p>Например, 09:00 (утренний) и 21:00 (вечерний). Можно одно время, можно несколько.</p></div></div>
+            <div class="step"><div class="step-content"><h4>Сохранить</h4><p>ESP32 рассчитает сколько ждать до следующего замера и уйдёт в сон.</p></div></div>
+            <div class="step"><div class="step-content"><h4>Проверить</h4><p>На Экране 6 LCD счётчик пробуждений N будет расти после каждого срабатывания. В логе сайта появится новая строка.</p></div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🔋 Энергопотребление</h2>
+        <table class="conn-table">
+            <thead><tr><th>Состояние</th><th>Ток</th><th>Длительность за день</th></tr></thead>
+            <tbody>
+                <tr><td class="from">Active + WiFi (отчёт TG)</td><td class="to">80–90 мА</td><td class="note">~30 сек × 2 раза = 1 мин/день</td></tr>
+                <tr><td class="from">Active без WiFi (после отчёта)</td><td class="to">30–50 мА</td><td class="note">~3 мин до auto-sleep × 2 = 6 мин/день</td></tr>
+                <tr><td class="from"><strong>Deep sleep с AMS1117</strong></td><td class="to"><strong>~7 мА</strong></td><td class="note">~23.5 ч/день — основной потребитель</td></tr>
+                <tr><td class="from">Deep sleep после HT7333</td><td class="to">~3 мА</td><td class="note">после замены LDO (планируется)</td></tr>
+            </tbody>
+        </table>
+        <p style="margin-top:15px;color:var(--text-muted)">Среднее ~7.3 мА × 24 ч → ~175 мА·ч/день. Ёмкость 18650 3000 мА·ч × 70% usable = ~2100 мА·ч → <b>~12–13 дней</b> с текущим LDO. С банкой 21700 на 4500–5000 мА·ч (3150 мА·ч usable) — <b>~19 дней</b>.</p>
+
+        <h3>Что реально продлит автономию</h3>
+        <table class="conn-table">
+            <thead><tr><th>Доводка</th><th>Экономия</th><th>Эффект</th></tr></thead>
+            <tbody>
+                <tr><td class="from">Замена AMS1117 → HT7333 (SOT-89)</td><td class="to">7 мА → 3 мА</td><td class="note">×2.3 — с 18650: 13 → <b>30 дней</b>. С 21700: 19 → <b>44 дня</b></td></tr>
+                <tr><td class="from">Выпаять Power LED ESP32 DevKit</td><td class="to">~5 мА</td><td class="note">+несколько дней</td></tr>
+                <tr><td class="from">Выпаять USB LED ESP32 DevKit</td><td class="to">~2 мА</td><td class="note">+пара дней</td></tr>
+                <tr><td class="from">Выпаять Power LED + R5 на DS3231</td><td class="to">~200 мкА</td><td class="note">копейки в бюджете, но даёт лет CR2032</td></tr>
+                <tr><td class="from">Реализовать P3 (DS3231 alarm wake)</td><td class="to">~5 мкА</td><td class="note">маленькая экономия, но точное расписание ±2 мин/год</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Влияние частоты замеров</h3>
+        <table class="conn-table">
+            <thead><tr><th>Расписание</th><th>Доп. расход</th><th>Автономия (18650, AMS1117)</th></tr></thead>
+            <tbody>
+                <tr><td class="from">2 раза в день (09:00, 21:00) <span style="color:var(--success)">★ оптимум</span></td><td class="to">+1.3 мА·ч/день</td><td class="note">~13 дней (разница незаметна)</td></tr>
+                <tr><td class="from">4 раза (каждые 6 часов)</td><td class="to">+2.7 мА·ч/день</td><td class="note">~13 дней</td></tr>
+                <tr><td class="from">12 раз (каждые 2 часа)</td><td class="to">+13 мА·ч/день</td><td class="note">~12 дней</td></tr>
+                <tr><td class="from">24 раза (каждый час)</td><td class="to">+27 мА·ч/день</td><td class="note">~11 дней</td></tr>
+            </tbody>
+        </table>
+        <div class="tip"><strong>💡 Расписание влияет на батарею мало</strong>Главный пожиратель — quiescent ток в deep sleep, а не сами замеры. Даже 24 замера в день добавляют всего ~7% к расходу. Поэтому <b>ставь 2 замера в день (утро + вечер)</b> — этого хватит для пасеки. Хочется детальнее — поставь 4 раза.</div>
+        <div class="tip"><strong>💡 Зачем именно 09:00 и 21:00</strong>Утром пчёлы ещё в улье — точный «холодный» вес. Вечером все вернулись с поля — виден чистый дневной принос. <b>Δ за день = вечер − утро</b> = именно то что интересно пчеловоду.</div>
     </div>
 </div>
 
 <!-- ===== WEB UI ===== -->
 <div id="webui" class="section">
     <div class="card">
-        <h2>🌐 Веб-интерфейс</h2>
+        <h2>🌐 Веб-панель</h2>
         <div class="steps">
             <div class="step"><div class="step-content"><h4>Подключиться к Wi-Fi</h4><p>Найдите сеть <strong>BeehiveScale</strong>, пароль: <strong>12345678</strong></p></div></div>
-            <div class="step"><div class="step-content"><h4>Открыть в браузере</h4><p><code>192.168.4.1</code></p></div></div>
+            <div class="step"><div class="step-content"><h4>Открыть в браузере</h4><p><code>http://192.168.4.1</code></p></div></div>
+            <div class="step"><div class="step-content"><h4>Логин (если попросит)</h4><p><strong>admin</strong> / <strong>beehive</strong>. После первого входа смените пароль в разделе «Wi-Fi → Пароли и доступ».</p></div></div>
         </div>
+        <div class="tip"><strong>💡 Режим STA (домашний роутер)</strong>В разделе «Wi-Fi» можно переключить ESP32 на подключение к домашнему роутеру. Тогда сайт открывается с любого устройства в сети по IP-адресу из роутера — удобно когда улей рядом с домом.</div>
+    </div>
 
-        <h3>API эндпоинты</h3>
+    <div class="card">
+        <h2>📑 Разделы сайта (вкладки в верхнем меню)</h2>
+        <table class="conn-table">
+            <thead><tr><th>Вкладка</th><th>Что внутри</th></tr></thead>
+            <tbody>
+                <tr><td class="from">🏠 Главная</td><td class="note">Текущий вес, дельты (от точки + с прошлого замера), температура, батарея, статус системы. Блок «Информация об улье» (сезон, мин/макс веса за день, точек за день, дней наблюдений). Мини-график. Кнопки «Тара», «📍 Зафиксировать», «☕ Продлить +10 мин»</td></tr>
+                <tr><td class="from">📊 График + Экспорт</td><td class="note">Большой график веса и температуры. Тач-курсор: палец/мышь по графику — значение в точке. Экспорт в CSV</td></tr>
+                <tr><td class="from">📡 Wi-Fi</td><td class="note">Режим (AP/STA), SSID домашнего роутера, пароли (AP/admin/OTA)</td></tr>
+                <tr><td class="from">⚙ Настройки</td><td class="note">EMA-сглаживание (скорость отклика), авто-сон (180 сек по умолчанию), опасные пороги, dead-band нуля. <b>Здесь же — расписание замеров</b> (например 09:00 и 21:00)</td></tr>
+                <tr><td class="from">⚖ Калибровка</td><td class="note">Точная калибровка по эталонной гире (без танцев с кнопками). Введи вес гири, поставь её на платформу — нажми «Сохранить»</td></tr>
+                <tr><td class="from">📅 Архив <span style="color:var(--success)">🆕 v5.0.16+</span></td><td class="note">Просмотр истории по дням за выбранный период. Пресеты (Сегодня / 3 дня / Неделя / Месяц / Всё / <b>С прошлого визита</b>). Лента дней с маркерами аномалий (🔴 при падении больше alert_delta). Скачивание CSV за период.</td></tr>
+                <tr><td class="from">📱 Telegram</td><td class="note">Token бота, chat_id, тестовое сообщение (см. вкладку «Telegram»)</td></tr>
+                <tr><td class="from">🔌 API</td><td class="note">Список всех API-эндпоинтов с примерами (для разработчика)</td></tr>
+            </tbody>
+        </table>
+        <div class="tip"><strong>💡 Блок «Информация об улье»</strong>На главной странице автоматически считается дневная статистика: <b>Сезон</b> (весенний/летний/осенний/зимний), <b>Вес мин/макс</b> за сегодня, <b>Темп. мин/макс</b>, <b>Изменение за день</b> (Δ от первого замера сегодня), <b>Точек сегодня</b>, <b>Дней наблюдений</b> (с момента первой записи в лог). Заполняется по мере поступления замеров — если расписание ещё не настроено и точек мало, поля будут «—».</div>
+    </div>
+
+    <div class="card">
+        <h2>📅 Вкладка Архив (с v5.0.16)</h2>
+        <p style="color:var(--text-muted)">История замеров за выбранный период. Удобно смотреть «как идёт сезон» — посуточные сводки, аномалии падения веса, скачивание данных в Excel за любой диапазон.</p>
+
+        <h3>Пресеты периода</h3>
+        <table class="conn-table">
+            <thead><tr><th>Пресет</th><th>Что показывает</th></tr></thead>
+            <tbody>
+                <tr><td class="from">Сегодня</td><td class="note">Текущий день</td></tr>
+                <tr><td class="from">3 дня / Неделя / Месяц</td><td class="note">Скользящее окно с сегодня</td></tr>
+                <tr><td class="from">Всё</td><td class="note">С первой записи в логе</td></tr>
+                <tr><td class="from">↩ С прошлого визита <span style="color:var(--success)">🆕 v5.0.17</span></td><td class="note">Автоматически от последнего открытия сайта (например, «вчера в 18:42» или «3 дн. назад»). Не сбрасывается при переключении вкладок</td></tr>
+                <tr><td class="from">Date-range</td><td class="note">Произвольный период через два календарика</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Что в архиве</h3>
+        <ul style="margin-left:20px;color:var(--text-muted);line-height:1.8">
+            <li><b>Сводка за период:</b> общая Δ веса, количество записей, разбивка по дням</li>
+            <li><b>Лента дней:</b> по карточке на каждый день, с месячными группировками и днями недели</li>
+            <li><b>Маркер аномалии:</b> 🔴 у дня где было падение веса больше <code>alert_delta</code> (тревожная роевая ситуация)</li>
+            <li><b>Скачать CSV за период:</b> для Excel или другой аналитики</li>
+        </ul>
+
+        <div class="tip"><strong>💡 «С прошлого визита» — главная фишка v5.0.17</strong>Заходишь на сайт через неделю — Архив сам открывается на интервале «с прошлого визита по сегодня». Не надо вспоминать когда последний раз смотрел и крутить даты. Кнопка <b>«↩ С прошлого визита»</b> + подпись «Прошлый визит: 05.05.2026 (7 дн. назад)».</div>
+    </div>
+
+    <div class="card">
+        <h2>📲 PWA — установка на главный экран телефона (с v5.0.16)</h2>
+        <p style="color:var(--text-muted)">Сайт весов поддерживает Progressive Web App. Можно «установить» его на главный экран телефона как обычное приложение — иконка пчелы с ульем, открывается в полноэкранном режиме без адресной строки браузера.</p>
+
+        <h3>Как установить</h3>
+        <div class="step"><div class="step-content"><h4>Android (Chrome / Edge)</h4><p>Открой сайт <code>192.168.4.1</code> (или IP в STA) → меню «⋮» → <b>«Добавить на главный экран»</b> или «Установить приложение»</p></div></div>
+        <div class="step"><div class="step-content"><h4>iOS (Safari)</h4><p>Открой сайт → кнопка «Поделиться» внизу (квадратик со стрелкой) → <b>«На экран Домой»</b></p></div></div>
+
+        <h3>Что даёт PWA</h3>
+        <ul style="margin-left:20px;color:var(--text-muted);line-height:1.8">
+            <li><b>Иконка пчелы</b> с медово-оранжевым фоном на главном экране — открывается как нативное приложение</li>
+            <li><b>Полноэкранный режим</b> — без адресной строки и кнопок браузера, чисто интерфейс весов</li>
+            <li><b>Offline-страница</b> — если нет связи с весами (например ты вдали от пасеки), приложение откроется из кеша с последними известными данными вместо ошибки браузера</li>
+            <li><b>Быстрый запуск</b> — один тап и сразу вес/график</li>
+        </ul>
+
+        <div class="tip"><strong>💡 Артефакты PWA</strong>На сайте есть <code>/manifest.json</code> (метаданные приложения), <code>/sw.js</code> (service-worker для offline-кеша) и <code>/icon.svg</code> (SVG-иконка пчелы). Всё подаётся прямо из прошивки ESP32.</div>
+    </div>
+
+    <div class="card">
+        <h2>🔌 API эндпоинты</h2>
         <table class="conn-table">
             <thead><tr><th>URL</th><th>Метод</th><th>Описание</th></tr></thead>
             <tbody>
-                <tr><td class="from">/api/data</td><td>GET</td><td class="note">JSON: вес, температура, батарея, время и т.д.</td></tr>
+                <tr><td class="from">/api/data</td><td>GET</td><td class="note">JSON: вес, температура, батарея, время, keepLeftSec и т.д.</td></tr>
                 <tr><td class="from">/api/tare</td><td>POST</td><td class="note">Тарировать весы</td></tr>
-                <tr><td class="from">/api/save</td><td>POST</td><td class="note">Сохранить текущий вес как опорный для дельты</td></tr>
-                <tr><td class="from">/api/settings</td><td>POST</td><td class="note">Сохранить настройки (alertDelta, calibWeight, emaAlpha)</td></tr>
-                <tr><td class="from">/api/log</td><td>GET</td><td class="note">Скачать CSV-лог с SD-карты (beehive_log.csv)</td></tr>
-                <tr><td class="from">/api/log/clear</td><td>POST</td><td class="note">Очистить лог на SD-карте</td></tr>
+                <tr><td class="from">/api/save</td><td>POST</td><td class="note">«📍 Зафиксировать» — сохранить эталон + дата</td></tr>
+                <tr><td class="from">/api/keepalive</td><td>POST</td><td class="note">«☕ Продлить +10 мин»</td></tr>
+                <tr><td class="from">/api/settings</td><td>POST</td><td class="note">EMA, alertDelta, calibWeight, autoSleep</td></tr>
+                <tr><td class="from">/api/ntp</td><td>POST</td><td class="note">Синхронизировать время с NTP</td></tr>
+                <tr><td class="from">/api/calib/set</td><td>POST</td><td class="note">Тонкая калибровка по эталонной гире через сайт</td></tr>
+                <tr><td class="from">/api/log</td><td>GET</td><td class="note">Скачать CSV-лог</td></tr>
+                <tr><td class="from">/api/log/json</td><td>GET</td><td class="note">JSON-лог для графика (с throttle 30 сек)</td></tr>
+                <tr><td class="from">/api/log/clear</td><td>POST</td><td class="note">Очистить лог</td></tr>
+                <tr><td class="from">/api/daystat</td><td>GET</td><td class="note">Дневная статистика (мин/макс/среднее)</td></tr>
+                <tr><td class="from">/api/period?from=&to=</td><td>GET</td><td class="note">🆕 v5.0.16 — JSON записей за диапазон дат (стриминг). Для вкладки Архив</td></tr>
+                <tr><td class="from">/api/log?from=&to=</td><td>GET</td><td class="note">🆕 v5.0.16 — CSV за диапазон дат. Старый <code>?date=</code> совместим</td></tr>
+                <tr><td class="from">/api/last-visit</td><td>GET</td><td class="note">🆕 v5.0.17 — Timestamp прошлого открытия web. Для пресета «С прошлого визита» в Архиве</td></tr>
+                <tr><td class="from">/archive</td><td>GET</td><td class="note">🆕 v5.0.16 — Alias на главный SPA (прямая ссылка на вкладку Архив)</td></tr>
+                <tr><td class="from">/manifest.json</td><td>GET</td><td class="note">🆕 v5.0.16 — PWA-манифест (имя, иконка, theme-color)</td></tr>
+                <tr><td class="from">/sw.js</td><td>GET</td><td class="note">🆕 v5.0.16 — Service-worker для offline-кеша</td></tr>
+                <tr><td class="from">/icon.svg</td><td>GET</td><td class="note">🆕 v5.0.16 — SVG-иконка пчелы для PWA</td></tr>
+                <tr><td class="from">/chart</td><td>GET</td><td class="note">Полноэкранная страница графика</td></tr>
+                <tr><td class="from">/api/tg/settings</td><td>POST</td><td class="note">Сохранить Telegram token + chat_id</td></tr>
+                <tr><td class="from">/api/tg/test</td><td>POST</td><td class="note">Тестовое сообщение в Telegram</td></tr>
+                <tr><td class="from">/api/wifi/settings</td><td>POST</td><td class="note">Режим Wi-Fi (AP/STA), SSID/пароль</td></tr>
+                <tr><td class="from">/api/auth/password</td><td>POST</td><td class="note">Сменить пароль admin</td></tr>
+                <tr><td class="from">/api/auth/ota</td><td>POST</td><td class="note">Сменить пароль OTA</td></tr>
+                <tr><td class="from">/api/backup</td><td>GET</td><td class="note">Скачать backup настроек (JSON)</td></tr>
+                <tr><td class="from">/api/backup/restore</td><td>POST</td><td class="note">Восстановить настройки из backup</td></tr>
+                <tr><td class="from">/api/reboot</td><td>POST</td><td class="note">Перезагрузка ESP32</td></tr>
             </tbody>
         </table>
 
         <h3>Пример ответа /api/data</h3>
         <div style="background:#0a0f1e;border-radius:10px;padding:16px;font-family:'Courier New',monospace;font-size:0.88em;line-height:1.8;border:1px solid var(--border)">
             <span style="color:#888">{</span><br>
-            &nbsp;&nbsp;<span style="color:#7ec8e3">"weight"</span>: <span style="color:#f5a623">25.40</span>,&nbsp;<span style="color:#555">// кг</span><br>
-            &nbsp;&nbsp;<span style="color:#7ec8e3">"savedWeight"</span>: <span style="color:#f5a623">23.80</span>,<br>
-            &nbsp;&nbsp;<span style="color:#7ec8e3">"prevWeight"</span>: <span style="color:#f5a623">23.80</span>,&nbsp;<span style="color:#555">// опорный для дельты</span><br>
-            &nbsp;&nbsp;<span style="color:#7ec8e3">"tempC"</span>: <span style="color:#f5a623">28.5</span>,<br>
-            &nbsp;&nbsp;<span style="color:#7ec8e3">"rtcTempC"</span>: <span style="color:#f5a623">22.1</span>,<br>
+            &nbsp;&nbsp;<span style="color:#7ec8e3">"weight"</span>: <span style="color:#f5a623">4.42</span>,&nbsp;<span style="color:#555">// кг</span><br>
+            &nbsp;&nbsp;<span style="color:#7ec8e3">"prevWeight"</span>: <span style="color:#f5a623">4.08</span>,&nbsp;<span style="color:#555">// зафиксированный эталон</span><br>
+            &nbsp;&nbsp;<span style="color:#7ec8e3">"prevWeightDate"</span>: <span style="color:#7fff7f">"2026-05-05 23:04"</span>,<br>
+            &nbsp;&nbsp;<span style="color:#7ec8e3">"lastReportWeight"</span>: <span style="color:#f5a623">4.40</span>,<br>
+            &nbsp;&nbsp;<span style="color:#7ec8e3">"tempC"</span>: <span style="color:#f5a623">27.5</span>,<br>
+            &nbsp;&nbsp;<span style="color:#7ec8e3">"rtcTempC"</span>: <span style="color:#f5a623">28.0</span>,<br>
             &nbsp;&nbsp;<span style="color:#7ec8e3">"batV"</span>: <span style="color:#f5a623">3.85</span>,<br>
-            &nbsp;&nbsp;<span style="color:#7ec8e3">"batPct"</span>: <span style="color:#f5a623">71</span>,<br>
-            &nbsp;&nbsp;<span style="color:#7ec8e3">"datetime"</span>: <span style="color:#7fff7f">"2024-06-15 10:35:22"</span>,<br>
-            &nbsp;&nbsp;<span style="color:#7ec8e3">"wifiOk"</span>: <span style="color:#aaaaff">true</span><br>
+            &nbsp;&nbsp;<span style="color:#7ec8e3">"batPct"</span>: <span style="color:#f5a623">78</span>,<br>
+            &nbsp;&nbsp;<span style="color:#7ec8e3">"datetime"</span>: <span style="color:#7fff7f">"2026-05-08 21:35:22"</span>,<br>
+            &nbsp;&nbsp;<span style="color:#7ec8e3">"wifiOk"</span>: <span style="color:#aaaaff">true</span>,<br>
+            &nbsp;&nbsp;<span style="color:#7ec8e3">"keepLeftSec"</span>: <span style="color:#f5a623">540</span>&nbsp;<span style="color:#555">// до auto-sleep</span><br>
             <span style="color:#888">}</span>
         </div>
-        <div class="tip" style="margin-top:15px"><strong>💡 Кнопка Save</strong>Нажатие «Save» в веб-форме сохраняет текущий вес как новый предыдущий для дельты (Экран #1). Используйте после установки улья на весы.</div>
+    </div>
+</div>
+
+<!-- ===== TELEGRAM ===== -->
+<div id="telegram" class="section">
+    <div class="card">
+        <h2>📱 Telegram-отчёты</h2>
+        <p>Весы шлют отчёты в Telegram <strong>по расписанию</strong>. В отчёте — текущий вес, эталон, изменение, температура, заряд батареи. Работает у любого провайдера (Beeline и др.) благодаря <strong>Cloudflare Worker-релаю</strong>.</p>
+
+        <div class="info-tg"><strong>Как это работает</strong>ESP32 шлёт HTTPS-запрос на <code>beehive-relay.darkvolg.workers.dev</code> с заголовком <code>X-Beehive-Secret</code>. Worker проверяет секрет и форвардит сообщение в <code>api.telegram.org</code> с твоим токеном. Beeline и подобные провайдеры блокируют только прямой доступ к Telegram API, а Cloudflare Worker они не блокируют.</div>
+
+        <div class="comp-grid" style="margin-top:20px">
+            <div class="comp-card"><div class="comp-icon">🤖</div><h4>BotFather</h4><p>Создаёт бота, выдаёт Token</p></div>
+            <div class="comp-card"><div class="comp-icon">🆔</div><h4>userinfobot</h4><p>Показывает твой Chat ID</p></div>
+            <div class="comp-card"><div class="comp-icon">☁️</div><h4>CF Worker</h4><p>Релай — обходит блокировку API</p></div>
+            <div class="comp-card"><div class="comp-icon">📨</div><h4>Отчёт</h4><p>Приходит каждый раз когда срабатывает расписание</p></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>⚙️ Настройка с нуля (5 шагов)</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-content">
+                    <h4>Создать бота через @BotFather</h4>
+                    <p>В Telegram найди <strong>@BotFather</strong>, напиши <code>/newbot</code>, придумай:<br>
+                    • Display name (например, «Улей 5 — мой») — что видишь в чате<br>
+                    • Username (например, <code>my_hive5_bot</code>) — обязательно заканчивается на <code>_bot</code></p>
+                    <p style="margin-top:8px">BotFather пришлёт <strong>Token</strong> — длинная строка вида <code>1234567890:AAFxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>. Скопируй её.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-content">
+                    <h4>Узнать свой Chat ID через @userinfobot</h4>
+                    <p>Найди <strong>@userinfobot</strong>, напиши ему любое сообщение. Он пришлёт твой <strong>Chat ID</strong> — число (может быть со знаком минус для групп).</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-content">
+                    <h4>Открыть бота из шага 1 и нажать «Start»</h4>
+                    <p style="color:var(--danger)"><strong>Это обязательно!</strong> Иначе бот не сможет тебе писать. Нажми /start или просто кнопку «Запустить».</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-content">
+                    <h4>Зайти на сайт весов, раздел «Telegram»</h4>
+                    <p>Подключись к Wi-Fi <code>BeehiveScale</code>, открой <code>192.168.4.1</code>. Раздел «Telegram». Вставь Token и Chat ID. Нажми «Сохранить».</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-content">
+                    <h4>Тестовое сообщение</h4>
+                    <p>Кнопка «Тестовое сообщение» — должно прийти в Telegram приветствие. Если пришло — всё работает. Дальше отчёты будут приходить по расписанию.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📨 Что приходит в отчёте</h2>
+        <p style="color:var(--text-muted);margin-bottom:15px">Пример отчёта (сообщение в Telegram):</p>
+        <div style="background:#0a0f1e;border-radius:10px;padding:16px;font-family:'Segoe UI',sans-serif;line-height:1.7;border:1px solid var(--border);color:#e8e8e8">
+            <strong style="color:#f5a623">📊 Отчёт: улей</strong><br>
+            🕐 <strong>Время:</strong> 08.05.2026 21:00:10<br>
+            ⚖️ <strong>Вес:</strong> 4.42 кг<br>
+            🎯 <strong>Эталон:</strong> 4.08 кг (зафикс. 05.05, 3 дн назад)<br>
+            🎯 <strong>От зафикс. точки:</strong> +0.34 кг<br>
+            📈 <strong>С прошлого замера:</strong> +0.02 кг<br>
+            🌡 <strong>Температура:</strong> 27.5 °C<br>
+            🔋 <strong>Батарея:</strong> 3.85 В (78 %)
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🛠️ Cloudflare Worker (для разработчика)</h2>
+        <p style="color:var(--text-muted)">Релай развёрнут на бесплатном плане Cloudflare Workers. URL: <code>beehive-relay.darkvolg.workers.dev</code>. Исходник в репо: <code>cloudflare-worker/src/index.js</code>.</p>
+        <table class="conn-table">
+            <thead><tr><th>Заголовок / параметр</th><th>Значение</th></tr></thead>
+            <tbody>
+                <tr><td class="from">Endpoint</td><td class="to">POST <code>https://beehive-relay.darkvolg.workers.dev/sendMessage</code></td></tr>
+                <tr><td class="from">X-Beehive-Secret</td><td class="to">общий секрет, проверяется Worker'ом</td></tr>
+                <tr><td class="from">Body</td><td class="to">JSON: <code>{ token, chat_id, text, parse_mode: "HTML" }</code></td></tr>
+            </tbody>
+        </table>
+        <div class="info-tg"><strong>Бесплатный лимит CF Workers</strong>100 000 запросов в день — для пасеки на 100 ульев с отчётами каждый час всё равно остаётся огромный запас.</div>
     </div>
 </div>
 
@@ -893,40 +1522,51 @@
         <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)">LCD не отображает ничего или показывает квадраты <span class="faq-toggle">+</span></div>
             <div class="faq-a">
-                <p><strong>1.</strong> LCD требует 5В на VCC — подключите к VIN (USB-питание), не к 3V3.</p>
-                <p><strong>2.</strong> Отрегулируйте контрастность — синий подстроечный резистор на обратной стороне I2C-адаптера LCD.</p>
-                <p><strong>3.</strong> Проверьте адрес I2C — в коде 0x27. Загрузите I2C-сканер и найдите реальный. Если 0x3F — измените LCD_ADDR.</p>
-                <p><strong>4.</strong> SDA → D2 (GPIO4), SCL → D1 (GPIO5).</p>
+                <p><strong>1.</strong> LCD требует 5В на VCC — подключите к VIN (от AS21), не к 3V3.</p>
+                <p><strong>2.</strong> Отрегулируйте контрастность — синий подстроечный резистор на обратной стороне I²C-адаптера LCD.</p>
+                <p><strong>3.</strong> Проверьте адрес I²C — в коде 0x27. Загрузите I²C-сканер и найдите реальный. Если 0x3F — измените LCD_ADDR.</p>
+                <p><strong>4.</strong> SDA → D21 (GPIO21), SCL → D22 (GPIO22).</p>
             </div>
         </div>
 
         <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)">Вес показывает 0.00 или мигает *** OSHIBKA! *** <span class="faq-toggle">+</span></div>
             <div class="faq-a">
-                <p><strong>1.</strong> Проверьте HX711: DT → D0 (GPIO16), SCK → TX (GPIO1), VCC → 3V3, GND → GND.</p>
-                <p><strong>2.</strong> Попробуйте поменять местами A+ и A− тензодатчика.</p>
-                <p><strong>3.</strong> Сделайте тарирование: 4× нажатие MAIN.</p>
+                <p><strong>1.</strong> Проверьте HX711: DT → D16, SCK → D17, VCC → 3V3, GND → GND.</p>
+                <p><strong>2.</strong> Откройте Экран 8 (Диагностика) — посмотрите HX711 OK или FAIL.</p>
+                <p><strong>3.</strong> Попробуйте поменять местами A+ и A− тензодатчика.</p>
+                <p><strong>4.</strong> Сделайте тарирование: MAIN 3 сек + MENU=OK.</p>
+                <p><strong>5.</strong> Если HX711 = FAIL — отключи питание, прозвони мультиметром все 4 провода. Чаще всего отвалился DT.</p>
             </div>
         </div>
 
         <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">Дельта (Экран #1) показывает 0 после перезагрузки <span class="faq-toggle">+</span></div>
+            <div class="faq-q" onclick="toggleFaq(this)">ESP32 не просыпается из Deep Sleep <span class="faq-toggle">+</span></div>
             <div class="faq-a">
-                <p>Исправлено в v4.1 — предыдущий вес хранится в отдельном EEPROM-слоте (адрес 30). Если дельта всё равно 0 — нажмите «Save» в веб-интерфейсе для явной установки предыдущего веса.</p>
+                <p>На ESP32 deep sleep работает железно (в отличие от ESP8266 — это была одна из главных причин перехода).</p>
+                <p><strong>1.</strong> Проверь батарею — если &lt; 3.0В, защита DW01 на AS21 могла отключить банку.</p>
+                <p><strong>2.</strong> Нажми кнопку RST на плате ESP32 — это полная перезагрузка.</p>
+                <p><strong>3.</strong> Проверь что время на DS3231 правильное (Экран 5). Если RTC ERROR — расписание не работает.</p>
+                <p><strong>4.</strong> Если N (счётчик пробуждений) на Экране 6 не растёт — расписание не настроено или AlarmCheck скетч даст подсказку.</p>
             </div>
         </div>
 
         <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">Устройство не просыпается после Deep Sleep <span class="faq-toggle">+</span></div>
+            <div class="faq-q" onclick="toggleFaq(this)">Telegram не приходит <span class="faq-toggle">+</span></div>
             <div class="faq-a">
-                <p>D0 (GPIO16) занят HX711, поэтому перемычка D0→RST невозможна. Пробуждение — только кнопкой <strong>RST</strong> на плате NodeMCU. Нажмите RST — устройство полностью перезагрузится.</p>
+                <p><strong>1.</strong> На сайте → раздел «Telegram» → кнопка «Тестовое сообщение». Если пришло — расписание просто ещё не сработало.</p>
+                <p><strong>2.</strong> Если ошибка <code>401 Unauthorized</code> — неправильный Token. Перепроверь, без пробелов, без кавычек.</p>
+                <p><strong>3.</strong> Если ошибка <code>400 Bad Request</code> или <code>chat not found</code> — неправильный Chat ID или ты не нажал «Start» в боте.</p>
+                <p><strong>4.</strong> Если <code>CONNECTION_REFUSED</code> / <code>CONNECTION_LOST</code> — нет интернета или Wi-Fi не подключился к роутеру.</p>
+                <p><strong>5.</strong> Если приходят сообщения <i>без</i> жирного шрифта (теги <code>&lt;b&gt;</code> видны как текст) — обнови прошивку до v5.0.1+.</p>
             </div>
         </div>
 
         <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)">Температура −127°C или ошибка <span class="faq-toggle">+</span></div>
             <div class="faq-a">
-                <p>Отсутствует резистор 4.7 кОм между DATA (D7/GPIO13) и VCC (3.3В). Это обязательный компонент OneWire.</p>
+                <p>Отсутствует резистор 4.7 кОм между DATA (D4 / GPIO4) и VCC (3.3В). Это обязательный компонент 1-Wire — без него датчик не отвечает.</p>
+                <p style="margin-top:8px">Если кабель к DS18B20 длинный (&gt;1м, например в улей) — pullup ставь ближе к датчику.</p>
             </div>
         </div>
 
@@ -934,18 +1574,51 @@
             <div class="faq-q" onclick="toggleFaq(this)">Wi-Fi сеть BeehiveScale не видна <span class="faq-toggle">+</span></div>
             <div class="faq-a">
                 <p><strong>1.</strong> Устройство инициализируется 5–10 секунд после включения.</p>
-                <p><strong>2.</strong> На Экране #5 LCD должно показывать W:OK.</p>
-                <p><strong>3.</strong> В Connectivity.h должен быть определён <code>#define WIFI_MODE_AP</code>.</p>
+                <p><strong>2.</strong> На Экране 6 LCD должно показывать W:OK.</p>
+                <p><strong>3.</strong> Если включён режим STA (подключение к роутеру) — сети BeehiveScale не будет, ищи весы по IP в роутере.</p>
+                <p><strong>4.</strong> Зажми MENU 5 сек на главном экране — сброс Wi-Fi на дефолт (AP-режим).</p>
             </div>
         </div>
 
         <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">Проверка батареи блоком питания — какое напряжение подавать <span class="faq-toggle">+</span></div>
+            <div class="faq-q" onclick="toggleFaq(this)">Расписание не срабатывает <span class="faq-toggle">+</span></div>
             <div class="faq-a">
-                <p style="margin-bottom:10px">В схеме стоит делитель R1=R2=100 кОм — напряжение батареи делится на 2 перед подачей на A0.</p>
-                <p style="margin-bottom:12px"><strong>Вариант 1: блок питания на вход делителя</strong> (как реальная батарея) — рекомендуется:</p>
+                <p><strong>1.</strong> Проверь время на Экране 5 — должно быть правильное (твой часовой пояс).</p>
+                <p><strong>2.</strong> Если время неправильное — синхронизируй через сайт: «Настройки → Часы → Sync NTP» (нужен интернет, режим STA).</p>
+                <p><strong>3.</strong> Если CR2032 на DS3231 села (RTC ERROR) — замени батарейку, потом снова выстави время.</p>
+                <p><strong>4.</strong> Sleep guard: если до следующего часа из расписания меньше 60 секунд, ESP32 не уснёт (защита от циклов).</p>
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">Скачать лог веса в CSV <span class="faq-toggle">+</span></div>
+            <div class="faq-a">
+                <p>Данные пишутся в <strong>LittleFS</strong> (внутренний flash ESP32, ~1МБ доступно).</p>
+                <p style="margin-top:8px"><strong>Интервал записи:</strong> по умолчанию каждый замер по расписанию + перед уходом в deep sleep.</p>
+                <p style="margin-top:8px"><strong>Формат строки:</strong></p>
+                <pre style="background:#0a0f1e;padding:10px;border-radius:6px;font-size:0.85em;margin:8px 0">datetime,weight_kg,temp_c,bat_v,bat_pct
+2026-05-08 21:00:10,4.42,27.5,3.85,78</pre>
+                <p><strong>Скачать лог:</strong> <code>192.168.4.1/api/log</code> — файл скачается автоматически.</p>
+                <p><strong>Скачать JSON для графика:</strong> <code>/api/log/json</code> (используется встроенным графиком).</p>
+                <p><strong>Очистить:</strong> POST на <code>/api/log/clear</code> или через сайт.</p>
+                <p><strong>Ротация:</strong> при достижении лимита файл переименовывается, начинается новый.</p>
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">Прошивка не влезает в ESP32 <span class="faq-toggle">+</span></div>
+            <div class="faq-a">
+                <p>В Arduino IDE нужно выбрать <strong>Partition Scheme: Huge APP (3MB No OTA / 1MB SPIFFS)</strong>. Default partition даёт всего 1.31МБ под код, а прошивка ~1.24МБ + WiFi + Web.</p>
+                <p style="margin-top:8px">Если используешь PlatformIO — <code>board_build.partitions = huge_app.csv</code> уже в platformio.ini.</p>
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">Какое напряжение подавать вместо батареи (для проверки) <span class="faq-toggle">+</span></div>
+            <div class="faq-a">
+                <p>На входе делителя R1+R2 = 100к / 100к. На GPIO34 попадает половина:</p>
                 <table class="eeprom-table">
-                    <thead><tr><th>Напряжение БП</th><th>На A0 пине</th><th>Экран #5 покажет</th><th>% заряда</th></tr></thead>
+                    <thead><tr><th>Напряжение БП</th><th>На D34 (ADC)</th><th>Сайт покажет</th><th>% заряда</th></tr></thead>
                     <tbody>
                         <tr><td>3.0 В</td><td>1.5 В</td><td>3.0 В</td><td>0% (LOW)</td></tr>
                         <tr><td>3.6 В</td><td>1.8 В</td><td>3.6 В</td><td>50%</td></tr>
@@ -953,41 +1626,15 @@
                         <tr><td>4.2 В</td><td>2.1 В</td><td>4.2 В</td><td>100%</td></tr>
                     </tbody>
                 </table>
-                <p style="margin-top:12px"><strong>Вариант 2: напрямую на пин A0</strong> (без делителя) — рабочий диапазон 1.5–2.1 В:</p>
-                <table class="eeprom-table">
-                    <thead><tr><th>Напряжение на A0</th><th>Экран #5 покажет</th><th>% заряда</th></tr></thead>
-                    <tbody>
-                        <tr><td>1.5 В</td><td>3.0 В</td><td>0% (LOW)</td></tr>
-                        <tr><td>1.8 В</td><td>3.6 В</td><td>50%</td></tr>
-                        <tr><td>2.1 В</td><td>4.2 В</td><td>100%</td></tr>
-                    </tbody>
-                </table>
-                <p style="margin-top:10px;color:var(--danger)"><strong>⚠️ Максимум на A0 NodeMCU = 3.3 В — не превышать, иначе сгорит ADC!</strong></p>
+                <p style="margin-top:10px;color:var(--danger)"><strong>⚠️ Максимум на D34 ESP32 = 3.3 В — не превышать!</strong></p>
             </div>
         </div>
 
         <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">Скачать лог веса в CSV (SD-карта) <span class="faq-toggle">+</span></div>
+            <div class="faq-q" onclick="toggleFaq(this)">Случайно сделал тарирование — как откатить <span class="faq-toggle">+</span></div>
             <div class="faq-a">
-                <p>Данные записываются на <strong>SD-карту</strong> (MicroSD FAT32) по SPI.</p>
-                <p style="margin-top:8px"><strong>Интервал записи:</strong> каждую <strong>1 минуту</strong> + принудительно <strong>перед уходом в deep sleep</strong> (3 мин бездействия). Это гарантирует, что минимум 2–3 записи сохранятся за каждое включение.</p>
-                <p style="margin-top:8px"><strong>Формат строки:</strong></p>
-                <pre style="background:#0a0f1e;padding:10px;border-radius:6px;font-size:0.85em;margin:8px 0">datetime,weight_kg,temp_c,humidity_pct,bat_v
-2024-06-15 10:00:00,25.40,28.5,65.2,3.85</pre>
-                <p><strong>Скачать лог:</strong> подключитесь к Wi-Fi <code>BeehiveScale</code>, откройте в браузере <code>192.168.4.1/api/log</code> — файл <code>beehive_log.csv</code> скачается автоматически.</p>
-                <p style="margin-top:8px"><strong>Очистить лог:</strong> POST на <code>192.168.4.1/api/log/clear</code> или через curl: <code>curl -X POST http://192.168.4.1/api/log/clear</code></p>
-                <p style="margin-top:8px"><strong>Ротация:</strong> при достижении 100 КБ файл переименовывается в <code>log_old.csv</code>, начинается новый.</p>
-                <p style="margin-top:8px"><strong>Подключение SD:</strong> CS→D8 (GPIO15), SCK→D5 (GPIO14), MISO→D6 (GPIO12), MOSI→D7 (GPIO13). HX711 перепаян на D0/TX. Подробности — вкладка «Подключение».</p>
-                <p style="margin-top:8px"><strong>SD не работает?</strong> Проверьте: 1) карта FAT32; 2) пайка SPI-проводов; 3) GPIO13 общий с DS18B20 — конфликт маловероятен, но проверьте контакт.</p>
-            </div>
-        </div>
-
-        <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">Spike-фильтр — защита от помех <span class="faq-toggle">+</span></div>
-            <div class="faq-a">
-                <p>Если новое показание HX711 отличается от текущего EMA-значения более чем на <strong>5 кг</strong> — оно отбрасывается.</p>
-                <p style="margin-top:8px">В Serial Monitor: <code>[Spike] Rejected raw=31.40</code></p>
-                <p style="margin-top:8px">Порог задаётся константой <code>SPIKE_FILTER_KG 5.0f</code> в <code>BeehiveScale.ino</code>.</p>
+                <p>Сайт → главная → кнопка <strong>«Отменить тару»</strong> — восстанавливает предыдущее значение из <code>prevOffset</code> в EEPROM.</p>
+                <p style="margin-top:8px">Если кнопки нет (старая прошивка) — просто заново протарируй с правильной нагрузкой.</p>
             </div>
         </div>
 
@@ -999,19 +1646,33 @@
                     <tbody>
                         <tr><td>0</td><td>4</td><td>calibrationFactor (float)</td></tr>
                         <tr><td>4</td><td>4</td><td>offset (long)</td></tr>
-                        <tr><td>8</td><td>4</td><td>lastSavedWeight (float) — авто-сохранение</td></tr>
+                        <tr><td>8</td><td>4</td><td>lastSavedWeight (float)</td></tr>
                         <tr><td>12</td><td>1</td><td>magic 0xA5</td></tr>
                         <tr><td>13</td><td>4</td><td>alertDelta (float)</td></tr>
                         <tr><td>17</td><td>4</td><td>calibWeight (float)</td></tr>
                         <tr><td>21</td><td>4</td><td>emaAlpha (float)</td></tr>
                         <tr><td>25</td><td>1</td><td>magic2 0xA6</td></tr>
                         <tr><td>26</td><td>4</td><td>prevOffset (long) — для отмены тары</td></tr>
-                        <tr><td>30</td><td>4</td><td>prevWeight (float) — опорный вес дельты</td></tr>
-                        <tr><td>34–63</td><td>30</td><td>резерв</td></tr>
+                        <tr><td>30</td><td>4</td><td>prevWeight (float) — эталон дельты</td></tr>
+                        <tr><td>40–63</td><td>24</td><td>AP_PASS (Wi-Fi пароль)</td></tr>
+                        <tr><td>64</td><td>1</td><td>magic3 0xA7</td></tr>
+                        <tr><td>313</td><td>4</td><td>prevWeightDate (uint32_t Unix timestamp)</td></tr>
+                        <tr><td>317–319</td><td>3</td><td>autoSleepSec (uint16_t + magic 0xA8)</td></tr>
+                        <tr><td>320–325</td><td>6</td><td>lastReportWeight (float + magic 0xA9)</td></tr>
+                        <tr><td>327–330</td><td>4</td><td>lastTempC (float + magic 0xAA) — для TG fallback</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">Как обновить прошивку «по воздуху» (OTA) <span class="faq-toggle">+</span></div>
+            <div class="faq-a">
+                <p>В Huge APP partition нет места под OTA — прошивка обновляется только через USB-C кабель и Arduino IDE.</p>
+                <p style="margin-top:8px">Если хочешь OTA — нужно перейти на partition <code>min_spiffs</code> (1.9МБ кода, 1.9МБ OTA, 190КБ SPIFFS) и пересобрать прошивку.</p>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -1027,6 +1688,16 @@ function showSection(id, el) {
 }
 function toggleFaq(el) {
     el.parentElement.classList.toggle('open');
+}
+function showComp(id) {
+    document.querySelectorAll('.comp-detail').forEach(d => d.style.display = 'none');
+    var target = document.getElementById('detail-' + id);
+    if (target) target.style.display = 'block';
+    document.querySelectorAll('.comp-card').forEach(c => c.classList.remove('active'));
+    var card = document.querySelector('.comp-card[data-comp="' + id + '"]');
+    if (card) card.classList.add('active');
+    var detailCard = document.getElementById('comp-detail-card');
+    if (detailCard) detailCard.scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 document.addEventListener('keydown', function(e) {
     const tabs = document.querySelectorAll('.nav-tab');

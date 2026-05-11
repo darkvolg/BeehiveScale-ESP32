@@ -19,7 +19,7 @@
 | 10 | **GPIO26** | Кнопка MENU → IN | input pullup | digital | **голубой** | RTC GPIO |
 | 33 | **GPIO21** | LCD SDA + DS3231 SDA | I²C SDA | I²C | **зелёный** | общая шина |
 | 36 | **GPIO22** | LCD SCL + DS3231 SCL | I²C SCL | I²C | **жёлтый** | общая шина |
-| 13 | **GPIO33** | DS3231 SQW | wake input | digital | **фиолетовый** | RTC GPIO (для будущего alarm wake P4) |
+| 13 | **GPIO33** | DS3231 SQW *(опц.)* | wake input | digital | **фиолетовый** | RTC GPIO. Задел на фазу P3 — в прошивке v5.0.15 не задействован |
 | 6 | **GPIO34** | Делитель батареи (midpoint) | ADC input | analog | **серый** | input only, ADC1_CH6 |
 | 1 | **3V3** | HX711 VCC, DS3231 VCC, DS18B20 VCC, R-pullup | питание | 3.3V | **красный** | от LDO ESP32 (~600 мА запас) |
 | 2 | **VIN** | вход 5V от AS21 V6.0 | питание | 5V | **оранжевый** | через AMS1117 → 3.3V LDO |
@@ -69,7 +69,7 @@
 | **GND** | ESP32 **GND** | чёрный | |
 | **SDA** | ESP32 **GPIO21** | зелёный | общая I²C шина с LCD |
 | **SCL** | ESP32 **GPIO22** | жёлтый | общая I²C шина с LCD |
-| **SQW** (INT) | ESP32 **GPIO33** | фиолетовый | RTC alarm output (для P4 — wake by alarm) |
+| **SQW** (INT) *(опц.)* | ESP32 **GPIO33** | фиолетовый | RTC alarm output. **Задел на P3** — wake by alarm, в v5.0.15 не используется. Паяй сейчас чтобы потом не перепаивать |
 | 32K | NC | — | не используется |
 | RST | NC | — | не используется |
 

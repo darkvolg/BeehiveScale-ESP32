@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔍 Неисправности — BeehiveScale v4.1</title>
+    <title>🔍 Неисправности — BeehiveScale ESP32 v5.0.17</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -79,6 +79,7 @@
         }
         .table td { padding: 12px; border-bottom: 1px solid var(--border); }
         .table tr:hover { background: rgba(245, 166, 35, 0.05); }
+        .table code { background: #0a0a0a; padding: 2px 6px; border-radius: 3px; color: var(--primary); font-size: 0.9em; }
 
         .problem-box {
             background: rgba(235, 87, 87, 0.1);
@@ -143,12 +144,16 @@
         }
 
         .display-example {
-            background: #000; border: 3px solid #333; border-radius: 10px;
-            padding: 15px; font-family: 'Courier New', monospace;
-            text-align: center; margin: 15px 0;
+            background: #0a1a3a;
+            border: 3px solid #1a2a5a;
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-family: 'Courier New', monospace;
+            display: inline-block;
+            margin: 10px 0;
         }
-        .display-example .line1 { color: var(--danger); font-size: 1.2em; }
-        .display-example .line2 { color: var(--text-muted); font-size: 1em; }
+        .display-example .line1 { color: var(--danger); font-size: 1.15em; line-height: 1.6; }
+        .display-example .line2 { color: var(--text-muted); font-size: 1em; line-height: 1.6; }
 
         .led {
             display: inline-block;
@@ -184,7 +189,7 @@
 
         <header>
             <h1>🔍 Устранение неисправностей</h1>
-            <p>Диагностика и решение распространённых проблем</p>
+            <p>Диагностика и FAQ для BeehiveScale ESP32 v5.0.17</p>
         </header>
 
         <nav class="nav-tabs">
@@ -197,445 +202,333 @@
             <a href="07_troubleshooting.html" class="nav-tab active">🔍 Неисправности</a>
         </nav>
 
+        <section class="card green">
+            <h2>🩺 Сначала — Экран 8 «Диагностика»</h2>
+            <p>В v5 добавлен <strong>встроенный самотест</strong>. Кнопкой MENU прокрути до <strong>Экрана 8</strong> — ESP32 проверит все компоненты по очереди и покажет OK / FAIL для каждого:</p>
+
+            <table class="table">
+                <tr><th>Компонент</th><th>Что проверяется</th><th>Если FAIL</th></tr>
+                <tr>
+                    <td><span class="led ok"></span>HX711</td>
+                    <td>Отклик на запрос данных</td>
+                    <td>Проверь DT (D16), SCK (D17), питание 3V3, целостность шлейфа</td>
+                </tr>
+                <tr>
+                    <td><span class="led ok"></span>DS18B20</td>
+                    <td>1-Wire ответ, температура ≠ −127</td>
+                    <td>Проверь резистор 4.7 кОм между DATA и 3V3, целостность кабеля</td>
+                </tr>
+                <tr>
+                    <td><span class="led ok"></span>RTC DS3231</td>
+                    <td>I²C 0x68 + чтение времени</td>
+                    <td>Проверь SDA/SCL, питание 3V3, батарейку CR2032</td>
+                </tr>
+                <tr>
+                    <td><span class="led ok"></span>Battery</td>
+                    <td>Напряжение на ADC (D34) в диапазоне</td>
+                    <td>Проверь делитель R1/R2, контакт BAT+ от AS21</td>
+                </tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 Если все OK</strong> — железо в порядке, ищи проблему в Wi-Fi / Telegram / расписании.
+            </div>
+        </section>
+
         <section class="card red">
-            <h2>❌ Ошибка датчика HX711</h2>
-            
-            <div class="display-example">
-                <div class="line1">*** OSHIBKA! ***</div>
-                <div class="line2">Check HX711 wire</div>
-            </div>
+            <h2>📺 LCD не работает</h2>
 
-            <h3>Симптомы</h3>
-            <ul style="margin-left: 20px; margin-top: 10px;">
-                <li>На дисплее мигает ошибка</li>
-                <li>Вес не отображается или показывает 0</li>
-                <li>В Serial: <code>[HX711] Sensor timeout!</code></li>
-            </ul>
-
-            <h3>Причины и решения</h3>
             <div class="problem-box">
-                <h4>🔌 Неправильное подключение</h4>
+                <h4>LCD не отображает ничего или показывает квадраты ▮▮▮▮</h4>
                 <ul>
-                    <li>Проверьте DT → GPIO 14</li>
-                    <li>Проверьте SCK → GPIO 12</li>
-                    <li>Проверьте питание VCC (3.3V или 5V)</li>
-                    <li>Проверьте общую землю GND</li>
+                    <li><strong>Питание:</strong> LCD требует 5 В на VCC. Подключи к <code>VIN</code> (от AS21), а не к 3V3</li>
+                    <li><strong>Контрастность:</strong> отрегулируй синий подстроечный резистор на обратной стороне I²C-адаптера LCD (тонкой отвёрткой)</li>
+                    <li><strong>I²C адрес:</strong> в коде <code>LCD_ADDR = 0x27</code>. На некоторых модулях — 0x3F. Загрузи I²C-сканер и проверь</li>
+                    <li><strong>Распиновка:</strong> SDA → D21 (GPIO21), SCL → D22 (GPIO22)</li>
+                    <li><strong>Подсветка не горит совсем</strong> — выпаянная или сгоревшая. Проверь джампер на адаптере (BL — backlight)</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card red">
+            <h2>⚖️ Вес неправильный или 0.00</h2>
+
+            <div class="problem-box">
+                <h4>Вес показывает 0.00, мигает «*** OSHIBKA! ***» или Экран 8 пишет HX711 FAIL</h4>
+                <ul>
+                    <li><strong>Распиновка:</strong> DT → D16 (GPIO16), SCK → D17 (GPIO17), VCC → 3V3, GND → GND</li>
+                    <li><strong>Экран 8 (Диагностика):</strong> посмотри HX711 OK или FAIL</li>
+                    <li><strong>Полярность:</strong> попробуй поменять местами A+ и A− тензодатчика — если вес уезжает в минус</li>
+                    <li><strong>Тарирование:</strong> зажми MAIN на 3 сек → MENU=OK</li>
+                    <li><strong>Если HX711 = FAIL</strong> — отключи питание, прозвони мультиметром все 4 провода (VCC, GND, DT, SCK). Чаще всего отвалился DT</li>
                 </ul>
             </div>
 
             <div class="problem-box">
-                <h4>⚡ Отсутствие питания</h4>
+                <h4>Вес «прыгает» на ±0.5 кг</h4>
                 <ul>
-                    <li>Измерьте напряжение на VCC HX711</li>
-                    <li>Должно быть 3.3V или 5V</li>
-                    <li>Проверьте подключение USB/батареи</li>
+                    <li><strong>Платформа кривая:</strong> поставь весы на ровную поверхность. Все 4 опоры должны нести нагрузку</li>
+                    <li><strong>Помехи:</strong> HX711 чувствителен к электромагнитным наводкам. Не клади провода рядом с силовыми кабелями</li>
+                    <li><strong>EMA-сглаживание:</strong> сайт → Настройки → EMA альфа = 0.1 (вместо 0.3) — сильнее сгладит, но медленнее реакция</li>
+                    <li><strong>Питание HX711:</strong> подключи к 3V3, а не к 5В — на 3V3 шум меньше</li>
                 </ul>
             </div>
 
             <div class="problem-box">
-                <h4>🔧 Неисправный модуль</h4>
+                <h4>Вес меняется на 0.5–1 кг при изменении температуры на улице</h4>
                 <ul>
-                    <li>Попробуйте заменить HX711</li>
-                    <li>Проверьте другой модуль</li>
+                    <li>Это особенность тензодатчика — он чувствителен к температуре. Калибруй при средней температуре сезона</li>
+                    <li>Используй компенсированные тензодатчики (класс C3, маркировка «temperature compensated»)</li>
+                    <li>Δ от эталона показывает <em>относительное</em> изменение — это не критично если фиксируешь эталон при той же температуре</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card red">
+            <h2>🌡️ Температура DS18B20 неправильная</h2>
+
+            <div class="problem-box">
+                <h4>−127 °C или ошибка</h4>
+                <ul>
+                    <li><strong>Резистор 4.7 кОм</strong> между DATA и VCC (3.3 В) обязателен. Без него датчик не отвечает — это самая частая причина</li>
+                    <li><strong>Распиновка:</strong> DATA → D4 (GPIO4), VCC → 3V3, GND → GND</li>
+                    <li><strong>Перепутаны GND и VCC:</strong> датчик греется и долго не работает (но обычно не сгорает за секунды)</li>
+                    <li><strong>Длинный кабель в улей</strong> (&gt;1 м) — pullup 4.7 кОм поставь ближе к датчику, не к ESP32</li>
                 </ul>
             </div>
 
             <div class="problem-box">
-                <h4> Плохой контакт тензодатчика</h4>
+                <h4>Температура не меняется (застряла на одном значении)</h4>
                 <ul>
-                    <li>Перепаяйте соединения с тензодатчиком</li>
-                    <li>Проверьте цветовую маркировку проводов</li>
-                    <li>Красный→E+, Чёрный→E-, Зелёный→A+, Белый→A-</li>
+                    <li>Перезагрузи ESP32 (RST). Возможно завис драйвер OneWire</li>
+                    <li>Запусти Экран 8 (Диагностика) — он сделает свежий запрос</li>
+                    <li>Проверь что в улье действительно та температура — поставь рядом контрольный термометр</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card red">
+            <h2>🕐 RTC DS3231 — RTC ERROR на Экране 5</h2>
+
+            <div class="problem-box">
+                <h4>«RTC ERROR» или время постоянно сбрасывается</h4>
+                <ul>
+                    <li><strong>Села CR2032</strong> — замени батарейку. Хватает на 5–10 лет, но могла прийти севшей</li>
+                    <li><strong>Power LED + R5 на модуле</strong> — выпаяй их (см. <a href="02_connection.html" style="color:var(--info)">«Подключение → DS3231»</a>). Иначе батарея проживёт месяцы вместо лет</li>
+                    <li><strong>I²C не отвечает:</strong> Экран 8 → RTC FAIL. Проверь SDA/SCL и питание 3V3</li>
+                    <li><strong>После замены батарейки</strong> — синхронизируй время: сайт → Настройки → Sync NTP (или Serial команда <code>SETTIME</code>)</li>
                 </ul>
             </div>
 
-            <div class="tip">
-                <strong>💡 Совет:</strong> Если показания отрицательные или не меняются, 
-                попробуйте поменять местами зелёный и белый провода (A+ и A-).
+            <div class="problem-box">
+                <h4>Время правильное, но расписание не срабатывает</h4>
+                <ul>
+                    <li>В прошивке v5.0.17 расписание работает через <b>timer wakeup ESP32</b> (внутренний таймер), а не DS3231 alarm. Пин SQW → D33 — это задел на будущее (фаза P3), сейчас в коде не используется</li>
+                    <li>Sleep guard 60 сек: если до следующего срабатывания меньше минуты, ESP32 не уходит в сон. Это нормально</li>
+                    <li>На Экране 6 счётчик пробуждений N должен расти после каждого срабатывания. Если N=0 после нескольких срабатываний — расписание не настроено или сохранено некорректно</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card red">
+            <h2>📶 Wi-Fi не работает</h2>
+
+            <div class="problem-box">
+                <h4>Сеть BeehiveScale не видна</h4>
+                <ul>
+                    <li>ESP32 инициализируется 5–10 секунд после включения — подожди</li>
+                    <li>На Экране 6 LCD должно показывать <strong>W:OK</strong></li>
+                    <li>Если включён режим STA (подключение к роутеру) — сети BeehiveScale не будет, ищи весы по IP в роутере</li>
+                    <li><strong>Сброс Wi-Fi на дефолт:</strong> зажми MENU 5 сек на главном экране — Wi-Fi настройки сбросятся (AP / BeehiveScale / 12345678)</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>STA-режим: ESP32 не подключается к роутеру</h4>
+                <ul>
+                    <li>ESP32 поддерживает <strong>только 2.4 ГГц</strong> Wi-Fi. Если роутер двухдиапазонный — выдели отдельную SSID для 2.4 ГГц</li>
+                    <li>Проверь пароль (без опечаток, регистр учитывается)</li>
+                    <li>Если STA таймаут (10 сек) — ESP32 откатывается обратно в AP. Подключайся к BeehiveScale, проверяй настройки</li>
+                    <li>WPA3-only сети не поддерживаются — нужен WPA2 или WPA2/WPA3 mixed</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card red">
+            <h2>📱 Telegram не приходит</h2>
+
+            <div class="problem-box">
+                <h4>Тестовое сообщение не приходит</h4>
+                <ul>
+                    <li><strong>401 Unauthorized:</strong> неправильный Token — перепроверь, без пробелов, без кавычек</li>
+                    <li><strong>400 Bad Request</strong> или <strong>chat not found:</strong> неправильный Chat ID, или ты не нажал /start в боте</li>
+                    <li><strong>CONNECTION_REFUSED</strong> / <strong>CONNECTION_LOST:</strong> нет интернета или Wi-Fi не подключился — нужен режим STA</li>
+                    <li>Если приходят сообщения <em>без</em> жирного шрифта (теги <code>&lt;b&gt;</code> видны как текст) — обнови прошивку до v5.0.1+</li>
+                </ul>
+                <p style="margin-top:10px">Подробности — на странице <a href="06_telegram.html" style="color:var(--info)">«Telegram → Что может пойти не так»</a>.</p>
+            </div>
+
+            <div class="problem-box">
+                <h4>Тест работает, но по расписанию ничего не приходит</h4>
+                <ul>
+                    <li>Сайт → Расписание — проверь что время задано</li>
+                    <li>Экран 5 LCD: время правильное?</li>
+                    <li>Экран 6: счётчик пробуждений N растёт после срабатывания расписания?</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card red">
+            <h2>💤 ESP32 не просыпается из Deep Sleep</h2>
+
+            <div class="info-box">
+                <strong>ℹ️ В v5 на ESP32 deep sleep работает железно</strong> (в отличие от ESP8266 v4.1, где была проблема с D0 = HX711 и нужна была перемычка GPIO16 → RST). Это была одна из главных причин миграции на ESP32.
+            </div>
+
+            <div class="problem-box">
+                <h4>ESP32 ушёл в сон и не возвращается</h4>
+                <ul>
+                    <li><strong>Батарея &lt; 3.0 В</strong> — защита DW01 на AS21 могла отключить банку. Подзаряди через microUSB AS21</li>
+                    <li><strong>Кнопка RST</strong> на плате ESP32 — полная перезагрузка</li>
+                    <li><strong>Экран 5:</strong> время на DS3231 правильное? Если RTC ERROR — расписание не работает</li>
+                    <li><strong>Экран 6:</strong> N (счётчик пробуждений) растёт? Если нет — расписание не настроено или таймер сна некорректен. В v5.0.17 wake идёт по timer (не по DS3231 alarm)</li>
+                    <li><strong>USB-C в ESP32 подключён?</strong> При активном USB-сериал ESP32 не уходит в полный сон — отключи USB</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card red">
+            <h2>💾 Прошивка не влезает в ESP32</h2>
+
+            <div class="problem-box">
+                <h4>Ошибка «Sketch too big» / «Not enough space» при загрузке</h4>
+                <ul>
+                    <li>В Arduino IDE → Инструменты → <strong>Partition Scheme: Huge APP (3MB No OTA / 1MB SPIFFS)</strong></li>
+                    <li>По умолчанию выбрана Default Partition (1.31 МБ под код), а прошивка ~1.4 МБ — не влезает</li>
+                    <li>В PlatformIO добавь в <code>platformio.ini</code>: <code>board_build.partitions = huge_app.csv</code></li>
+                </ul>
+                <div class="warning" style="margin-top:10px">
+                    <strong>⚠️ Цена Huge APP:</strong> нет места под OTA — прошивка обновляется только через USB-C кабель. Для OTA нужен <code>min_spiffs.csv</code> partition (1.9 МБ кода / 1.9 МБ OTA / 190 КБ SPIFFS) и пересборка.
+                </div>
+            </div>
+        </section>
+
+        <section class="card red">
+            <h2>🔋 Батарея показывает неправильный заряд</h2>
+
+            <div class="problem-box">
+                <h4>Сайт показывает 0% при 100% батарее</h4>
+                <ul>
+                    <li>Проверь делитель R1+R2 (по 100 кОм). Прозвони мультиметром</li>
+                    <li>Проверь что BAT+ берётся с банки 18650 (3.0–4.2 В), а не с 5V_OUT AS21</li>
+                    <li>На D34 ESP32 должно быть ~2.1 В при полной батарее (4.2 / 2)</li>
+                    <li>На Экране 8 (Диагностика) → Battery должно быть OK</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>Ошибка ADC после обновления Arduino ESP32 Core 3.0+</h4>
+                <ul>
+                    <li>В Core 3.0 переименованы константы аттенюации: <code>ADC_ATTEN_DB_11</code> → <code>ADC_11db</code></li>
+                    <li>Если собираешь с Core 3.0 — обнови прошивку (или замени константу в <code>Battery.cpp</code>)</li>
+                    <li>Альтернатива — откатиться на Core 2.0.x в Менеджере плат</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>Батарея слишком быстро разряжается</h4>
+                <ul>
+                    <li>Auto-sleep работает? Сайт → Настройки → Авто-сон должен быть 180 сек, не 0</li>
+                    <li>Wi-Fi STA активен 24/7? Это жрёт ~80 мА — отключай после отчёта (в v5 это автоматически)</li>
+                    <li>Power LED на DS3231 не выпаян? Жжёт 200 мкА постоянно</li>
+                    <li>R5 на DS3231 не выпаян? Жрёт ток через CR2032</li>
+                    <li>Замени AMS1117 на HT7333 — спячка с 7 мА упадёт до 3 мА</li>
+                    <li>USB-C в ESP32 подключён? — мешает уходу в полный сон</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card red">
+            <h2>📊 Нет данных в логе / графике</h2>
+
+            <div class="problem-box">
+                <h4>Лог пустой / график не строится</h4>
+                <ul>
+                    <li>В v5 лог хранится в <strong>LittleFS</strong> (внутренний flash ESP32), а не на SD-карте. SD-карты больше нет вообще</li>
+                    <li>Замеры пишутся <em>по расписанию</em> и <em>перед уходом в deep sleep</em>. Если расписание не настроено и ESP32 всё время активна — лог не пополняется</li>
+                    <li>Проверь: <code>http://192.168.4.1/api/log</code> — должен скачаться CSV. Если файл 0 байт — лог пуст</li>
+                    <li>Очистка лога: <code>POST /api/log/clear</code> — может ты случайно его очистил</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>График долго грузится / не обновляется</h4>
+                <ul>
+                    <li><code>/api/log/json</code> имеет throttle 30 сек на сервере — чаще обновлять не получится (защита ESP32 от нагрузки)</li>
+                    <li>Если файл лога большой (&gt;500 КБ) — ESP32 долго парсит. Очисти лог раз в сезон</li>
+                    <li>Открой полноэкранный график: <code>/chart</code> — на нём меньше JS</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card red">
+            <h2>🛠️ Отвалилась кнопка / случайно сделал тарирование</h2>
+
+            <div class="problem-box">
+                <h4>Кнопка MAIN не реагирует</h4>
+                <ul>
+                    <li>Распиновка: D27 (GPIO27) ↔ GND. INPUT_PULLUP, без внешних резисторов</li>
+                    <li>Если кнопка работает только удержанием очень долго — возможно дребезг. В <code>Settings.h</code> увеличь <code>BTN_DEBOUNCE_MS</code></li>
+                    <li>В v5 короткое нажатие MAIN <em>ничего не делает</em> (защита). Для тары нужно держать 3 сек + MENU=OK</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>Случайно сделал тарирование — как откатить</h4>
+                <ul>
+                    <li>Сайт → главная → кнопка <strong>«Отменить тару»</strong> — восстанавливает предыдущее значение из <code>prevOffset</code> в EEPROM</li>
+                    <li>Если кнопки нет (старая прошивка) — просто заново протарируй с правильной нагрузкой</li>
+                </ul>
             </div>
         </section>
 
         <section class="card yellow">
-            <h2>❌ Ошибка RTC</h2>
-            
-            <div class="display-example">
-                <div class="line1">No RTC      W</div>
-                <div class="line2">RTC ERROR!</div>
-            </div>
+            <h2>📋 Контрольный список перед обращением за помощью</h2>
+            <p>Прежде чем писать в issues — пройди по этому списку:</p>
 
-            <h3>Симптомы</h3>
-            <ul style="margin-left: 20px; margin-top: 10px;">
-                <li>На экране <code>No RTC</code> или <code>RTC ERROR!</code></li>
-                <li>Время не отображается</li>
-                <li>В Serial: <code>[RTC] DS3231 not found!</code></li>
-            </ul>
-
-            <h3>Причины и решения</h3>
-            <div class="problem-box">
-                <h4>🔌 Не подключена шина I2C</h4>
-                <ul>
-                    <li>Проверьте SDA → GPIO 21</li>
-                    <li>Проверьте SCL → GPIO 22</li>
-                    <li>Проверьте питание VCC (3.3V)</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>🔋 Села батарейка CR2032</h4>
-                <ul>
-                    <li>Замените элемент питания</li>
-                    <li>Напряжение CR2032 должно быть ~3V</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>📍 Неверный адрес I2C</h4>
-                <ul>
-                    <li>DS3231 имеет адрес <code>0x68</code></li>
-                    <li>Используйте I2C сканер для проверки</li>
-                </ul>
-            </div>
-
-            <div class="info-box">
-                <strong>ℹ️ I2C сканер:</strong> Загрузите скетч I2C Scanner для поиска устройств на шине I2C.
-            </div>
-        </section>
-
-        <section class="card yellow">
-            <h2>❌ Нет WiFi подключения</h2>
-            
-            <div class="display-example">
-                <div class="line1">W:-- N:15</div>
-                <div class="line2">No WiFi</div>
-            </div>
-
-            <h3>Симптомы</h3>
-            <ul style="margin-left: 20px; margin-top: 10px;">
-                <li>Статус <code>WiFi: --</code> или <code>Нет связи</code></li>
-                <li>Невозможно подключиться к веб-интерфейсу</li>
-                <li>В Serial: <code>[WiFi] Timeout!</code></li>
-            </ul>
-
-            <h3>Причины и решения</h3>
-            <div class="problem-box">
-                <h4>📡 Неверный SSID/пароль</h4>
-                <ul>
-                    <li>Проверьте настройки в <code>Connectivity.h</code></li>
-                    <li>SSID чувствителен к регистру</li>
-                    <li>Перезагрузите устройство</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>📶 Слабый сигнал</h4>
-                <ul>
-                    <li>Переместите устройство ближе к роутеру</li>
-                    <li>Используйте внешнюю антенну</li>
-                    <li>Проверьте уровень сигнала в роутере</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>🔀 Режим AP</h4>
-                <ul>
-                    <li>В режиме AP подключитесь к сети <code>BeehiveScale</code></li>
-                    <li>Пароль: <code>12345678</code></li>
-                    <li>Адрес: <code>192.168.4.1</code></li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>🔄 Роутер перезагружен</h4>
-                <ul>
-                    <li>Устройство попытается переподключиться автоматически</li>
-                    <li>Интервал переподключения: 10 секунд</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>❌ Нестабильные показания веса</h2>
-            
-            <h3>Симптомы</h3>
-            <ul style="margin-left: 20px; margin-top: 10px;">
-                <li>Вес «прыгает» на 0.1-0.5 кг</li>
-                <li>Нет звёздочки стабильности <code>*</code></li>
-                <li>Привес/убыль показываются неверно</li>
-            </ul>
-
-            <h3>Причины и решения</h3>
-            <div class="problem-box">
-                <h4>🌬 Вибрации</h4>
-                <ul>
-                    <li>Установите устройство на стабильную поверхность</li>
-                    <li>Защитите от ветра</li>
-                    <li>Используйте антивибрационную платформу</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>🌡️ Нагрев</h4>
-                <ul>
-                    <li>Дайте HX711 прогреться 10 минут</li>
-                    <li>Тензодатчики чувствительны к температуре</li>
-                    <li>Установите защиту от солнца</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>⚡ Помехи питания</h4>
-                <ul>
-                    <li>Используйте стабильный источник питания</li>
-                    <li>Добавьте конденсатор 100мкФ параллельно питанию</li>
-                    <li>Проверьте батарею</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>📊 Настройки EMA</h4>
-                <ul>
-                    <li>Увеличьте EMA сглаживание (0.3-0.5)</li>
-                    <li>Меньше alpha = более плавные показания</li>
-                </ul>
-            </div>
+            <table class="table">
+                <tr><th>Шаг</th><th>Что проверить</th></tr>
+                <tr><td>1</td><td>Версия прошивки = <strong>v5.0.17</strong>? (Serial команда <code>STATUS</code> или Экран 6)</td></tr>
+                <tr><td>2</td><td>Экран 8 «Диагностика» — все компоненты OK?</td></tr>
+                <tr><td>3</td><td>Партиция = <strong>Huge APP (3MB No OTA / 1MB SPIFFS)</strong>?</td></tr>
+                <tr><td>4</td><td>Библиотеки актуальные? Особенно <strong>ArduinoJson 6.x</strong> (НЕ 7.x!)</td></tr>
+                <tr><td>5</td><td>Распиновка совпадает с <a href="02_connection.html" style="color:var(--info)">схемой</a>? (D16/D17 для HX711, D21/D22 для I²C, D27/D26 кнопки, D4 для DS18B20, D34 для батареи. D33 для SQW — задел на P3, в коде не используется)</td></tr>
+                <tr><td>6</td><td>Питание стабильное? Проверь напряжение на VIN (должно быть ~5 В от AS21)</td></tr>
+                <tr><td>7</td><td>Открой Serial монитор (115200) — есть подсказки в логе?</td></tr>
+                <tr><td>8</td><td>Сделай <code>STATUS</code> и <code>DIAG</code> через Serial и приложи вывод к issue</td></tr>
+            </table>
 
             <div class="tip">
-                <strong>💡 Совет:</strong> Для уличной установки используйте герметичный корпус 
-                и защитите тензодатчик от прямого попадания воды.
+                <strong>💡 GitHub Issues:</strong> в репозитории есть <code>.github/ISSUE_TEMPLATE/</code> — шаблоны для багов. Заполни как минимум: версия прошивки, что произошло, что ожидалось, вывод Serial.
             </div>
         </section>
 
-        <section class="card">
-            <h2>❌ Быстрый разряд батареи</h2>
-            
-            <h3>Симптомы</h3>
-            <ul style="margin-left: 20px; margin-top: 10px;">
-                <li>Устройство работает несколько часов вместо дней</li>
-                <li>На экране <code>!! LOW BATTERY !!</code></li>
-                <li>Процент батареи быстро уменьшается</li>
+        <section class="card green">
+            <h2>📚 Полезные ссылки в документации</h2>
+            <ul style="margin-left:20px;color:var(--text-muted);line-height:2">
+                <li><a href="01_components.html" style="color:var(--info)">Компоненты</a> — список + где купить</li>
+                <li><a href="02_connection.html" style="color:var(--info)">Подключение</a> — схемы и таблица распиновки</li>
+                <li><a href="03_settings.html" style="color:var(--info)">Настройка</a> — pin defines, EEPROM-карта, partition</li>
+                <li><a href="04_operation.html" style="color:var(--info)">Эксплуатация</a> — кнопки, экраны, авто-сон</li>
+                <li><a href="05_web.html" style="color:var(--info)">Веб-интерфейс</a> — REST API, разделы сайта</li>
+                <li><a href="06_telegram.html" style="color:var(--info)">Telegram</a> — настройка через CF Worker</li>
+                <li><a href="../manual.html" style="color:var(--info)">Полное руководство (manual.html)</a> — всё в одном файле</li>
             </ul>
-
-            <h3>Причины и решения</h3>
-            <div class="problem-box">
-                <h4>📶 Постоянная работа WiFi</h4>
-                <ul>
-                    <li>WiFi потребляет 100-200мА</li>
-                    <li>Включите режим deep sleep</li>
-                    <li>Увеличьте интервал отчётов</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>💡 Яркая подсветка LCD</h4>
-                <ul>
-                    <li>LCD с подсветкой потребляет 20-50мА</li>
-                    <li>Отключите backlight в коде</li>
-                    <li>Используйте OLED вместо LCD</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>🔋 Старая батарея</h4>
-                <ul>
-                    <li>Замените на новую 18650</li>
-                    <li>Ёмкость должна быть 2000mAh+</li>
-                    <li>Проверьте напряжение заряда</li>
-                </ul>
-            </div>
-
-            <div class="info-box">
-                <strong>ℹ️ Deep Sleep:</strong> В режиме глубокого сна ESP32 потребляет ~10мкА. 
-                Устройство просыпается по таймеру или кнопке.
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>❌ Telegram не работает</h2>
-            
-            <h3>Симптомы</h3>
-            <ul style="margin-left: 20px; margin-top: 10px;">
-                <li>Сообщения не приходят</li>
-                <li>В Serial: <code>[TG] Error code: XXX</code></li>
-            </ul>
-
-            <h3>Коды ошибок</h3>
-            <table class="table">
-                <tr>
-                    <th>Код</th>
-                    <th>Причина</th>
-                    <th>Решение</th>
-                </tr>
-                <tr>
-                    <td style="color: var(--danger);">401</td>
-                    <td>Неверный токен</td>
-                    <td>Проверьте токен от @BotFather</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--danger);">400</td>
-                    <td>Неверный Chat ID</td>
-                    <td>Проверьте Chat ID</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--danger);">403</td>
-                    <td>Бот не админ</td>
-                    <td>Добавьте бота как админа</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--primary);">429</td>
-                    <td>Слишком много запросов</td>
-                    <td>Подождите, увеличьте интервал</td>
-                </tr>
-            </table>
-        </section>
-
-        <section class="card">
-            <h2>❌ LCD дисплей не работает</h2>
-            
-            <h3>Симптомы</h3>
-            <ul style="margin-left: 20px; margin-top: 10px;">
-                <li>Дисплей не светится</li>
-                <li>Только подсветка, нет символов</li>
-                <li>Кракозябры вместо текста</li>
-            </ul>
-
-            <h3>Причины и решения</h3>
-            <div class="problem-box">
-                <h4>🔌 Нет питания</h4>
-                <ul>
-                    <li>Проверьте VCC → 5V</li>
-                    <li>Проверьте GND</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>📍 Неверный I2C адрес</h4>
-                <ul>
-                    <li>Адрес LCD: <code>0x27</code> или <code>0x3F</code></li>
-                    <li>Измените в <code>BeehiveScale.ino</code></li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>🔧 Плохой контакт I2C</h4>
-                <ul>
-                    <li>Проверьте SDA → GPIO 21</li>
-                    <li>Проверьте SCL → GPIO 22</li>
-                    <li>Подтяжка уже на плате LCD</li>
-                </ul>
-            </div>
-
-            <div class="problem-box">
-                <h4>🔘 Контрастность</h4>
-                <ul>
-                    <li>Отрегулируйте потенциометр на I2C плате</li>
-                    <li>Поворачивайте маленькой отвёрткой</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>🔧 Serial команды для отладки</h2>
-            <p>Отправьте через Serial монитор (115200 бод):</p>
-            
-            <table class="table">
-                <tr>
-                    <th>Команда</th>
-                    <th>Описание</th>
-                    <th>Пример</th>
-                </tr>
-                <tr>
-                    <td><code>HELP</code></td>
-                    <td>Список всех команд</td>
-                    <td><code>HELP</code></td>
-                </tr>
-                <tr>
-                    <td><code>STATUS</code></td>
-                    <td>Полная информация о системе</td>
-                    <td><code>STATUS</code></td>
-                </tr>
-                <tr>
-                    <td><code>NTP</code></td>
-                    <td>Принудительная синхронизация времени</td>
-                    <td><code>NTP</code></td>
-                </tr>
-                <tr>
-                    <td><code>TIME</code></td>
-                    <td>Показать текущее время RTC</td>
-                    <td><code>TIME</code></td>
-                </tr>
-                <tr>
-                    <td><code>SETTIME</code></td>
-                    <td>Установить время вручную</td>
-                    <td><code>SETTIME 2026 02 21 14 30 00</code></td>
-                </tr>
-                <tr>
-                    <td><code>REBOOT</code></td>
-                    <td>Перезагрузка устройства</td>
-                    <td><code>REBOOT</code></td>
-                </tr>
-            </table>
-
-            <div class="code-block">
-                <code>=== STATUS ===
-Weight: 45.67
-Temp: 25.3
-WiFi: OK
-Sensor: OK
-Heap: 150000 b
-=============</code>
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>📊 Индикаторы состояния</h2>
-            
-            <table class="table">
-                <tr>
-                    <th>Индикатор</th>
-                    <th>Значение</th>
-                    <th>Норма</th>
-                </tr>
-                <tr>
-                    <td><span class="led ok"></span> Sensor OK</td>
-                    <td>HX711 подключён</td>
-                    <td>✅</td>
-                </tr>
-                <tr>
-                    <td><span class="led err"></span> Sensor ERROR</td>
-                    <td>HX711 не найден</td>
-                    <td>❌</td>
-                </tr>
-                <tr>
-                    <td><span class="led ok"></span> WiFi OK</td>
-                    <td>WiFi подключён</td>
-                    <td>✅</td>
-                </tr>
-                <tr>
-                    <td><span class="led warn"></span> WiFi --</td>
-                    <td>Нет подключения</td>
-                    <td>⚠️</td>
-                </tr>
-                <tr>
-                    <td><span class="led ok"></span> RTC OK</td>
-                    <td>RTC работает</td>
-                    <td>✅</td>
-                </tr>
-                <tr>
-                    <td><span class="led err"></span> RTC ERROR</td>
-                    <td>RTC не найден</td>
-                    <td>❌</td>
-                </tr>
-                <tr>
-                    <td><span class="led warn"></span> LOW BATTERY</td>
-                    <td>&lt;10% заряда</td>
-                    <td>⚠️</td>
-                </tr>
-            </table>
         </section>
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.17</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
             <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
         </p>

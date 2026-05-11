@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚙️ Настройка — BeehiveScale v4.1</title>
+    <title>⚙️ Настройка — BeehiveScale ESP32 v5.0.17</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -92,6 +92,11 @@
             padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
         }
 
+        .danger {
+            background: rgba(235, 87, 87, 0.1); border-left: 4px solid var(--danger);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
         .info-box {
             background: rgba(86, 204, 242, 0.1); border-left: 4px solid var(--info);
             padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
@@ -119,6 +124,7 @@
         }
         .step h4 { color: var(--text); margin-bottom: 10px; font-size: 1.2em; }
         .step p { color: var(--text-muted); }
+        .step ul { color: var(--text-muted); margin: 8px 0 0 20px; }
 
         .config-table {
             width: 100%; border-collapse: collapse; margin: 15px 0;
@@ -130,6 +136,7 @@
         }
         .config-table td { padding: 12px; border-bottom: 1px solid var(--border); }
         .config-table tr:hover { background: rgba(245, 166, 35, 0.05); }
+        .config-table code { background: #0a0a0a; padding: 2px 6px; border-radius: 3px; color: var(--primary); }
 
         @media (max-width: 768px) {
             header h1 { font-size: 1.8em; }
@@ -150,8 +157,8 @@
         </div>
 
         <header>
-            <h1>⚙️ Настройка системы</h1>
-            <p>Конфигурация WiFi, Telegram, NTP и других параметров</p>
+            <h1>⚙️ Настройка прошивки</h1>
+            <p>Параметры скетча, библиотеки, partition, EEPROM-карта для BeehiveScale ESP32 v5.0.17</p>
         </header>
 
         <nav class="nav-tabs">
@@ -165,115 +172,288 @@
         </nav>
 
         <section class="card">
-            <h2>📋 Файлы конфигурации</h2>
-            <p>Основные настройки находятся в файле <code>Connectivity.h</code>. Откройте его в Arduino IDE перед загрузкой прошивки.</p>
+            <h2>📋 Основные файлы прошивки</h2>
+            <p>Все настройки и константы вынесены в заголовочные файлы скетча <code>BeehiveScale/</code>. Полный список:</p>
+            <table class="config-table">
+                <tr><th>Файл</th><th>За что отвечает</th></tr>
+                <tr><td><code>BeehiveScale.ino</code></td><td>Главный файл, setup() и loop()</td></tr>
+                <tr><td><code>Pins.h</code></td><td>Распиновка GPIO (DT, SCK, SDA, SCL, BTN_*, BAT_ADC...)</td></tr>
+                <tr><td><code>Settings.h</code></td><td>Тайминги, EMA, пороги, авто-сон, EEPROM-адреса</td></tr>
+                <tr><td><code>Connectivity.h</code></td><td>Дефолты Wi-Fi (AP), URL CF Worker, секреты</td></tr>
+                <tr><td><code>WebUI.cpp</code></td><td>HTTP-сервер, REST API, HTML-страницы</td></tr>
+                <tr><td><code>Telegram.cpp</code></td><td>Отправка отчёта через CF Worker</td></tr>
+                <tr><td><code>Schedule.cpp</code></td><td>Расписание, alarm DS3231, deep sleep</td></tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 Большинство настроек теперь редактируется через сайт</strong> (<code>192.168.4.1</code>) — не нужно перепрошивать. В прошивке остаются только дефолты и распиновка.
+            </div>
         </section>
 
         <section class="card">
-            <h2>📶 Настройка WiFi</h2>
-            
-            <h3>Режим 1: Подключение к роутеру (STA)</h3>
-            <p>Устройство подключается к вашей домашней сети WiFi:</p>
+            <h2>📌 Pin defines (Pins.h)</h2>
+            <p>Распиновка ESP32-WROOM-32 для v5.0.17:</p>
             <div class="code-block">
-                <code><span class="code-comment">// Раскомментируйте для режима станции (STA)</span>
-<span class="code-comment">// #define WIFI_MODE_AP</span>
+                <code><span class="code-comment">// HX711 (тензодатчик)</span>
+<span class="code-keyword">#define</span> DT_PIN          <span class="code-number">16</span>     <span class="code-comment">// GPIO16 (D16) — данные</span>
+<span class="code-keyword">#define</span> SCK_PIN         <span class="code-number">17</span>     <span class="code-comment">// GPIO17 (D17) — тактирование</span>
 
-<span class="code-comment">// Настройки вашего роутера</span>
-<span class="code-keyword">#define</span> WIFI_SSID        <span class="code-string">"Beeline"</span>
-<span class="code-keyword">#define</span> WIFI_PASSWORD    <span class="code-string">"9044355157"</span>
-<span class="code-keyword">#define</span> WIFI_TIMEOUT_MS  <span class="code-number">10000UL</span></code>
+<span class="code-comment">// I²C шина (LCD + DS3231)</span>
+<span class="code-keyword">#define</span> SDA_PIN         <span class="code-number">21</span>     <span class="code-comment">// GPIO21 (D21)</span>
+<span class="code-keyword">#define</span> SCL_PIN         <span class="code-number">22</span>     <span class="code-comment">// GPIO22 (D22)</span>
+
+<span class="code-comment">// DS3231 alarm wake (RTC GPIO) — задел на P3, в v5.0.17 не задействован</span>
+<span class="code-keyword">#define</span> SQW_PIN         <span class="code-number">33</span>     <span class="code-comment">// GPIO33 (D33) — пин подведён, прошивка пока не использует</span>
+
+<span class="code-comment">// DS18B20 1-Wire</span>
+<span class="code-keyword">#define</span> TEMP_PIN        <span class="code-number">4</span>      <span class="code-comment">// GPIO4 (D4) + 4.7kΩ pullup → 3V3</span>
+
+<span class="code-comment">// Кнопки</span>
+<span class="code-keyword">#define</span> BTN_MAIN_PIN    <span class="code-number">27</span>     <span class="code-comment">// GPIO27 (D27, RTC GPIO ⚡) — тара/калибровка</span>
+<span class="code-keyword">#define</span> BTN_MENU_PIN    <span class="code-number">26</span>     <span class="code-comment">// GPIO26 (D26) — навигация/OK</span>
+
+<span class="code-comment">// ADC батареи</span>
+<span class="code-keyword">#define</span> BAT_ADC_PIN     <span class="code-number">34</span>     <span class="code-comment">// GPIO34 (D34, ADC1_CH6) — input only!</span>
+
+<span class="code-comment">// I²C адреса</span>
+<span class="code-keyword">#define</span> LCD_ADDR        <span class="code-number">0x27</span>   <span class="code-comment">// LCD 1602 (или 0x3F на некоторых модулях)</span>
+<span class="code-keyword">#define</span> RTC_ADDR        <span class="code-number">0x68</span>   <span class="code-comment">// DS3231 (фиксированный)</span></code>
+            </div>
+            <div class="warning">
+                <strong>⚠️ Не использовать GPIO 6–11</strong> — это внутренняя SPI flash ESP32. Плата перестанет загружаться. Также избегать 0/2/12/15 (strapping) и 1/3 (USB-Serial).
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>⏱️ Тайминги и фильтры (Settings.h)</h2>
+            <div class="code-block">
+                <code><span class="code-comment">// Чтение HX711</span>
+<span class="code-keyword">#define</span> SCALE_READ_INTERVAL_MS   <span class="code-number">600</span>     <span class="code-comment">// Период замера (было 1500 на ESP8266)</span>
+<span class="code-keyword">#define</span> EMA_ALPHA_DEFAULT        <span class="code-number">0.3f</span>    <span class="code-comment">// Дефолт сглаживания (было 0.2)</span>
+<span class="code-keyword">#define</span> SPIKE_FILTER_KG          <span class="code-number">5.0f</span>    <span class="code-comment">// Резкие выбросы &gt; 5 кг отбрасываются</span>
+<span class="code-keyword">#define</span> DEAD_BAND_KG             <span class="code-number">0.005f</span>  <span class="code-comment">// Зона нечувствительности возле 0</span>
+
+<span class="code-comment">// Авто-сон</span>
+<span class="code-keyword">#define</span> AUTO_SLEEP_MS            <span class="code-number">180000UL</span>  <span class="code-comment">// 180 сек = 3 мин (настраивается через сайт)</span>
+<span class="code-keyword">#define</span> SLEEP_GUARD_SEC          <span class="code-number">60</span>      <span class="code-comment">// Не уходим в сон если до alarm &lt; 60 сек</span>
+<span class="code-keyword">#define</span> KEEPALIVE_BONUS_MS       <span class="code-number">600000UL</span>  <span class="code-comment">// «☕ +10 мин» добавляет 10 минут</span>
+
+<span class="code-comment">// LCD</span>
+<span class="code-keyword">#define</span> LCD_REFRESH_MS           <span class="code-number">200</span>     <span class="code-comment">// Перерисовка экрана (с dirty-check, без мерцания)</span>
+<span class="code-keyword">#define</span> I2C_FREQ_HZ              <span class="code-number">400000</span>  <span class="code-comment">// 400 kHz fast mode (было 100 kHz)</span>
+
+<span class="code-comment">// Кнопки</span>
+<span class="code-keyword">#define</span> BTN_DEBOUNCE_MS          <span class="code-number">50</span>
+<span class="code-keyword">#define</span> BTN_MEDIUM_MS            <span class="code-number">3000</span>    <span class="code-comment">// MAIN MEDIUM = тара</span>
+<span class="code-keyword">#define</span> BTN_LONG_MS              <span class="code-number">6000</span>    <span class="code-comment">// MAIN LONG = калибровка</span>
+<span class="code-keyword">#define</span> BTN_MENU_HOLD_MS         <span class="code-number">2500</span>    <span class="code-comment">// MENU удержание = OK</span></code>
+            </div>
+            <div class="tip">
+                <strong>💡 EMA альфа:</strong> 0.05–0.2 — сильное сглаживание, плавно но запаздывает. <strong>0.3</strong> (дефолт) — баланс. 0.5–0.9 — быстрая реакция, шумно.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📶 Wi-Fi настройки (Connectivity.h)</h2>
+            <h3>Дефолтные значения AP-режима (ESP32 создаёт свою сеть)</h3>
+            <div class="code-block">
+                <code><span class="code-comment">// Дефолтная точка доступа (можно сменить через сайт)</span>
+<span class="code-keyword">#define</span> AP_SSID_DEFAULT      <span class="code-string">"BeehiveScale"</span>
+<span class="code-keyword">#define</span> AP_PASS_DEFAULT      <span class="code-string">"12345678"</span>     <span class="code-comment">// мин. 8 символов</span>
+<span class="code-keyword">#define</span> AP_CHANNEL           <span class="code-number">1</span>
+<span class="code-keyword">#define</span> AP_MAX_CLIENTS       <span class="code-number">4</span>
+<span class="code-comment">// IP по умолчанию: 192.168.4.1 (стандарт ESP32 AP)</span></code>
             </div>
 
-            <h3>Режим 2: Точка доступа (AP)</h3>
-            <p>Устройство создаёт собственную WiFi сеть (работает без роутера):</p>
+            <h3>Логин/пароль веб-панели</h3>
             <div class="code-block">
-                <code><span class="code-comment">// Режим точки доступа</span>
-<span class="code-keyword">#define</span> WIFI_MODE_AP
-
-<span class="code-comment">// Настройки точки доступа</span>
-<span class="code-keyword">#define</span> AP_SSID          <span class="code-string">"BeehiveScale"</span>
-<span class="code-keyword">#define</span> AP_PASSWORD      <span class="code-string">"12345678"</span>
-<span class="code-keyword">#define</span> AP_CHANNEL       <span class="code-number">1</span>
-<span class="code-keyword">#define</span> AP_MAX_CLIENTS   <span class="code-number">4</span></code>
+                <code><span class="code-keyword">#define</span> WEB_USER_DEFAULT     <span class="code-string">"admin"</span>
+<span class="code-keyword">#define</span> WEB_PASS_DEFAULT     <span class="code-string">"beehive"</span>      <span class="code-comment">// сменить после первого входа!</span>
+<span class="code-keyword">#define</span> OTA_PASS_DEFAULT     <span class="code-string">"beehive"</span>      <span class="code-comment">// для будущего OTA (если включить)</span></code>
             </div>
 
+            <h3>STA-режим (подключение к домашнему роутеру)</h3>
+            <p>Включается через сайт «Wi-Fi» — не редактируется в коде. Хранится в EEPROM.</p>
             <div class="info-box">
                 <strong>ℹ️ Какой режим выбрать?</strong>
                 <ul style="margin-top: 10px; margin-left: 20px;">
-                    <li><strong>STA режим:</strong> Если улей рядом с домом и есть WiFi</li>
-                    <li><strong>AP режим:</strong> Если улей далеко от роутера, подключайтесь с телефона</li>
+                    <li><strong>AP режим</strong> (дефолт): улей далеко от дома. Подключаешься телефоном к сети BeehiveScale.</li>
+                    <li><strong>STA режим:</strong> улей в зоне домашнего Wi-Fi. Сайт открывается с любого устройства в сети + работает синхронизация NTP и Telegram-отчёты.</li>
                 </ul>
             </div>
         </section>
 
         <section class="card">
-            <h2>🕐 Настройка NTP (синхронизация времени)</h2>
-            <p>NTP серверы используются для автоматической установки точного времени:</p>
+            <h2>📱 Telegram через Cloudflare Worker</h2>
+            <p>В v5 прямой запрос на <code>api.telegram.org</code> заменён на релай через Cloudflare Worker (обходит блокировку Beeline и др.). Подробности — на странице <a href="06_telegram.html" style="color:var(--info)">«Telegram»</a>.</p>
             <div class="code-block">
-                <code><span class="code-comment">// Часовой пояс (Москва = 3)</span>
-<span class="code-keyword">#define</span> NTP_TIMEZONE         <span class="code-number">3</span>
+                <code><span class="code-comment">// URL релая (фиксированный, не меняется)</span>
+<span class="code-keyword">#define</span> TG_RELAY_URL    <span class="code-string">"https://beehive-relay.darkvolg.workers.dev/sendMessage"</span>
 
-<span class="code-comment">// NTP серверы</span>
-<span class="code-keyword">#define</span> NTP_SERVER_1         <span class="code-string">"pool.ntp.org"</span>
-<span class="code-keyword">#define</span> NTP_SERVER_2         <span class="code-string">"time.nist.gov"</span>
+<span class="code-comment">// Общий секрет (заголовок X-Beehive-Secret) — должен совпадать с CF Worker</span>
+<span class="code-keyword">#define</span> TG_RELAY_SECRET <span class="code-string">"&lt;см. в исходнике, не публикуется&gt;"</span>
 
-<span class="code-comment">// Интервал синхронизации (1 час = 3600000 мс)</span>
-<span class="code-keyword">#define</span> NTP_SYNC_INTERVAL    <span class="code-number">3600000UL</span></code>
+<span class="code-comment">// Token и chat_id хранятся в EEPROM, вводятся через сайт «Telegram»</span></code>
             </div>
-
             <div class="tip">
-                <strong>💡 Совет:</strong> В режиме AP синхронизация NTP недоступна (нет интернета). 
-                Время устанавливается вручную через веб-интерфейс или Serial команды.
+                <strong>💡 Token и Chat ID</strong> вводятся через сайт <code>192.168.4.1</code> → раздел «Telegram». В прошивку не зашиваются.
             </div>
         </section>
 
         <section class="card">
-            <h2>📱 Настройка Telegram уведомлений</h2>
-            <p>Для получения уведомлений в Telegram создайте бота и узнайте Chat ID:</p>
+            <h2>🕐 NTP (синхронизация часов)</h2>
             <div class="code-block">
-                <code><span class="code-comment">// Токен бота от @BotFather</span>
-<span class="code-keyword">#define</span> TG_BOT_TOKEN     <span class="code-string">"1234567890:AABcDeFgHiJkLmNoPqRsTuVwXyZ"</span>
+                <code><span class="code-comment">// Часовой пояс: Москва = +3</span>
+<span class="code-keyword">#define</span> NTP_TZ_OFFSET_SEC    <span class="code-number">10800</span>   <span class="code-comment">// 3 * 3600</span>
+<span class="code-keyword">#define</span> NTP_DST_OFFSET_SEC   <span class="code-number">0</span>       <span class="code-comment">// в РФ нет летнего времени</span>
 
-<span class="code-comment">// ID чата для отправки</span>
-<span class="code-keyword">#define</span> TG_CHAT_ID       <span class="code-string">"-1001234567890"</span>
-
-<span class="code-comment">// Порог изменения веса для тревоги (кг)</span>
-<span class="code-keyword">#define</span> TG_ALERT_DELTA_KG   <span class="code-number">1.0f</span>
-
-<span class="code-comment">// Интервал отчётов (6 часов = 21600000 мс)</span>
-<span class="code-keyword">#define</span> TG_REPORT_INTERVAL  <span class="code-number">21600000UL</span></code>
+<span class="code-keyword">#define</span> NTP_SERVER_1         <span class="code-string">"pool.ntp.org"</span>
+<span class="code-keyword">#define</span> NTP_SERVER_2         <span class="code-string">"time.google.com"</span></code>
             </div>
+            <div class="tip">
+                <strong>💡 Sync time:</strong> сайт → «Настройки» → кнопка «Sync NTP». Работает только в режиме STA (нужен интернет). Время записывается в DS3231.
+            </div>
+        </section>
 
+        <section class="card">
+            <h2>💾 Arduino IDE — настройки платы</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Установить core ESP32</h4>
+                        <p>Файл → Настройки → Дополнительные URL менеджера плат:</p>
+                        <p style="margin-top:8px"><code>https://espressif.github.io/arduino-esp32/package_esp32_index.json</code></p>
+                        <p style="margin-top:8px">Затем: Инструменты → Плата → Менеджер плат → найти «esp32» → Установить (версия <strong>2.0.x или 3.0.x</strong>).</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Выбрать плату DOIT ESP32 DEVKIT V1</h4>
+                        <p>Инструменты → Плата → ESP32 Arduino → <strong>DOIT ESP32 DEVKIT V1</strong></p>
+                        <ul>
+                            <li>CPU Frequency: <strong>240 MHz</strong></li>
+                            <li><strong>Partition Scheme: Huge APP (3MB No OTA / 1MB SPIFFS)</strong> ← обязательно!</li>
+                            <li>Flash Size: 4MB</li>
+                            <li>Upload Speed: 921600</li>
+                            <li>Core Debug Level: None</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Загрузить скетч</h4>
+                        <p>Файл → Открыть → <code>BeehiveScale/BeehiveScale.ino</code><br>
+                        Инструменты → Порт → COM-порт ESP32 → нажать «Загрузить» (→).</p>
+                        <div class="tip" style="margin-top:10px"><strong>💡 Авто-прошивка:</strong> ESP32 DevKit V1 поддерживает auto-reset через DTR/RTS — никаких кнопок зажимать не надо.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="danger">
+                <strong>❌ Ошибка «Sketch too big» / «Not enough space»:</strong> ты выбрал Default Partition (1.31 МБ под код). Прошивка ~1.4 МБ. Поставь <strong>Huge APP (3MB No OTA)</strong> и пересобери.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📦 Библиотеки Arduino</h2>
+            <p>Установить через Менеджер библиотек (Скетч → Подключить библиотеку → Управлять библиотеками):</p>
+            <table class="config-table">
+                <tr>
+                    <th>Библиотека</th>
+                    <th>Версия</th>
+                    <th>Для чего</th>
+                </tr>
+                <tr>
+                    <td><code>arduino-esp32</code> (Espressif)</td>
+                    <td>2.0.x или 3.0.x</td>
+                    <td>Основной core ESP32</td>
+                </tr>
+                <tr>
+                    <td><code>LiquidCrystal_I2C</code></td>
+                    <td>1.1.2+</td>
+                    <td>LCD 16×2 I²C</td>
+                </tr>
+                <tr>
+                    <td><code>HX711</code> by bogde</td>
+                    <td>0.7.5+</td>
+                    <td>АЦП тензодатчика</td>
+                </tr>
+                <tr>
+                    <td><code>OneWire</code></td>
+                    <td>2.3+</td>
+                    <td>Шина 1-Wire (DS18B20)</td>
+                </tr>
+                <tr>
+                    <td><code>DallasTemperature</code></td>
+                    <td>3.9+</td>
+                    <td>Драйвер DS18B20</td>
+                </tr>
+                <tr>
+                    <td><code>RTClib</code> by Adafruit</td>
+                    <td>2.1+</td>
+                    <td>DS3231 RTC + alarm</td>
+                </tr>
+                <tr>
+                    <td><code>ArduinoJson</code></td>
+                    <td><strong>6.x</strong> (НЕ 7.x!)</td>
+                    <td>Web API использует API v6 — на 7.x не соберётся</td>
+                </tr>
+            </table>
             <div class="warning">
-                <strong>⚠️ Важно:</strong> Замените <code>YOUR_BOT_TOKEN</code> и <code>YOUR_CHAT_ID</code> 
-                на реальные значения, иначе Telegram не будет работать!
+                <strong>⚠️ ArduinoJson 7.x несовместима</strong> — у неё другой API (<code>JsonDocument</code> вместо <code>StaticJsonDocument</code>). Откати до 6.21.x если поставил 7.
             </div>
         </section>
 
         <section class="card">
-            <h2>📊 Настройка ThingSpeak</h2>
-            <p>ThingSpeak — платформа для сбора и визуализации данных:</p>
+            <h2>🛠️ PlatformIO (альтернатива)</h2>
+            <p>В корне проекта есть <code>platformio.ini</code> с готовым окружением:</p>
             <div class="code-block">
-                <code><span class="code-comment">// API ключ канала ThingSpeak</span>
-<span class="code-keyword">#define</span> TS_API_KEY       <span class="code-string">"XXXXXXXXXXXXXXXX"</span>
-
-<span class="code-comment">// ID канала (опционально)</span>
-<span class="code-keyword">#define</span> TS_CHANNEL_ID    <span class="code-number">0</span>
-
-<span class="code-comment">// Интервал отправки (60 сек = 60000 мс)</span>
-<span class="code-keyword">#define</span> TS_UPDATE_INTERVAL_MS  <span class="code-number">60000UL</span></code>
+                <code>[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+board_build.partitions = huge_app.csv
+monitor_speed = 115200
+upload_speed = 921600
+lib_deps =
+    bogde/HX711@^0.7.5
+    marcoschwartz/LiquidCrystal_I2C@^1.1.4
+    paulstoffregen/OneWire@^2.3.7
+    milesburton/DallasTemperature@^3.11.0
+    adafruit/RTClib@^2.1.4
+    bblanchon/ArduinoJson@^6.21.5</code>
             </div>
+            <p style="margin-top:10px;color:var(--text-muted)">Команда: <code>pio run -e esp32dev -t upload</code></p>
+        </section>
 
-            <div class="info-box">
-                <strong>ℹ️ ThingSpeak:</strong> Бесплатный аккаунт позволяет отправлять данные 
-                не чаще чем раз в 15 секунд. Для hourly отчётов достаточно.
+        <section class="card">
+            <h2>💾 EEPROM-карта v5.0.17</h2>
+            <p>В EEPROM ESP32 (эмулируется через NVS, 512 байт) хранятся постоянные настройки:</p>
+            <table class="config-table">
+                <tr><th>Адрес</th><th>Байт</th><th>Что хранится</th></tr>
+                <tr><td><code>0</code></td><td>4</td><td><code>calibrationFactor</code> (float) — коэф. калибровки HX711</td></tr>
+                <tr><td><code>4</code></td><td>4</td><td><code>offset</code> (long) — нулевое смещение тары</td></tr>
+                <tr><td><code>8</code></td><td>4</td><td><code>lastSavedWeight</code> (float)</td></tr>
+                <tr><td><code>12</code></td><td>1</td><td>magic <code>0xA5</code></td></tr>
+                <tr><td><code>13</code></td><td>4</td><td><code>alertDelta</code> (float) — порог алерта в ТГ</td></tr>
+                <tr><td><code>17</code></td><td>4</td><td><code>calibWeight</code> (float) — эталонный вес для калибровки</td></tr>
+                <tr><td><code>21</code></td><td>4</td><td><code>emaAlpha</code> (float) — сглаживание</td></tr>
+                <tr><td><code>25</code></td><td>1</td><td>magic2 <code>0xA6</code></td></tr>
+                <tr><td><code>26</code></td><td>4</td><td><code>prevOffset</code> (long) — для отмены тары</td></tr>
+                <tr><td><code>30</code></td><td>4</td><td><code>prevWeight</code> (float) — эталон Δ</td></tr>
+                <tr><td><code>40–63</code></td><td>24</td><td><code>AP_PASS</code> (Wi-Fi пароль)</td></tr>
+                <tr><td><code>64</code></td><td>1</td><td>magic3 <code>0xA7</code></td></tr>
+                <tr style="background:rgba(245,166,35,0.05)"><td><code>313</code></td><td>4</td><td><strong>NEW v5:</strong> <code>prevWeightDate</code> (uint32_t Unix ts — дата фиксации эталона)</td></tr>
+                <tr style="background:rgba(245,166,35,0.05)"><td><code>317–319</code></td><td>3</td><td><strong>NEW v5:</strong> <code>autoSleepSec</code> (uint16_t + magic <code>0xA8</code>)</td></tr>
+                <tr style="background:rgba(245,166,35,0.05)"><td><code>320–325</code></td><td>6</td><td><strong>NEW v5:</strong> <code>lastReportWeight</code> (float + magic <code>0xA9</code>) — для Δ «с прошлого замера»</td></tr>
+                <tr style="background:rgba(245,166,35,0.05)"><td><code>327–330</code></td><td>4</td><td><strong>NEW v5:</strong> <code>lastTempC</code> (float + magic <code>0xAA</code>) — fallback для TG</td></tr>
+            </table>
+            <div class="tip">
+                <strong>💡 Подсветка</strong> — оранжевые строки = новые поля v5.0.x, добавлены при портировании с ESP8266.
             </div>
         </section>
 
         <section class="card">
-            <h2>⚙️ Быстрые настройки (через веб-интерфейс)</h2>
-            <p>Эти параметры можно менять без перепрошивки через веб-интерфейс:</p>
-            
+            <h2>⚙️ Параметры, настраиваемые через сайт (без перепрошивки)</h2>
             <table class="config-table">
                 <tr>
                     <th>Параметр</th>
@@ -282,148 +462,77 @@
                     <th>Описание</th>
                 </tr>
                 <tr>
-                    <td><strong>Порог тревоги</strong></td>
-                    <td>0.1 — 10.0 кг</td>
-                    <td>0.5 кг</td>
-                    <td>Изменение веса для Telegram уведомления</td>
+                    <td><strong>EMA сглаживание</strong></td>
+                    <td>0.05 — 0.9</td>
+                    <td>0.3</td>
+                    <td>Фильтр показаний веса</td>
                 </tr>
                 <tr>
                     <td><strong>Эталонный груз</strong></td>
-                    <td>100 — 5000 г</td>
-                    <td>1000 г</td>
-                    <td>Вес для калибровки</td>
+                    <td>0.1 — 50 кг</td>
+                    <td>5.0 кг</td>
+                    <td>Для калибровки через сайт</td>
                 </tr>
                 <tr>
-                    <td><strong>EMA сглаживание</strong></td>
-                    <td>0.05 — 0.9</td>
-                    <td>0.2</td>
-                    <td>Фильтр показаний веса</td>
+                    <td><strong>Авто-сон</strong></td>
+                    <td>0 — 600 сек</td>
+                    <td>180 сек (3 мин)</td>
+                    <td>Бездействие до deep sleep. 0 = не засыпать (отладка)</td>
+                </tr>
+                <tr>
+                    <td><strong>Порог алерта Δ</strong></td>
+                    <td>0.05 — 10 кг</td>
+                    <td>1.0 кг</td>
+                    <td>Срочное TG-сообщение при резком изменении</td>
+                </tr>
+                <tr>
+                    <td><strong>Расписание</strong></td>
+                    <td>00:00 — 23:59</td>
+                    <td>09:00 / 21:00</td>
+                    <td>Время автоматического замера + отчёта в TG</td>
+                </tr>
+                <tr>
+                    <td><strong>Wi-Fi режим</strong></td>
+                    <td>AP / STA</td>
+                    <td>AP</td>
+                    <td>Точка доступа или клиент роутера</td>
+                </tr>
+                <tr>
+                    <td><strong>Telegram token + chat_id</strong></td>
+                    <td>—</td>
+                    <td>пусто</td>
+                    <td>Раздел «Telegram» на сайте</td>
                 </tr>
             </table>
-
-            <div class="tip">
-                <strong>💡 EMA сглаживание:</strong> 
-                <ul style="margin-top: 10px; margin-left: 20px;">
-                    <li><strong>0.05-0.2:</strong> Сильное сглаживание, плавные но запаздывающие показания</li>
-                    <li><strong>0.3-0.5:</strong> Баланс между плавностью и отзывчивостью</li>
-                    <li><strong>0.6-0.9:</strong> Минимальное сглаживание, быстрые но шумные показания</li>
-                </ul>
-            </div>
         </section>
 
         <section class="card">
-            <h2>🔋 Настройка сна (Power Management)</h2>
-            <p>Для экономии энергии можно включить режим глубокого сна:</p>
-            <div class="code-block">
-                <code><span class="code-comment">// В файле SleepManager.h</span>
-
-<span class="code-comment">// Раскомментируйте для deep sleep</span>
-<span class="code-comment">// #define SLEEP_MODE_DEEP_SLEEP</span>
-
-<span class="code-comment">// Интервал сна (900 сек = 15 мин)</span>
-<span class="code-keyword">#define</span> SLEEP_INTERVAL_SEC   <span class="code-number">900UL</span>
-
-<span class="code-comment">// Пин пробуждения по кнопке</span>
-<span class="code-keyword">#define</span> SLEEP_WAKEUP_PIN     <span class="code-number">0</span></code>
-            </div>
-
-            <div class="warning">
-                <strong>⚠️ Deep Sleep:</strong> В режиме глубокого сна WiFi отключается между пробуждениями. 
-                Данные отправляются только при активном WiFi соединении.
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>📝 Пошаговая настройка</h2>
-            
-            <div class="steps">
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Откройте Connectivity.h</h4>
-                        <p>Найдите файл в папке проекта и откройте в Arduino IDE.</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Настройте WiFi</h4>
-                        <p>Введите SSID и пароль вашего роутера ИЛИ включите режим AP.</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Настройте часовой пояс</h4>
-                        <p>Укажите ваш часовой пояс (Москва = 3, Екатеринбург = 5, и т.д.)</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Настройте Telegram (опционально)</h4>
-                        <p>Создайте бота через @BotFather и вставьте токен и Chat ID.</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Настройте ThingSpeak (опционально)</h4>
-                        <p>Создайте канал на thingspeak.com и получите API ключ.</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Сохраните и загрузите</h4>
-                        <p>Сохраните файл и загрузите прошивку на ESP32.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>🔧 Serial команды для настройки</h2>
-            <p>Отправьте через Serial монитор (115200 бод):</p>
-            
+            <h2>🔧 Serial команды (115200 бод)</h2>
+            <p>Для отладки можно слать команды через USB-C → Serial монитор:</p>
             <table class="config-table">
                 <tr>
                     <th>Команда</th>
                     <th>Описание</th>
                     <th>Пример</th>
                 </tr>
-                <tr>
-                    <td><code>NTP</code></td>
-                    <td>Синхронизация времени</td>
-                    <td><code>NTP</code></td>
-                </tr>
-                <tr>
-                    <td><code>TIME</code></td>
-                    <td>Показать текущее время</td>
-                    <td><code>TIME</code></td>
-                </tr>
-                <tr>
-                    <td><code>SETTIME</code></td>
-                    <td>Установить время</td>
-                    <td><code>SETTIME 2026 02 21 14 30 00</code></td>
-                </tr>
-                <tr>
-                    <td><code>STATUS</code></td>
-                    <td>Информация о системе</td>
-                    <td><code>STATUS</code></td>
-                </tr>
-                <tr>
-                    <td><code>REBOOT</code></td>
-                    <td>Перезагрузка</td>
-                    <td><code>REBOOT</code></td>
-                </tr>
+                <tr><td><code>STATUS</code></td><td>Информация о системе (вес, время, батарея)</td><td><code>STATUS</code></td></tr>
+                <tr><td><code>NTP</code></td><td>Синхронизировать время с NTP (нужен STA)</td><td><code>NTP</code></td></tr>
+                <tr><td><code>TIME</code></td><td>Показать текущее время DS3231</td><td><code>TIME</code></td></tr>
+                <tr><td><code>SETTIME</code></td><td>Установить время вручную</td><td><code>SETTIME 2026 05 09 14 30 00</code></td></tr>
+                <tr><td><code>TARE</code></td><td>Сделать тарирование</td><td><code>TARE</code></td></tr>
+                <tr><td><code>WAKEUP_REASON</code></td><td>Причина последнего пробуждения из sleep</td><td><code>WAKEUP_REASON</code></td></tr>
+                <tr><td><code>SLEEP</code></td><td>Принудительно уйти в deep sleep</td><td><code>SLEEP 60</code> (на 60 сек)</td></tr>
+                <tr><td><code>DIAG</code></td><td>Самотест (HX711, DS18B20, RTC, Battery)</td><td><code>DIAG</code></td></tr>
+                <tr><td><code>REBOOT</code></td><td>Перезагрузка</td><td><code>REBOOT</code></td></tr>
             </table>
         </section>
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.17</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
-            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
+            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a> ·
+            <a href="04_operation.html" style="color: var(--primary);">Дальше: Эксплуатация →</a>
         </p>
     </footer>
 

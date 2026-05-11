@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📦 Компоненты — BeehiveScale v4.1</title>
+    <title>📦 Компоненты — BeehiveScale ESP32 v5.0.17</title>
     <link rel="stylesheet" href="../styles/main.css">
     <style>
         :root {
@@ -41,7 +41,6 @@
             padding: 20px;
         }
 
-        /* Header */
         header {
             text-align: center;
             padding: 40px 20px;
@@ -64,7 +63,6 @@
             color: var(--text-muted);
         }
 
-        /* Navigation */
         .nav-tabs {
             display: flex;
             flex-wrap: wrap;
@@ -97,7 +95,6 @@
             color: #000;
         }
 
-        /* Cards */
         .card {
             background: var(--card-bg);
             border-radius: 15px;
@@ -127,7 +124,6 @@
             fill: currentColor;
         }
 
-        /* Components Grid */
         .components-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -175,7 +171,6 @@
             color: var(--primary);
         }
 
-        /* Connection Table */
         .connection-table {
             width: 100%;
             border-collapse: collapse;
@@ -211,7 +206,6 @@
             font-weight: bold;
         }
 
-        /* Tips and Warnings */
         .tip {
             background: rgba(111, 207, 151, 0.1);
             border-left: 4px solid var(--success);
@@ -236,7 +230,6 @@
             margin: 20px 0;
         }
 
-        /* Breadcrumb */
         .breadcrumb {
             margin-bottom: 20px;
             padding: 10px 0;
@@ -252,7 +245,6 @@
             margin: 0 10px;
         }
 
-        /* Footer */
         footer {
             text-align: center;
             padding: 30px;
@@ -261,7 +253,6 @@
             margin-top: 40px;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             header h1 { font-size: 1.8em; }
             .nav-tab { padding: 10px 15px; font-size: 0.9em; }
@@ -281,7 +272,7 @@
 
         <header>
             <h1>📦 Необходимые компоненты</h1>
-            <p>Полный список деталей для сборки BeehiveScale v4.1</p>
+            <p>Полный список деталей для сборки BeehiveScale ESP32 v5.0.17</p>
         </header>
 
         <nav class="nav-tabs">
@@ -299,7 +290,7 @@
                 <svg class="icon" viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
                 Список компонентов
             </h2>
-            <p>Для сборки системы мониторинга улья вам понадобятся следующие компоненты:</p>
+            <p>Для сборки умных весов на базе <strong>ESP32-WROOM-32 DevKit V1</strong> понадобятся:</p>
 
             <div class="components-grid">
                 <!-- ESP32 -->
@@ -307,19 +298,19 @@
                     <svg viewBox="0 0 100 100">
                         <rect x="20" y="10" width="60" height="80" rx="5" fill="#0066cc"/>
                         <rect x="25" y="15" width="50" height="50" rx="3" fill="#1a1a2e"/>
-                        <circle cx="35" cy="25" r="3" fill="#gold"/>
-                        <circle cx="45" cy="25" r="3" fill="#gold"/>
-                        <circle cx="55" cy="25" r="3" fill="#gold"/>
-                        <circle cx="65" cy="25" r="3" fill="#gold"/>
+                        <circle cx="35" cy="25" r="3" fill="#f5a623"/>
+                        <circle cx="45" cy="25" r="3" fill="#f5a623"/>
+                        <circle cx="55" cy="25" r="3" fill="#f5a623"/>
+                        <circle cx="65" cy="25" r="3" fill="#f5a623"/>
                         <rect x="35" y="40" width="30" height="20" fill="#333"/>
                         <text x="50" y="85" text-anchor="middle" fill="white" font-size="8">ESP32</text>
                     </svg>
-                    <h4>ESP32 DevKit v1</h4>
-                    <p>Микроконтроллер с WiFi/Bluetooth</p>
+                    <h4>ESP32-WROOM-32 DevKit V1</h4>
+                    <p>DOIT, 38 пинов, USB-C. Wi-Fi + BT, deep sleep, RTC GPIO</p>
                     <div class="specs">
-                        GPIO: 34 пина<br>
                         Flash: 4MB<br>
-                        WiFi: 2.4GHz
+                        SRAM: 520KB<br>
+                        CPU: 240 MHz dual-core
                     </div>
                 </div>
 
@@ -328,35 +319,36 @@
                     <svg viewBox="0 0 100 100">
                         <rect x="15" y="30" width="70" height="50" rx="3" fill="#2d5016"/>
                         <rect x="20" y="35" width="60" height="20" fill="#1a1a2e"/>
-                        <circle cx="30" cy="45" r="5" fill="#gold"/>
-                        <circle cx="70" cy="45" r="5" fill="#gold"/>
+                        <circle cx="30" cy="45" r="5" fill="#f5a623"/>
+                        <circle cx="70" cy="45" r="5" fill="#f5a623"/>
                         <rect x="25" y="60" width="50" height="15" fill="#4a4a4a"/>
                         <text x="50" y="90" text-anchor="middle" fill="white" font-size="8">HX711</text>
                     </svg>
                     <h4>Модуль HX711</h4>
-                    <p>АЦП для тензодатчиков</p>
+                    <p>24-бит АЦП для тензодатчика. Усиление 128. Питание 3.3 В</p>
                     <div class="specs">
-                        24-bit АЦП<br>
-                        2 канала<br>
-                        Программируемое усиление
+                        Каналы: A (gain 128/64) + B<br>
+                        Скорость: 10/80 Hz<br>
+                        DT → D16, SCK → D17<br>
+                        <span style="color:#FF9800">⚡ Pull-up 10 кΩ SCK→3V3 обязательно для sleep</span>
                     </div>
                 </div>
 
                 <!-- Тензодатчик -->
                 <div class="component-card">
                     <svg viewBox="0 0 100 100">
-                        <rect x="10" y="40" width="80" height="40" rx="2" fill="#silver"/>
+                        <rect x="10" y="40" width="80" height="40" rx="2" fill="#aaaaaa"/>
                         <rect x="15" y="45" width="70" height="30" fill="#666"/>
                         <line x1="20" y1="55" x2="80" y2="55" stroke="#999" stroke-width="2"/>
                         <line x1="50" y1="45" x2="50" y2="75" stroke="#999" stroke-width="2"/>
                         <text x="50" y="95" text-anchor="middle" fill="white" font-size="8">Тензодатчик</text>
                     </svg>
                     <h4>Тензодатчик</h4>
-                    <p>На нагрузку 50-100 кг</p>
+                    <p>Балочный или платформенный, 50–200 кг</p>
                     <div class="specs">
-                        Тип: S-образный<br>
                         Класс точности: C3<br>
-                        4 провода
+                        4 провода (E+/E−/A+/A−)<br>
+                        Диапазон 0–200 кг
                     </div>
                 </div>
 
@@ -370,12 +362,12 @@
                         <rect x="20" y="65" width="60" height="5" fill="#333"/>
                         <text x="50" y="90" text-anchor="middle" fill="white" font-size="7">LCD 1602 I2C</text>
                     </svg>
-                    <h4>LCD 1602 I2C</h4>
-                    <p>Дисплей 16 символов × 2 строки</p>
+                    <h4>LCD 1602 I²C</h4>
+                    <p>16×2 символов, PCF8574, адрес 0x27, питание 5 В</p>
                     <div class="specs">
-                        Интерфейс: I2C<br>
-                        Адрес: 0x27<br>
-                        Подсветка: зелёная
+                        SDA → D21<br>
+                        SCL → D22<br>
+                        VCC → VIN (5 В)
                     </div>
                 </div>
 
@@ -387,34 +379,34 @@
                         <circle cx="50" cy="45" r="8" fill="#0d1b2a"/>
                         <line x1="50" y1="45" x2="50" y2="40" stroke="#f5a623" stroke-width="2"/>
                         <line x1="50" y1="45" x2="55" y2="45" stroke="#f5a623" stroke-width="2"/>
-                        <rect x="30" y="60" width="40" height="8" fill="#gold"/>
+                        <rect x="30" y="60" width="40" height="8" fill="#f5a623"/>
                         <text x="50" y="90" text-anchor="middle" fill="white" font-size="8">RTC DS3231</text>
                     </svg>
                     <h4>RTC DS3231</h4>
-                    <p>Модуль реального времени</p>
+                    <p>Часы реального времени, точность ±2 ppm. Хранит время для расписания и логов</p>
                     <div class="specs">
-                        Точность: ±2ppm<br>
+                        Адрес I²C: 0x68<br>
                         Батарейка: CR2032<br>
-                        I2C интерфейс
+                        SQW → D33 (опц., задел на P3)
                     </div>
                 </div>
 
-                <!-- DHT22/DS18B20 -->
+                <!-- DS18B20 -->
                 <div class="component-card">
                     <svg viewBox="0 0 100 100">
                         <rect x="35" y="30" width="30" height="40" rx="5" fill="#333"/>
                         <circle cx="50" cy="45" r="8" fill="#555"/>
-                        <rect x="40" y="60" width="20" height="5" fill="#gold"/>
-                        <rect x="40" y="70" width="20" height="5" fill="#gold"/>
-                        <rect x="40" y="80" width="20" height="5" fill="#gold"/>
-                        <text x="50" y="95" text-anchor="middle" fill="white" font-size="8">DHT22</text>
+                        <rect x="40" y="60" width="20" height="5" fill="#f5a623"/>
+                        <rect x="40" y="70" width="20" height="5" fill="#f5a623"/>
+                        <rect x="40" y="80" width="20" height="5" fill="#f5a623"/>
+                        <text x="50" y="95" text-anchor="middle" fill="white" font-size="8">DS18B20</text>
                     </svg>
-                    <h4>DHT22 / DS18B20</h4>
-                    <p>Датчик температуры/влажности</p>
+                    <h4>DS18B20</h4>
+                    <p>Цифровой термометр 1-Wire, −55…+125 °C. В гильзе для улья</p>
                     <div class="specs">
-                        DHT22: T+H<br>
-                        DS18B20: T<br>
-                        Цифровой выход
+                        Точность: ±0.5 °C<br>
+                        DATA → D4<br>
+                        Pull-up 4.7 кОм
                     </div>
                 </div>
 
@@ -424,34 +416,35 @@
                         <circle cx="50" cy="40" r="20" fill="#333"/>
                         <circle cx="50" cy="40" r="15" fill="#444"/>
                         <circle cx="50" cy="40" r="10" fill="#555"/>
-                        <rect x="40" y="70" width="20" height="5" fill="#gold"/>
-                        <rect x="40" y="80" width="20" height="5" fill="#gold"/>
+                        <rect x="40" y="70" width="20" height="5" fill="#f5a623"/>
+                        <rect x="40" y="80" width="20" height="5" fill="#f5a623"/>
                         <text x="50" y="95" text-anchor="middle" fill="white" font-size="8">Кнопки</text>
                     </svg>
                     <h4>Кнопки тактовые</h4>
-                    <p>2 штуки для управления</p>
+                    <p>MAIN (D27, RTC GPIO — wake) и MENU (D26)</p>
                     <div class="specs">
-                        Тип: NO (нормально-открытые)<br>
-                        Размер: 12×12мм<br>
-                        4 контакта
+                        Тип: NO, 4 контакта<br>
+                        Размер: 6×6 мм<br>
+                        INPUT_PULLUP, без внешних R
                     </div>
                 </div>
 
-                <!-- Аккумулятор -->
+                <!-- AS21 V6.0 -->
                 <div class="component-card">
                     <svg viewBox="0 0 100 100">
-                        <rect x="25" y="25" width="50" height="50" rx="5" fill="#333"/>
-                        <rect x="65" y="35" width="10" height="30" rx="2" fill="#555"/>
-                        <text x="50" y="55" text-anchor="middle" fill="white" font-size="10">Li-Ion</text>
-                        <text x="50" y="70" text-anchor="middle" fill="white" font-size="8">18650 3.7V</text>
-                        <rect x="30" y="85" width="40" height="5" fill="#gold"/>
+                        <rect x="15" y="20" width="70" height="60" rx="5" fill="#3a3a1a"/>
+                        <rect x="25" y="30" width="50" height="20" fill="#5a3a1a"/>
+                        <text x="50" y="44" text-anchor="middle" fill="#ffcc88" font-size="9">18650</text>
+                        <rect x="35" y="60" width="30" height="10" fill="#1a1a2e"/>
+                        <text x="50" y="68" text-anchor="middle" fill="#f5a623" font-size="6">TP4056+DW01</text>
+                        <text x="50" y="92" text-anchor="middle" fill="white" font-size="7">AS21 V6.0</text>
                     </svg>
-                    <h4>Li-Ion 18650</h4>
-                    <p>Аккумулятор 3.7V</p>
+                    <h4>AS21 V6.0 + 18650</h4>
+                    <p>Всё-в-одном: TP4056 (зарядка), DW01 (защита), Boost 5 В, держатель 18650</p>
                     <div class="specs">
-                        Ёмкость: 2000-3500mAh<br>
-                        Напряжение: 3.7V<br>
-                        Макс: 4.2V
+                        microUSB зарядка<br>
+                        5V_OUT 1 А, BAT+ raw<br>
+                        Заменяет 3 модуля
                     </div>
                 </div>
 
@@ -459,74 +452,140 @@
                 <div class="component-card">
                     <svg viewBox="0 0 100 100">
                         <rect x="20" y="45" width="60" height="10" fill="#d4a574"/>
-                        <line x1="10" y1="50" x2="20" y2="50" stroke="#gold" stroke-width="3"/>
-                        <line x1="80" y1="50" x2="90" y2="50" stroke="#gold" stroke-width="3"/>
+                        <line x1="10" y1="50" x2="20" y2="50" stroke="#f5a623" stroke-width="3"/>
+                        <line x1="80" y1="50" x2="90" y2="50" stroke="#f5a623" stroke-width="3"/>
                         <line x1="30" y1="45" x2="30" y2="55" stroke="#8b4513" stroke-width="2"/>
                         <line x1="50" y1="45" x2="50" y2="55" stroke="#8b4513" stroke-width="2"/>
                         <line x1="70" y1="45" x2="70" y2="55" stroke="#8b4513" stroke-width="2"/>
-                        <text x="50" y="85" text-anchor="middle" fill="white" font-size="8">100кОм ×2</text>
+                        <text x="50" y="85" text-anchor="middle" fill="white" font-size="8">Резисторы</text>
                     </svg>
-                    <h4>Резисторы 100кОм</h4>
-                    <p>Делитель напряжения для батареи</p>
+                    <h4>Резисторы</h4>
+                    <p>4.7 кОм — pull-up DS18B20<br>2 × 100 кОм — делитель батареи</p>
                     <div class="specs">
-                        Мощность: 0.25W<br>
-                        Точность: 5%<br>
-                        Тип: углеродные
+                        Мощность: 0.25 W<br>
+                        Точность: 1–5 %<br>
+                        Угольные / металлоплёночные
                     </div>
                 </div>
 
-                <!-- Провода -->
+                <!-- DIP socket -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="20" y="30" width="60" height="40" rx="2" fill="#1a1a2e"/>
+                        <circle cx="28" cy="38" r="2" fill="#888"/>
+                        <circle cx="36" cy="38" r="2" fill="#888"/>
+                        <circle cx="44" cy="38" r="2" fill="#888"/>
+                        <circle cx="52" cy="38" r="2" fill="#888"/>
+                        <circle cx="60" cy="38" r="2" fill="#888"/>
+                        <circle cx="68" cy="38" r="2" fill="#888"/>
+                        <circle cx="28" cy="62" r="2" fill="#888"/>
+                        <circle cx="36" cy="62" r="2" fill="#888"/>
+                        <circle cx="44" cy="62" r="2" fill="#888"/>
+                        <circle cx="52" cy="62" r="2" fill="#888"/>
+                        <circle cx="60" cy="62" r="2" fill="#888"/>
+                        <circle cx="68" cy="62" r="2" fill="#888"/>
+                        <text x="50" y="85" text-anchor="middle" fill="white" font-size="7">DIP-сокет</text>
+                    </svg>
+                    <h4>DIP-сокет 2×19</h4>
+                    <p>Female pin headers — съёмный ESP32 для удобства замены</p>
+                    <div class="specs">
+                        2 × 19 пинов (38)<br>
+                        Шаг: 2.54 мм<br>
+                        Совместим с DevKit V1
+                    </div>
+                </div>
+
+                <!-- LittleFS -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="20" y="30" width="60" height="40" rx="3" fill="#1a1a2e"/>
+                        <rect x="25" y="35" width="50" height="8" fill="#56ccf2"/>
+                        <rect x="25" y="46" width="50" height="8" fill="#56ccf2"/>
+                        <rect x="25" y="57" width="50" height="8" fill="#56ccf2"/>
+                        <text x="50" y="85" text-anchor="middle" fill="white" font-size="7">LittleFS / Flash</text>
+                    </svg>
+                    <h4>LittleFS (внутренний flash)</h4>
+                    <p>Лог замеров пишется во встроенный flash ESP32. SD-карта не нужна</p>
+                    <div class="specs">
+                        ~1 МБ под лог<br>
+                        Без окисления контактов<br>
+                        CSV через /api/log
+                    </div>
+                </div>
+
+                <!-- Cloudflare Worker -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <ellipse cx="50" cy="55" rx="30" ry="15" fill="#f5a623"/>
+                        <ellipse cx="40" cy="50" rx="22" ry="12" fill="#f8c060"/>
+                        <ellipse cx="62" cy="58" rx="18" ry="10" fill="#fad080"/>
+                        <text x="50" y="60" text-anchor="middle" fill="#1a1a2e" font-size="9" font-weight="bold">CF</text>
+                        <text x="50" y="90" text-anchor="middle" fill="white" font-size="7">CF Worker</text>
+                    </svg>
+                    <h4>Cloudflare Worker (relay)</h4>
+                    <p>Не плата, а внешний сервис. Прокси для Telegram API — обходит блокировку Beeline и др.</p>
+                    <div class="specs">
+                        Бесплатный план<br>
+                        100k запросов/день<br>
+                        beehive-relay.darkvolg.workers.dev
+                    </div>
+                </div>
+
+                <!-- HT7333 (опц.) -->
+                <div class="component-card">
+                    <svg viewBox="0 0 100 100">
+                        <rect x="35" y="30" width="30" height="35" rx="3" fill="#222"/>
+                        <text x="50" y="50" text-anchor="middle" fill="#f5a623" font-size="8">HT7333</text>
+                        <line x1="38" y1="65" x2="38" y2="78" stroke="#888" stroke-width="2"/>
+                        <line x1="50" y1="65" x2="50" y2="78" stroke="#888" stroke-width="2"/>
+                        <line x1="62" y1="65" x2="62" y2="78" stroke="#888" stroke-width="2"/>
+                        <text x="50" y="92" text-anchor="middle" fill="white" font-size="7">SOT-89 LDO</text>
+                    </svg>
+                    <h4>HT7333 (опционально)</h4>
+                    <p>Замена штатного AMS1117 → ток в deep sleep ~7 → ~3 мА. Корпус SOT-89</p>
+                    <div class="specs">
+                        Iq ≈ 4 мкА<br>
+                        Vout: 3.3 В (фикс.)<br>
+                        Imax: 250 мА
+                    </div>
+                </div>
+
+                <!-- Корпус / провода -->
                 <div class="component-card">
                     <svg viewBox="0 0 100 100">
                         <path d="M20 30 Q50 20 80 30" stroke="#ef5350" stroke-width="4" fill="none"/>
                         <path d="M20 50 Q50 40 80 50" stroke="#4caf50" stroke-width="4" fill="none"/>
                         <path d="M20 70 Q50 60 80 70" stroke="#2196f3" stroke-width="4" fill="none"/>
                         <path d="M20 90 Q50 80 80 90" stroke="#666" stroke-width="4" fill="none"/>
-                        <text x="50" y="20" text-anchor="middle" fill="white" font-size="8">Провода</text>
                     </svg>
-                    <h4>Провода соединительные</h4>
-                    <p>Дюпон провода папа-папа</p>
+                    <h4>Провода + корпус</h4>
+                    <p>Дюпон / гибкий многожильный. ABS-корпус IP54 для улья</p>
                     <div class="specs">
-                        Длина: 10-20см<br>
-                        Тип: дюпон<br>
-                        Комплект: 40+ шт
-                    </div>
-                </div>
-
-                <!-- Макетная плата -->
-                <div class="component-card">
-                    <svg viewBox="0 0 100 100">
-                        <rect x="15" y="35" width="70" height="30" rx="3" fill="#1a1a2e"/>
-                        <line x1="20" y1="45" x2="80" y2="45" stroke="#333" stroke-width="1"/>
-                        <line x1="20" y1="55" x2="80" y2="55" stroke="#333" stroke-width="1"/>
-                        <circle cx="25" cy="42" r="2" fill="#gold"/>
-                        <circle cx="35" cy="42" r="2" fill="#gold"/>
-                        <circle cx="45" cy="42" r="2" fill="#gold"/>
-                        <circle cx="25" cy="52" r="2" fill="#gold"/>
-                        <circle cx="35" cy="52" r="2" fill="#gold"/>
-                        <circle cx="45" cy="52" r="2" fill="#gold"/>
-                        <text x="50" y="85" text-anchor="middle" fill="white" font-size="8">Макетная плата</text>
-                    </svg>
-                    <h4>Макетная плата</h4>
-                    <p>Для прототипирования</p>
-                    <div class="specs">
-                        Размер: 8.5×5.5см<br>
-                        Точек: 400+<br>
-                        Самоклеящаяся
+                        AWG 22–26<br>
+                        Длина 10–30 см<br>
+                        Гермоввод PG-7 для DS18B20
                     </div>
                 </div>
             </div>
 
             <div class="tip">
-                <strong>💡 Совет:</strong> Все компоненты можно приобрести на AliExpress, Ozon или в местных магазинах электроники (Чип и Дип, Амперка). 
-                Рекомендуется покупать готовые наборы — это дешевле.
+                <strong>💡 Совет:</strong> компоненты есть на AliExpress, Ozon, в Чип и Дип, Амперке.
+                Готовые наборы для ESP32 + HX711 + LCD + DS3231 продаются за ~1500 ₽ — это проще чем покупать по отдельности.
+            </div>
+            <div class="tip">
+                <strong>💾 Что больше не нужно (по сравнению с ESP8266 v4.1):</strong>
+                <ul style="margin-top:8px;margin-left:20px">
+                    <li><strong>SD-карта + holder</strong> — заменена внутренней LittleFS. Меньше деталей, нет окисления контактов</li>
+                    <li><strong>Отдельные TP4056 + DW01 + Boost</strong> — заменены модулем AS21 V6.0 «всё-в-одном»</li>
+                    <li><strong>Holder 18650 отдельно</strong> — встроен в AS21</li>
+                </ul>
             </div>
         </section>
 
         <section class="card">
-            <h2>📋 Таблица подключений</h2>
-            <p>Краткая справка по подключениям компонентов к ESP32:</p>
-            
+            <h2>📋 Краткая таблица подключений к ESP32</h2>
+            <p>Полная распиновка и схема — на странице <a href="02_connection.html" style="color:var(--info)">«Подключение»</a>. Здесь — короткая справка:</p>
+
             <table class="connection-table">
                 <thead>
                     <tr>
@@ -539,93 +598,171 @@
                 <tbody>
                     <tr>
                         <td><strong>HX711 DT</strong></td>
-                        <td><span class="pin">GPIO 14</span></td>
-                        <td>Данные</td>
-                        <td>Подтяжка не требуется</td>
+                        <td><span class="pin">D16 / GPIO16</span></td>
+                        <td>Данные АЦП</td>
+                        <td>DT_PIN = 16</td>
                     </tr>
                     <tr>
                         <td><strong>HX711 SCK</strong></td>
-                        <td><span class="pin">GPIO 12</span></td>
-                        <td>Тактовый сигнал</td>
-                        <td>—</td>
+                        <td><span class="pin">D17 / GPIO17</span></td>
+                        <td>Тактирование</td>
+                        <td>SCK_PIN = 17. <span style="color:#FF9800">⚡ Pull-up 10 кΩ → 3V3 (обязательно для deep sleep, экономит 4 мА)</span></td>
                     </tr>
                     <tr>
                         <td><strong>HX711 VCC</strong></td>
-                        <td><span class="pin">5V / 3.3V</span></td>
-                        <td>Питание</td>
-                        <td>Можно от 3.3V или 5V</td>
-                    </tr>
-                    <tr>
-                        <td><strong>HX711 GND</strong></td>
-                        <td><span class="pin">GND</span></td>
-                        <td>Земля</td>
-                        <td>Общая с ESP32</td>
+                        <td><span class="pin">3V3</span></td>
+                        <td>Питание 3.3 В</td>
+                        <td>Стабильнее, чем 5 В</td>
                     </tr>
                     <tr>
                         <td><strong>LCD SDA</strong></td>
-                        <td><span class="pin">GPIO 21</span></td>
-                        <td>I2C данные</td>
-                        <td>Подтяжка на плате</td>
+                        <td><span class="pin">D21 / GPIO21</span></td>
+                        <td>I²C данные</td>
+                        <td>Общая шина с DS3231</td>
                     </tr>
                     <tr>
                         <td><strong>LCD SCL</strong></td>
-                        <td><span class="pin">GPIO 22</span></td>
-                        <td>I2C тактовая</td>
-                        <td>Подтяжка на плате</td>
+                        <td><span class="pin">D22 / GPIO22</span></td>
+                        <td>I²C тактирование</td>
+                        <td>Общая шина с DS3231</td>
                     </tr>
                     <tr>
                         <td><strong>LCD VCC</strong></td>
-                        <td><span class="pin">5V</span></td>
-                        <td>Питание LCD</td>
-                        <td>—</td>
+                        <td><span class="pin">VIN (5 В)</span></td>
+                        <td>Питание подсветки</td>
+                        <td>5 В от AS21, не 3V3!</td>
                     </tr>
                     <tr>
-                        <td><strong>RTC SDA</strong></td>
-                        <td><span class="pin">GPIO 21</span></td>
-                        <td>I2C данные</td>
+                        <td><strong>DS3231 SDA</strong></td>
+                        <td><span class="pin">D21 / GPIO21</span></td>
+                        <td>I²C данные</td>
                         <td>Параллельно LCD</td>
                     </tr>
                     <tr>
-                        <td><strong>RTC SCL</strong></td>
-                        <td><span class="pin">GPIO 22</span></td>
-                        <td>I2C тактовая</td>
+                        <td><strong>DS3231 SCL</strong></td>
+                        <td><span class="pin">D22 / GPIO22</span></td>
+                        <td>I²C тактирование</td>
                         <td>Параллельно LCD</td>
                     </tr>
                     <tr>
-                        <td><strong>DHT22 DATA</strong></td>
-                        <td><span class="pin">GPIO 4</span></td>
-                        <td>Данные</td>
-                        <td>Резистор 10кОм к VCC</td>
+                        <td><strong>DS3231 SQW</strong> <span style="color:#FF9800">опц.</span></td>
+                        <td><span class="pin">D33 / GPIO33</span></td>
+                        <td>Alarm wake (задел на P3)</td>
+                        <td>RTC GPIO ⚡ — в v5.0.17 не задействован, паяем для будущего</td>
                     </tr>
                     <tr>
-                        <td><strong>Кнопка 1</strong></td>
-                        <td><span class="pin">GPIO 0</span></td>
-                        <td>Тарировка/Калибровка</td>
+                        <td><strong>DS18B20 DATA</strong></td>
+                        <td><span class="pin">D4 / GPIO4</span></td>
+                        <td>1-Wire</td>
+                        <td>+ резистор 4.7 кОм к 3V3</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Кнопка MAIN</strong></td>
+                        <td><span class="pin">D27 / GPIO27</span></td>
+                        <td>Тара / калибровка</td>
+                        <td>RTC GPIO ⚡, INPUT_PULLUP</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Кнопка MENU</strong></td>
+                        <td><span class="pin">D26 / GPIO26</span></td>
+                        <td>Навигация / OK</td>
                         <td>INPUT_PULLUP</td>
                     </tr>
                     <tr>
-                        <td><strong>Кнопка 2</strong></td>
-                        <td><span class="pin">GPIO 2</span></td>
-                        <td>Меню</td>
-                        <td>INPUT_PULLUP</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Батарея (+)</strong></td>
-                        <td><span class="pin">GPIO 34</span></td>
-                        <td>ADC чтение</td>
-                        <td>Через делитель 2:1!</td>
+                        <td><strong>Делитель батареи</strong></td>
+                        <td><span class="pin">D34 / GPIO34</span></td>
+                        <td>ADC1_CH6</td>
+                        <td>Input only! Через 2 × 100 кОм</td>
                     </tr>
                 </tbody>
             </table>
 
             <div class="warning">
-                <strong>⚠️ Внимание:</strong> GPIO 34 — это входной пин ADC только для чтения. 
-                Для подключения батареи обязательно используйте делитель напряжения 
-                (два резистора 100кОм), чтобы разделить напряжение батареи пополам.
+                <strong>⚠️ Запрещённые пины ESP32:</strong>
+                <ul style="margin-top:8px;margin-left:20px">
+                    <li><strong>GPIO 6–11</strong> — внутренняя SPI flash, плата перестанет загружаться</li>
+                    <li><strong>GPIO 0, 2, 12, 15</strong> — strapping pins, влияют на boot</li>
+                    <li><strong>GPIO 1 (TX0), 3 (RX0)</strong> — UART0 для USB-Serial</li>
+                    <li><strong>GPIO 34, 35, 36, 39</strong> — input only, нельзя как OUTPUT</li>
+                </ul>
             </div>
         </section>
 
-        <section class="card green">
+        <section class="card">
+            <h2>🔋 Модуль AS21 V6.0 — что внутри</h2>
+            <p>AS21 V6.0 — это <strong>«всё-в-одном» модуль питания</strong>. Заменяет связку <code>TP4056 + DW01 + Boost 5V + holder 18650</code>:</p>
+
+            <table class="connection-table">
+                <thead>
+                    <tr>
+                        <th>Блок AS21</th>
+                        <th>Что делает</th>
+                        <th>Эквивалент v4.1</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>TP4056</strong></td>
+                        <td>Контроллер заряда Li-Ion от microUSB (5 В), ток ~1 А</td>
+                        <td>TP4056 модуль</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DW01 + FET</strong></td>
+                        <td>Защита от переразряда (&lt;2.7 В), перезаряда (&gt;4.25 В), КЗ</td>
+                        <td>BMS-плата</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Boost 5 В</strong></td>
+                        <td>Повышает 3.0–4.2 В до стабильных 5 В для ESP32 VIN и LCD</td>
+                        <td>MT3608 / похожий</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Holder 18650</strong></td>
+                        <td>Встроенный держатель банки, контакты на пружинах</td>
+                        <td>Отдельный holder</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Подключение AS21 → ESP32</h3>
+            <table class="connection-table">
+                <thead>
+                    <tr>
+                        <th>Выход AS21</th>
+                        <th>→ Куда</th>
+                        <th>Описание</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="pin">5V_OUT</span></td>
+                        <td>ESP32 <strong>VIN</strong></td>
+                        <td>Питает ESP32 + LCD (через VIN)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="pin">GND</span></td>
+                        <td>ESP32 <strong>GND</strong></td>
+                        <td>Общая земля</td>
+                    </tr>
+                    <tr>
+                        <td><span class="pin">BAT+ (raw)</span></td>
+                        <td>Делитель R1+R2 → <strong>D34</strong></td>
+                        <td>Прямое напряжение банки 3.0–4.2 В для ADC</td>
+                    </tr>
+                    <tr>
+                        <td><span class="pin">microUSB</span></td>
+                        <td>Зарядное 5 В</td>
+                        <td>Только для зарядки 18650 (не прошивка!)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="tip">
+                <strong>💡 Два USB на устройстве:</strong> microUSB на AS21 = зарядка батареи. USB-C на ESP32 DevKit = прошивка / Serial-консоль. Можно подключать оба одновременно.
+            </div>
+        </section>
+
+        <section class="card">
             <h2>🛒 Где купить компоненты</h2>
             <table class="connection-table">
                 <thead>
@@ -638,55 +775,69 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>ESP32 DevKit</td>
-                        <td>✅ Есть</td>
+                        <td>ESP32-WROOM-32 DevKit V1</td>
+                        <td>✅ Есть (DOIT)</td>
                         <td>✅ Чип и Дип, Амперка</td>
-                        <td>300-500 ₽</td>
+                        <td>400–700 ₽</td>
                     </tr>
                     <tr>
-                        <td>HX711 + тензодатчик 50кг</td>
+                        <td>HX711 + тензодатчик 50 кг</td>
                         <td>✅ Есть набор</td>
                         <td>✅ Чип и Дип</td>
-                        <td>400-700 ₽</td>
+                        <td>400–700 ₽</td>
                     </tr>
                     <tr>
-                        <td>LCD 1602 I2C</td>
+                        <td>LCD 1602 I²C (PCF8574, 0x27)</td>
                         <td>✅ Есть</td>
                         <td>✅ Амперка</td>
-                        <td>250-400 ₽</td>
+                        <td>250–400 ₽</td>
                     </tr>
                     <tr>
-                        <td>RTC DS3231</td>
+                        <td>RTC DS3231 + CR2032</td>
                         <td>✅ Есть</td>
                         <td>✅ Чип и Дип</td>
-                        <td>150-250 ₽</td>
+                        <td>150–250 ₽</td>
                     </tr>
                     <tr>
-                        <td>DHT22 / DS18B20</td>
+                        <td>DS18B20 в гильзе (1 м кабель)</td>
                         <td>✅ Есть</td>
                         <td>✅ Есть</td>
-                        <td>100-200 ₽</td>
+                        <td>150–250 ₽</td>
                     </tr>
                     <tr>
-                        <td>Li-Ion 18650</td>
+                        <td>AS21 V6.0 (TP4056+DW01+Boost)</td>
+                        <td>✅ Есть (искать «AS21 V6 18650»)</td>
+                        <td>⚠ Реже</td>
+                        <td>250–400 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>Li-Ion 18650 (Samsung INR/Sony VTC)</td>
                         <td>✅ Есть</td>
                         <td>✅ Есть</td>
-                        <td>200-500 ₽</td>
+                        <td>200–500 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>HT7333 SOT-89 (опционально)</td>
+                        <td>✅ Есть (10 шт ~200 ₽)</td>
+                        <td>⚠ Реже</td>
+                        <td>20–40 ₽/шт</td>
                     </tr>
                 </tbody>
             </table>
+            <div class="tip">
+                <strong>💰 Итого «полный комплект»:</strong> 2000–3500 ₽ за все детали (без корпуса). Это разовые расходы, дальше только электричество для зарядки.
+            </div>
         </section>
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.17</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
             <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
         </p>
     </footer>
 
     <script>
-        // Подсветка активной вкладки
         document.querySelectorAll('.nav-tab').forEach(tab => {
             if (tab.getAttribute('href') === window.location.pathname.split('/').pop()) {
                 tab.classList.add('active');

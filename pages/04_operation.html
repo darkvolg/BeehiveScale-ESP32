@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚙️ Эксплуатация — BeehiveScale v4.1</title>
+    <title>⚙️ Эксплуатация — BeehiveScale ESP32 v5.0.17</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -62,9 +62,6 @@
         .card h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.6em; }
         .card h3 { color: var(--info); margin: 20px 0 10px; }
 
-        .card.green::before { background: var(--success); }
-        .card.blue::before { background: var(--info); }
-
         .table {
             width: 100%; border-collapse: collapse; margin: 15px 0;
             background: var(--card-light); border-radius: 10px; overflow: hidden;
@@ -94,6 +91,7 @@
         }
         .step h4 { color: var(--text); margin-bottom: 10px; font-size: 1.2em; }
         .step p { color: var(--text-muted); }
+        .step ul { color: var(--text-muted); margin: 8px 0 0 20px; }
 
         .tip {
             background: rgba(111, 207, 151, 0.1); border-left: 4px solid var(--success);
@@ -102,6 +100,11 @@
 
         .warning {
             background: rgba(245, 166, 35, 0.1); border-left: 4px solid var(--primary);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
+        .danger {
+            background: rgba(235, 87, 87, 0.1); border-left: 4px solid var(--danger);
             padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
         }
 
@@ -115,18 +118,53 @@
         }
 
         .display-example {
-            background: #000; border: 3px solid #333; border-radius: 10px;
-            padding: 15px; font-family: 'Courier New', monospace;
-            text-align: center; margin: 15px 0;
+            background: #0a1a3a;
+            border: 3px solid #1a2a5a;
+            border-radius: 8px;
+            padding: 18px 22px;
+            font-family: 'Courier New', monospace;
+            display: inline-block;
+            margin: 10px 0;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 15px rgba(80,150,255,0.15);
         }
-        .display-example .line1 { color: var(--success); font-size: 1.3em; }
-        .display-example .line2 { color: var(--success); font-size: 1.1em; }
+        .display-example .line1, .display-example .line2 {
+            font-size: 1.2em;
+            color: #e8e8ff;
+            line-height: 1.7;
+            letter-spacing: 2px;
+            white-space: pre;
+            font-weight: bold;
+        }
+        .display-example .hl { color: #ffeb66; }
 
         .button-action {
-            display: inline-block; padding: 10px 20px;
+            display: inline-block; padding: 8px 16px;
             border: 2px solid var(--primary); border-radius: 8px;
-            color: var(--primary); font-weight: bold; margin: 5px;
+            color: var(--primary); font-weight: bold; margin: 3px;
+            font-size: 0.9em;
         }
+        .button-action.danger { border-color: var(--danger); color: var(--danger); }
+
+        .screen-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            margin-top: 15px;
+        }
+        .screen-card {
+            background: var(--card-light);
+            border-radius: 12px;
+            padding: 16px;
+            border-left: 4px solid var(--primary);
+        }
+        .screen-card .num {
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 6px;
+        }
+        .screen-card h4 { color: var(--text); margin-bottom: 8px; }
+        .screen-card .note { color: var(--text-muted); font-size: 0.88em; margin-top: 6px; }
 
         @media (max-width: 768px) {
             header h1 { font-size: 1.8em; }
@@ -148,7 +186,7 @@
 
         <header>
             <h1>⚙️ Эксплуатация</h1>
-            <p>Управление кнопками, экраны LCD, калибровка весов</p>
+            <p>Управление кнопками, 8 экранов LCD, калибровка, авто-сон, расписание</p>
         </header>
 
         <nav class="nav-tabs">
@@ -162,274 +200,365 @@
         </nav>
 
         <section class="card">
-            <h2>🔘 Управление кнопками</h2>
-            
-            <h3>Кнопка 1 (GPIO 0) — Основная</h3>
+            <h2>🔘 Управление кнопками (важно изменилось в v5!)</h2>
+            <div class="warning">
+                <strong>⚠️ Режимы кнопок переделаны:</strong> на ESP8266 v4.1 тара была «4 коротких нажатия MAIN». В v5 для защиты от случайных нажатий — <strong>3-секундное удержание MAIN</strong> + подтверждение через MENU=OK. Если ты привык к старой схеме — отвыкай.
+            </div>
+
+            <h3>Кнопка MAIN <span class="pin">D27 / GPIO27</span> (RTC GPIO ⚡)</h3>
             <table class="table">
                 <tr>
                     <th>Действие</th>
-                    <th>Описание</th>
+                    <th>Длительность</th>
                     <th>Результат</th>
                 </tr>
                 <tr>
-                    <td><span class="button-action">4 коротких</span></td>
-                    <td>4 нажатия в течение 3 сек</td>
-                    <td>Тарировка (обнуление веса)</td>
+                    <td><span class="button-action">Короткое нажатие</span></td>
+                    <td>&lt; 1 сек</td>
+                    <td><strong>Ничего</strong> (защита от случайного тарирования). Только зажигает LCD после wake.</td>
                 </tr>
                 <tr>
-                    <td><span class="button-action">Удержание 2 сек</span></td>
-                    <td>Длинное нажатие</td>
-                    <td>Калибровка с эталонным грузом</td>
+                    <td><span class="button-action">MEDIUM</span></td>
+                    <td>~3 сек</td>
+                    <td><strong>ТАРА</strong> — открывает диалог «Выполнить тару? MENU=OK». Если в течение 5 сек не нажать MENU — отмена.</td>
                 </tr>
                 <tr>
-                    <td><span class="button-action">Короткое (в меню)</span></td>
-                    <td>В режиме калибровки</td>
-                    <td>Переключение шага (10/1/0.1)</td>
+                    <td><span class="button-action danger">LONG</span></td>
+                    <td>~6 сек</td>
+                    <td><strong>КАЛИБРОВКА</strong> — мастер калибровки по эталонной гире (см. ниже).</td>
                 </tr>
                 <tr>
-                    <td><span class="button-action">Удержание (в меню)</span></td>
-                    <td>В режиме калибровки</td>
-                    <td>Сохранить калибровку</td>
+                    <td><span class="button-action">В режиме CF (Экран 7)</span></td>
+                    <td>короткое</td>
+                    <td>Сменить шаг подстройки: 10 → 1 → 0.1 → 10 ...</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">В режиме CF (Экран 7)</span></td>
+                    <td>длинное</td>
+                    <td>Сохранить CF в EEPROM и выйти</td>
                 </tr>
             </table>
 
-            <h3>Кнопка 2 (GPIO 2) — Меню</h3>
+            <h3>Кнопка MENU <span class="pin">D26 / GPIO26</span></h3>
             <table class="table">
                 <tr>
                     <th>Действие</th>
-                    <th>Описание</th>
+                    <th>Длительность</th>
                     <th>Результат</th>
                 </tr>
                 <tr>
-                    <td><span class="button-action">Одиночное</span></td>
-                    <td>Одно нажатие</td>
-                    <td>Переключение экрана меню</td>
+                    <td><span class="button-action">Короткое нажатие</span></td>
+                    <td>&lt; 1 сек</td>
+                    <td>Переключение между 8 экранами LCD по кругу.</td>
                 </tr>
                 <tr>
-                    <td><span class="button-action">Двойное</span></td>
-                    <td>2 нажатия &lt; 0.5 сек</td>
-                    <td>Отмена последней тарировки</td>
+                    <td><span class="button-action">Удержание</span></td>
+                    <td>~2.5 сек</td>
+                    <td><strong>OK</strong> — подтверждение в диалогах (после MAIN MEDIUM = тара). Из меню — возврат на Экран 1.</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">В режиме CF (Экран 7)</span></td>
+                    <td>короткое</td>
+                    <td>CF + шаг (увеличить)</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">В режиме CF (Экран 7)</span></td>
+                    <td>длинное</td>
+                    <td>CF − шаг (уменьшить)</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">Удержание 5 сек на Экране 1</span></td>
+                    <td>~5 сек</td>
+                    <td>Сброс Wi-Fi настроек на дефолт (AP-режим, BeehiveScale / 12345678)</td>
                 </tr>
             </table>
+
+            <div class="tip">
+                <strong>💡 Wake-press guard:</strong> сразу после пробуждения из deep sleep первое нажатие MAIN <em>не</em> открывает тару — оно только зажигает LCD. Это защита от случайного тарирования при выходе из сна.
+            </div>
         </section>
 
         <section class="card">
-            <h2>📟 Экраны LCD дисплея</h2>
-            <p>Нажимайте Кнопку 2 для переключения между экранами:</p>
+            <h2>📟 Экраны LCD (8 штук, переключение кнопкой MENU)</h2>
+            <p>В v5 добавлен <strong>Экран 8 — Диагностика</strong> (самотест железа). Остальные 7 экранов аналогичны v4.1, но содержимое чуть изменено.</p>
 
-            <h3>Экран 0: Вес</h3>
-            <div class="display-example">
-                <div class="line1">Ves: 45.32*kg</div>
-                <div class="line2">21.02.26 14:30  W</div>
-            </div>
-            <p><strong>*</strong> — стабильное показание (авто-фиксация)</p>
-            <p><strong>W</strong> — WiFi подключён</p>
+            <div class="screen-grid">
+                <div class="screen-card">
+                    <div class="num">Экран 1 — Вес и время</div>
+                    <div class="display-example">
+                        <div class="line1">Ves: <span class="hl">4.42</span>*kg  </div>
+                        <div class="line2">21:35:22       <span class="hl">W</span></div>
+                    </div>
+                    <div class="note">* = показания стабильны (для авто-фиксации). W = Wi-Fi OK.</div>
+                </div>
 
-            <h3>Экран 1: Температура</h3>
-            <div class="display-example">
-                <div class="line1">T: 25.3C R: 24.8C</div>
-                <div class="line2">H: 65.2 %</div>
-            </div>
-            <p><strong>T</strong> — температура улья (DHT22)</p>
-            <p><strong>R</strong> — температура RTC модуля</p>
-            <p><strong>H</strong> — влажность</p>
+                <div class="screen-card">
+                    <div class="num">Экран 2 — Дельта (Δ)</div>
+                    <div class="display-example">
+                        <div class="line1">D:<span class="hl">+0.34</span>kg   </div>
+                        <div class="line2">Pred:<span class="hl">4.08</span>kg </div>
+                    </div>
+                    <div class="note">D = текущий − зафиксированный эталон (prevWeight). Pred = эталон. Меняется кнопкой «📍 Зафиксировать» на сайте.</div>
+                </div>
 
-            <h3>Экран 2: Разница</h3>
-            <div class="display-example">
-                <div class="line1">D:+0.52kg</div>
-                <div class="line2">Prv:44.80kg</div>
-            </div>
-            <p><strong>D</strong> — разница с предыдущим весом</p>
-            <p><strong>Prv</strong> — предыдущее значение</p>
+                <div class="screen-card">
+                    <div class="num">Экран 3 — Батарея</div>
+                    <div class="display-example">
+                        <div class="line1">Bat:<span class="hl">3.85</span>V <span class="hl"> 78</span>%</div>
+                        <div class="line2">Li-Ion 1S       </div>
+                    </div>
+                    <div class="note">При &lt;10% — мигает «!LOW BATTERY!»</div>
+                </div>
 
-            <h3>Экран 3: Статус</h3>
-            <div class="display-example">
-                <div class="line1">CF:2280</div>
-                <div class="line2">W:OK N:15</div>
-            </div>
-            <p><strong>CF</strong> — калибровочный коэффициент</p>
-            <p><strong>W</strong> — WiFi статус (OK/--)</p>
-            <p><strong>N</strong> — счётчик пробуждений</p>
+                <div class="screen-card">
+                    <div class="num">Экран 4 — Температура</div>
+                    <div class="display-example">
+                        <div class="line1">T:<span class="hl">27.5</span>C R:<span class="hl">28.0</span>C</div>
+                        <div class="line2">H: --   (DS18) </div>
+                    </div>
+                    <div class="note">T = улей (DS18B20), R = воздух (RTC DS3231). Влажность не измеряется.</div>
+                </div>
 
-            <h3>Экран 4: Дата/время</h3>
-            <div class="display-example">
-                <div class="line1">21.02.26 14:30</div>
-                <div class="line2">RTC OK</div>
-            </div>
+                <div class="screen-card">
+                    <div class="num">Экран 5 — Дата и время</div>
+                    <div class="display-example">
+                        <div class="line1"><span class="hl">09.05.26 14:30</span></div>
+                        <div class="line2">RTC OK          </div>
+                    </div>
+                    <div class="note">«RTC ERROR!» = села CR2032, замени батарейку и синхронизируй NTP.</div>
+                </div>
 
-            <h3>Экран 5: Батарея</h3>
-            <div class="display-example">
-                <div class="line1">Bat:3.85V 75%</div>
-                <div class="line2">Li-Ion 1S</div>
-            </div>
-            <p>При &lt;10%: <code>!! LOW BATTERY !!</code></p>
+                <div class="screen-card">
+                    <div class="num">Экран 6 — Статус</div>
+                    <div class="display-example">
+                        <div class="line1">CF:<span class="hl">432167</span>    </div>
+                        <div class="line2">W:<span class="hl">OK</span>   N:<span class="hl">42</span>    </div>
+                    </div>
+                    <div class="note">CF = калибровочный коэффициент. N = пробуждений из сна (растёт при срабатывании расписания).</div>
+                </div>
 
-            <h3>Экран 6: Калибровка</h3>
-            <div class="display-example">
-                <div class="line1">CF:2280.0</div>
-                <div class="line2">MAIN=Vojti</div>
-            </div>
-            <p>Нажмите Кнопку 1 для входа в режим редактирования</p>
-        </section>
+                <div class="screen-card">
+                    <div class="num">Экран 7 — Меню калибровки</div>
+                    <div class="display-example">
+                        <div class="line1">CF:<span class="hl">432167.0</span>  </div>
+                        <div class="line2">MAIN=Vojti      </div>
+                    </div>
+                    <div class="note">MAIN = вход в режим ручной подстройки CF. Для опытных.</div>
+                </div>
 
-        <section class="card">
-            <h2>⚖️ Калибровка весов</h2>
-            
-            <h3>Автоматическая калибровка</h3>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Уберите груз</h4>
-                        <p>Убедитесь, что на весах ничего нет.</p>
+                <div class="screen-card" style="border-left-color:var(--success)">
+                    <div class="num" style="color:var(--success)">Экран 8 — Диагностика 🆕 v5</div>
+                    <div class="display-example">
+                        <div class="line1"><span class="hl">Diagnostika...</span></div>
+                        <div class="line2">HX711...    <span class="hl">OK</span></div>
                     </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Удерживайте Кнопку 1 (2 сек)</h4>
-                        <p>На экране появится: <code>Ubrat gruz!</code></p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Нажмите Кнопку 1</h4>
-                        <p>Происходит обнуление нуля.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Положите эталонный груз</h4>
-                        <p>По умолчанию 1 кг. На экране: <code>Polozh. 1 kg</code></p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Нажмите Кнопку 1</h4>
-                        <p>Устройство вычислит калибровочный коэффициент.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Дождитесь результата</h4>
-                        <p>На экране: <code>OK! Factor: XXXX.XXX</code></p>
-                    </div>
-                </div>
-            </div>
-
-            <h3>Ручная настройка калибровки</h3>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Перейдите на экран 6</h4>
-                        <p>Нажимайте Кнопку 2 до появления <code>CF:XXX.X</code></p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Нажмите Кнопку 1</h4>
-                        <p>Вход в режим редактирования.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Настройте коэффициент</h4>
-                        <p>
-                            <strong>Кнопка 1:</strong> шаг (10/1/0.1)<br>
-                            <strong>Кнопка 2 коротко:</strong> +шаг<br>
-                            <strong>Кнопка 2 долго:</strong> -шаг
-                        </p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Сохраните (Кнопка 1 долго)</h4>
-                        <p>Значение сохранится в EEPROM.</p>
-                    </div>
+                    <div class="note">Проходит самотест: HX711 / DS18B20 / RTC / Battery. Каждый компонент → OK или FAIL. MAIN = повторить тест.</div>
                 </div>
             </div>
 
             <div class="tip">
-                <strong>💡 Совет:</strong> Для точной калибровки используйте проверенный груз 
-                (гири, калибровочные веса). Дайте устройству прогреться 5-10 минут.
+                <strong>💡 LCD без мерцания:</strong> в v5 добавлен dirty-check кеш (рисуется только то, что изменилось) + I²C 400 kHz fast mode. Цифры веса больше не мигают при пересчёте.
             </div>
         </section>
 
         <section class="card">
-            <h2>🔄 Тарировка</h2>
-            
-            <h3>Быстрая тарировка</h3>
-            <p>4 быстрых нажатия Кнопки 1 → вес обнуляется.</p>
+            <h2>📊 Двойная дельта веса (новое в v5)</h2>
+            <p>В v5 теперь <strong>две</strong> точки отсчёта дельты — гибкость для пасечника:</p>
 
-            <h3>Отмена тарировки</h3>
-            <p>Двойное нажатие Кнопки 2 → восстанавливается предыдущий offset.</p>
+            <table class="table">
+                <tr>
+                    <th>Где видно</th>
+                    <th>Что считается</th>
+                    <th>Как сбросить</th>
+                </tr>
+                <tr>
+                    <td>📈 <strong>«С прошлого замера»</strong></td>
+                    <td>Δ от <code>lastReportWeight</code></td>
+                    <td>Авто после каждого Telegram-отчёта</td>
+                </tr>
+                <tr>
+                    <td>🎯 <strong>«От зафиксированной точки»</strong></td>
+                    <td>Δ от <code>prevWeight</code> + дата фиксации</td>
+                    <td>Только вручную: сайт → кнопка «📍 Зафиксировать»</td>
+                </tr>
+            </table>
 
-            <div class="warning">
-                <strong>⚠️ Важно:</strong> Перед тарировкой убедитесь, что на весах ничего нет!
+            <div class="tip">
+                <strong>💡 Пример сценария:</strong> поставил улей → нажал «📍 Зафиксировать» → началась запись эталона. Через неделю «От зафиксированной точки» покажет точный прирост мёда (например +3.2 кг с 02.05). Параллельно «С прошлого замера» показывает дневное изменение (например +0.34 кг с утра) для оперативного контроля.
+            </div>
+            <div class="tip">
+                <strong>💡 Эталон переживает reset</strong> — <code>prevWeight</code> + дата фиксации хранятся в EEPROM (адреса 30 + 313, magic 0xA9). Не теряется при перезагрузке/прошивке.
             </div>
         </section>
 
         <section class="card">
-            <h2>🚀 Первый запуск</h2>
-            
+            <h2>⚖️ Калибровка через кнопки (MAIN 6 сек)</h2>
+            <p>Делается <strong>один раз</strong> при сборке весов и потом раз в сезон. Понадобится <strong>гиря известного веса</strong>: 1 кг (5-литровая бутылка воды), лучше 5–10 кг под рабочий диапазон.</p>
+
             <div class="steps">
                 <div class="step">
                     <div class="step-content">
-                        <h4>Проверьте подключения</h4>
-                        <p>Убедитесь, что все компоненты подключены правильно.</p>
+                        <h4>Снять нагрузку с платформы</h4>
+                        <p>Платформа должна быть пустой и горизонтальной.</p>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-content">
-                        <h4>Подайте питание</h4>
-                        <p>Подключите батарею или USB питание.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Дождитесь приветствия</h4>
+                        <h4>Запустить калибровку: зажать MAIN</h4>
+                        <p>Через 3 сек на LCD: «Otpust = TARA!» — НЕ отпускай. Через 6 сек сменится на «Otpust = KALIBR» — теперь отпускай.</p>
                         <div class="display-example">
-                            <div class="line1">Vesy Pchelovod</div>
-                            <div class="line2">Versiya 4.1</div>
+                            <div class="line1">Ubrat gruz!     </div>
+                            <div class="line2">Zhmi knopku...  </div>
                         </div>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-content">
-                        <h4>Проверьте WiFi</h4>
-                        <p>
-                            <strong>AP режим:</strong> Найдите сеть <code>BeehiveScale</code><br>
-                            <strong>STA режим:</strong> Проверьте IP в Serial мониторе
-                        </p>
+                        <h4>Нажать MENU — тара пустых весов</h4>
+                        <div class="display-example">
+                            <div class="line1">Postav gruz     </div>
+                            <div class="line2">Zhmi knopku...  </div>
+                        </div>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-content">
-                        <h4>Откалибруйте весы</h4>
-                        <p>Следуйте инструкции по калибровке выше.</p>
+                        <h4>Положить эталонный груз</h4>
+                        <p>Поставь гирю на платформу, подожди 2–3 сек чтобы показания устаканились.</p>
                     </div>
                 </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Нажать MENU — сохранить</h4>
+                        <div class="display-example">
+                            <div class="line1">OK! Factor:     </div>
+                            <div class="line2"><span class="hl">432167</span>          </div>
+                        </div>
+                        <p style="margin-top:8px">Калибровочный коэффициент сохраняется в EEPROM навсегда.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip">
+                <strong>💡 Удобнее через сайт:</strong> зайди на <code>192.168.4.1</code> → вкладка «Калибровка». Поставь гирю, в поле введи её точный вес (например, 5.0) и нажми «Сохранить» — без танцев с кнопками. Можно с любым весом.
+            </div>
+            <div class="warning">
+                <strong>⚠️ Не калибруй в улье:</strong> пчёлы летают, машут крыльями — это вибрация, портит точность. Калибровать в гараже на ровной поверхности.
             </div>
         </section>
 
         <section class="card">
-            <h2>📊 Авто-фиксация стабильных показаний</h2>
-            <p>Устройство автоматически фиксирует стабильные показания веса:</p>
-            <ul style="margin-left: 20px; margin-top: 10px;">
-                <li>Если вес не меняется в течение ~3 секунд → фиксируется</li>
-                <li>На экране появляется звёздочка <code>*</code></li>
-                <li>Значение сохраняется в EEPROM</li>
-            </ul>
+            <h2>💤 Авто-сон (Deep Sleep)</h2>
+            <p>После 3 минут бездействия (никто не нажимает кнопки и не открывает сайт) — автоматический переход в глубокий сон. Это даёт автономию <strong>30–40 дней</strong> на одной зарядке 18650.</p>
+
+            <div class="steps">
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Sleep guard 60 сек</h4>
+                        <p>Если до следующего срабатывания расписания меньше 60 сек, ESP32 не уходит в сон (избегаем цикла «проснулся-уснул»).</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Запись лога и отключение питания периферии</h4>
+                        <p>Лог пишется в LittleFS. <code>lastReportWeight</code>, <code>lastTempC</code>, эталон сохраняются в EEPROM. Wi-Fi и LCD отключаются. HX711 → power_down (1.5 мА → 1 мкА).</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Пробуждение — несколько способов</h4>
+                        <ul>
+                            <li>По <b>таймеру ESP32</b> (расписание) → новый замер + Telegram-отчёт. Это основной способ в v5.0.17</li>
+                            <li>По кнопке MAIN (D27 — RTC GPIO) — ручное пробуждение</li>
+                            <li>Кнопкой RST на плате (полная перезагрузка, теряется RTC RAM)</li>
+                            <li><span style="opacity:0.7">По alarm DS3231 (D33 — RTC GPIO) — <b>опц., задел на P3</b>. Сейчас не задействовано в коде, провод для будущего</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Кнопка ☕ Продлить +10 мин (на сайте)</h3>
+            <p>На главной странице сайта есть кнопка «Продлить +10 мин» — отодвигает auto-sleep если ты сидишь и смотришь графики. В <code>/api/data</code> приходит поле <code>keepLeftSec</code> с обратным отсчётом до сна.</p>
 
             <div class="tip">
-                <strong>💡 Совет:</strong> Установите устройство на стабильную поверхность 
-                вдали от вибраций и ветра для точных показаний.
+                <strong>💡 Настройка авто-сна:</strong> через сайт «Настройки → Авто-сон» — диапазон 0…600 сек. По умолчанию 180 сек (3 мин). 0 = не засыпать (отладка).
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>⏰ Расписание замеров (новое в v5)</h2>
+            <p>ESP32 умеет <strong>просыпаться по расписанию</strong>, делать замер, слать отчёт в Telegram и снова уходить в сон. Подробности — на странице <a href="05_web.html" style="color:var(--info)">«Веб-интерфейс»</a>.</p>
+
+            <div class="steps">
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Зайти на сайт → раздел «Расписание»</h4>
+                        <p>Подключись к Wi-Fi <code>BeehiveScale</code>, открой <code>192.168.4.1</code>, выбери «Расписание».</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Выбрать время замера</h4>
+                        <p>Например, 09:00 (утренний) и 21:00 (вечерний). Можно одно время, можно несколько.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h4>ESP32 рассчитает alarm и уйдёт в сон</h4>
+                        <p>DS3231 пробудит ESP32 ровно в назначенное время. Замер → Telegram-отчёт → снова в сон.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Проверить</h4>
+                        <p>На Экране 6 счётчик пробуждений N будет расти после каждого срабатывания. В логе сайта появится новая строка.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ Если время в DS3231 неправильное</strong> — расписание не сработает. Сначала синхронизируй через сайт: «Настройки → Часы → Sync NTP» (нужен интернет, режим STA).
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🔋 Энергопотребление</h2>
+            <table class="table">
+                <tr><th>Состояние</th><th>Ток</th><th>Длительность за день</th></tr>
+                <tr>
+                    <td>Active + Wi-Fi (отчёт TG)</td>
+                    <td>80–90 мА</td>
+                    <td>~30 сек × 2 раза = 1 мин/день</td>
+                </tr>
+                <tr>
+                    <td>Active без Wi-Fi (после отчёта)</td>
+                    <td>30–50 мА</td>
+                    <td>~3 мин до auto-sleep × 2 = 6 мин/день</td>
+                </tr>
+                <tr>
+                    <td><strong>Deep sleep с штатным AMS1117</strong></td>
+                    <td><strong>~7 мА</strong></td>
+                    <td>~23.5 ч/день — основной потребитель</td>
+                </tr>
+                <tr>
+                    <td>Deep sleep после замены LDO на HT7333</td>
+                    <td>~3 мА</td>
+                    <td>планируется доводка</td>
+                </tr>
+            </table>
+            <p style="margin-top:15px;color:var(--text-muted)">Сейчас (с AMS1117) автономия <strong>~12 дней</strong> на одной зарядке 18650 (3000 мА·ч × ~70% usable). После замены LDO на HT7333 — <strong>30–40 дней</strong>.</p>
+
+            <div class="tip">
+                <strong>💡 Доводка: HT7333</strong> — замена SOT-89 LDO опустит ток в спячке с ~7 до ~3 мА. Корпус совместим с AMS1117, перепайка ~2 минуты.
             </div>
         </section>
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.17</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
-            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
+            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a> ·
+            <a href="05_web.html" style="color: var(--primary);">Дальше: Веб-интерфейс →</a>
         </p>
     </footer>
 

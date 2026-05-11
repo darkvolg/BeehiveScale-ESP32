@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌐 Веб-интерфейс — BeehiveScale v4.1</title>
+    <title>🌐 Веб-интерфейс — BeehiveScale ESP32 v5.0.17</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -77,6 +77,7 @@
         }
         .table td { padding: 12px; border-bottom: 1px solid var(--border); }
         .table tr:hover { background: rgba(245, 166, 35, 0.05); }
+        .table code { background: #0a0a0a; padding: 2px 6px; border-radius: 3px; color: var(--primary); font-size: 0.9em; }
 
         .code-block {
             background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px;
@@ -112,6 +113,11 @@
             padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
         }
 
+        .danger {
+            background: rgba(235, 87, 87, 0.1); border-left: 4px solid var(--danger);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
         .info-box {
             background: rgba(86, 204, 242, 0.1); border-left: 4px solid var(--info);
             padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
@@ -138,6 +144,17 @@
             font-family: 'Courier New', monospace; color: var(--text);
         }
 
+        .creds {
+            display: inline-block;
+            background: var(--card-light);
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            padding: 4px 12px;
+            font-family: 'Courier New', monospace;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
         footer {
             text-align: center; padding: 30px; color: var(--text-muted);
             border-top: 1px solid var(--border); margin-top: 40px;
@@ -161,7 +178,7 @@
 
         <header>
             <h1>🌐 Веб-интерфейс</h1>
-            <p>Управление и мониторинг через браузер</p>
+            <p>Управление и мониторинг через браузер — мобильная вёрстка, графики, REST API</p>
         </header>
 
         <nav class="nav-tabs">
@@ -175,297 +192,392 @@
         </nav>
 
         <section class="card">
-            <h2>🔌 Доступ к веб-интерфейсу</h2>
-            
-            <h3>Шаг 1: Подключитесь к WiFi</h3>
-            <div class="info-box">
-                <strong>AP режим (точка доступа):</strong>
-                <ul style="margin-top: 10px; margin-left: 20px;">
-                    <li>Найдите сеть <strong><code>BeehiveScale</code></strong></li>
-                    <li>Пароль: <strong><code>12345678</code></strong></li>
-                </ul>
-            </div>
-            <div class="info-box">
-                <strong>STA режим (роутер):</strong>
-                <ul style="margin-top: 10px; margin-left: 20px;">
-                    <li>Устройство подключится к вашему роутеру</li>
-                    <li>IP адрес можно узнать из Serial монитора или роутера</li>
-                </ul>
-            </div>
+            <h2>🚀 Как зайти на сайт</h2>
+            <p>В режиме AP (по умолчанию) ESP32 поднимает свою Wi-Fi сеть. Подключайся с телефона/ноутбука и открывай браузер:</p>
 
-            <h3>Шаг 2: Откройте браузер</h3>
-            <div class="api-endpoint" style="border-color: var(--success);">
-                <p style="color: var(--text); margin-bottom: 10px;">
-                    <strong>AP режим:</strong> <code style="color: var(--success);">http://192.168.4.1</code>
-                </p>
-                <p style="color: var(--text);">
-                    <strong>STA режим:</strong> <code style="color: var(--success);">http://[IP_устройства]</code>
-                </p>
-            </div>
+            <table class="table">
+                <tr><th>Параметр</th><th>Значение</th></tr>
+                <tr><td>Wi-Fi сеть (SSID)</td><td><span class="creds">BeehiveScale</span></td></tr>
+                <tr><td>Пароль Wi-Fi</td><td><span class="creds">12345678</span></td></tr>
+                <tr><td>IP адрес панели</td><td><span class="creds">http://192.168.4.1</span></td></tr>
+                <tr><td>Логин админки</td><td><span class="creds">admin</span></td></tr>
+                <tr><td>Пароль админки</td><td><span class="creds">beehive</span></td></tr>
+            </table>
 
-            <h3>Шаг 3: Авторизация</h3>
-            <div class="table" style="max-width: 500px;">
-                <table>
-                    <tr><th>Логин</th><td><code>admin</code></td></tr>
-                    <tr><th>Пароль</th><td><code>beehive</code></td></tr>
-                </table>
+            <div class="warning">
+                <strong>⚠️ Сразу смени пароль!</strong> После первого входа открой раздел «Wi-Fi → Пароли и доступ» и поставь свой пароль для admin (и желательно сменить пароль AP на не-дефолтный).
+            </div>
+            <div class="tip">
+                <strong>💡 Режим STA (домашний роутер):</strong> в разделе «Wi-Fi» можно переключить ESP32 на подключение к домашнему роутеру. Тогда сайт открывается с любого устройства в твоей сети по IP-адресу из роутера. Удобно когда улей рядом с домом — не нужно каждый раз переключать Wi-Fi.
             </div>
         </section>
 
         <section class="card">
-            <h2>📊 Главная панель</h2>
-            <p>Веб-интерфейс автоматически обновляется каждые 5 секунд.</p>
-            
+            <h2>✨ Что нового в веб-панели v5</h2>
             <div class="feature-grid">
                 <div class="feature">
+                    <div class="feature-icon">📊</div>
+                    <h4>Графики с тач-курсором</h4>
+                    <p>Палец/мышь по графику веса — в реальном времени видишь значение в точке. Работает на тачскрине телефона.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📍</div>
+                    <h4>Зафиксировать с датой</h4>
+                    <p>Кнопка «📍 Зафиксировать» сохраняет эталон + дату фиксации. Дельта показывается в формате «От зафикс. точки (3 дн назад)».</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">☕</div>
+                    <h4>Продлить +10 мин</h4>
+                    <p>Отодвигает auto-sleep на 10 минут — пока ты сидишь и смотришь графики ESP32 не уснёт.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📱</div>
+                    <h4>Мобильная вёрстка</h4>
+                    <p>Респонсив дизайн — нормально читается на телефоне. Большие кнопки для пальца.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⏰</div>
+                    <h4>Расписание</h4>
+                    <p>Время автоматических замеров и Telegram-отчётов настраивается прямо с сайта (например 09:00 + 21:00).</p>
+                </div>
+                <div class="feature">
                     <div class="feature-icon">⚖️</div>
-                    <h4>Текущий вес</h4>
-                    <p>Вес в реальном времени, предыдущее значение, разница (привес)</p>
+                    <h4>Калибровка через сайт</h4>
+                    <p>Поставь любую гирю, введи её точный вес, нажми «Сохранить» — без танцев с кнопками.</p>
                 </div>
                 <div class="feature">
-                    <div class="feature-icon">🌡️</div>
-                    <h4>Температура</h4>
-                    <p>Температура улья, влажность, температура RTC</p>
+                    <div class="feature-icon">💾</div>
+                    <h4>Backup настроек</h4>
+                    <p>Скачать/восстановить все настройки в JSON. Удобно при замене ESP32 или массовой настройке нескольких ульев.</p>
                 </div>
                 <div class="feature">
-                    <div class="feature-icon">📡</div>
-                    <h4>Статус системы</h4>
-                    <p>Датчик, WiFi, калибровка, батарея, пробуждения</p>
+                    <div class="feature-icon">🚀</div>
+                    <h4>Быстрая загрузка</h4>
+                    <p>HTML отдаётся чанками по 4 КБ + кеш статистики SD. Страница открывается мгновенно.</p>
                 </div>
-                <div class="feature">
-                    <div class="feature-icon">🕐</div>
-                    <h4>Дата и время</h4>
-                    <p>Время RTC модуля и uptime устройства</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="card green">
-            <h2>🔧 Доступные действия</h2>
-            
-            <table class="table">
-                <tr>
-                    <th>Кнопка</th>
-                    <th>Действие</th>
-                    <th>Описание</th>
-                </tr>
-                <tr>
-                    <td style="color: var(--primary);">⚖ Тарировка</td>
-                    <td>Обнуление веса</td>
-                    <td>Сбрасывает текущий вес в ноль (уберите груз перед нажатием!)</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--success);">💾 Сохранить эталон</td>
-                    <td>Фиксация веса</td>
-                    <td>Запоминает текущий вес как базовый для расчёта привеса</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--info);">🕐 NTP Время</td>
-                    <td>Синхронизация</td>
-                    <td>Синхронизирует время через интернет (только STA режим)</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--danger);">↺ Перезагрузить</td>
-                    <td>Рестарт ESP32</td>
-                    <td>Перезагружает устройство</td>
-                </tr>
-            </table>
-        </section>
-
-        <section class="card blue">
-            <h2>⚙️ Быстрые настройки</h2>
-            <p>Изменяйте параметры без перепрошивки:</p>
-            
-            <table class="table">
-                <tr>
-                    <th>Параметр</th>
-                    <th>Диапазон</th>
-                    <th>Описание</th>
-                </tr>
-                <tr>
-                    <td><strong>Порог тревоги Telegram</strong></td>
-                    <td>0.1 — 10.0 кг</td>
-                    <td>Изменение веса для отправки уведомления</td>
-                </tr>
-                <tr>
-                    <td><strong>Эталонный груз</strong></td>
-                    <td>100 — 5000 г</td>
-                    <td>Вес груза для автоматической калибровки</td>
-                </tr>
-                <tr>
-                    <td><strong>EMA сглаживание</strong></td>
-                    <td>0.05 — 0.9</td>
-                    <td>Коэффициент фильтра показаний веса</td>
-                </tr>
-            </table>
-
-            <div class="tip" style="margin-top: 20px;">
-                <strong>💡 Совет:</strong> Нажмите «Сохранить» после изменения настроек. 
-                Значения сохраняются в EEPROM и сохраняются после перезагрузки.
             </div>
         </section>
 
         <section class="card">
-            <h2>🔌 REST API</h2>
-            <p>Для интеграции с внешними системами:</p>
+            <h2>📑 Разделы сайта</h2>
+            <table class="table">
+                <tr><th>Раздел</th><th>Что делает</th></tr>
+                <tr>
+                    <td><strong>Главная</strong></td>
+                    <td>Текущий вес, температура (DS18B20 + RTC), батарея, дата/время. Кнопки: «Тара», «📍 Зафиксировать эталон», «☕ Продлить +10 мин», «Отменить тару».</td>
+                </tr>
+                <tr>
+                    <td><strong>График</strong></td>
+                    <td>Кривая веса/температуры по дням и неделям. <strong>Тач-курсор:</strong> палец/мышь по графику — значение в точке. Полноэкранный режим: <code>/chart</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Лог</strong></td>
+                    <td>Все замеры таблицей. Скачать CSV для Excel. Очистка лога.</td>
+                </tr>
+                <tr>
+                    <td><strong>Настройки</strong></td>
+                    <td>EMA-сглаживание, авто-сон, опасные пороги, dead-band нуля, sync NTP.</td>
+                </tr>
+                <tr>
+                    <td><strong>Калибровка</strong></td>
+                    <td>Точная калибровка по гире (без танцев с кнопками — поставь груз, введи вес, сохрани).</td>
+                </tr>
+                <tr>
+                    <td><strong>📅 Архив</strong> <span style="color:var(--success)">🆕 v5.0.16</span></td>
+                    <td>История замеров за выбранный период (Сегодня / 3 дня / Неделя / Месяц / Всё / <b>С прошлого визита</b> 🆕 v5.0.17 / произвольный диапазон). Лента дней с маркерами аномалий (🔴 при падении больше alert_delta). Скачивание CSV за период.</td>
+                </tr>
+                <tr>
+                    <td><strong>Расписание</strong> 🆕</td>
+                    <td>Время автоматических замеров и Telegram-отчётов. Можно несколько слотов.</td>
+                </tr>
+                <tr>
+                    <td><strong>Telegram</strong> 🆕</td>
+                    <td>Token бота, chat_id, тестовое сообщение. Подробности — на странице <a href="06_telegram.html" style="color:var(--info)">«Telegram»</a>.</td>
+                </tr>
+                <tr>
+                    <td><strong>Wi-Fi</strong> 🆕</td>
+                    <td>Режим (AP/STA), SSID домашнего роутера, пароли (AP / admin / OTA).</td>
+                </tr>
+                <tr>
+                    <td><strong>Backup</strong> 🆕</td>
+                    <td>Скачать/восстановить настройки в JSON. Удобно при массовой настройке ульев.</td>
+                </tr>
+                <tr>
+                    <td><strong>📲 PWA</strong> <span style="color:var(--success)">🆕 v5.0.16</span></td>
+                    <td>Установка сайта как приложение на главный экран телефона. Android (Chrome → меню → «Установить») или iOS (Safari → Поделиться → «На экран Домой»). Открывается в полноэкранном режиме, иконка пчелы, offline-кеш страницы.</td>
+                </tr>
+            </table>
+        </section>
+
+        <section class="card">
+            <h2>📲 PWA — установка на главный экран</h2>
+            <p>С v5.0.16 сайт поддерживает Progressive Web App. На сайте есть <code>/manifest.json</code>, <code>/sw.js</code> (service-worker), <code>/icon.svg</code> (SVG-иконка пчелы), <code>apple-mobile-web-app-*</code> meta-теги.</p>
+            <h3>Что даёт PWA</h3>
+            <ul style="margin-left:20px;color:var(--text-muted);line-height:1.8">
+                <li>Иконка пчелы на главном экране телефона — один тап → весы</li>
+                <li>Полноэкранный режим без адресной строки</li>
+                <li>Offline-страница работает даже если ESP32 недоступна (последние данные из кеша)</li>
+                <li>Theme-color #f5a623 (медовый) в системных панелях</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <h2>📅 Вкладка Архив (v5.0.16+)</h2>
+            <p>История замеров за период с пресетами и аномалиями. Главная фишка v5.0.17 — пресет <b>«↩ С прошлого визита»</b>: автоматически выбирает диапазон с момента твоего последнего открытия сайта.</p>
+            <h3>Пресеты</h3>
+            <ul style="margin-left:20px;color:var(--text-muted);line-height:1.8">
+                <li><b>Сегодня</b> · <b>3 дня</b> · <b>Неделя</b> · <b>Месяц</b> · <b>Всё</b> — скользящие окна</li>
+                <li><b>↩ С прошлого визита</b> 🆕 v5.0.17 — авто от <code>/api/last-visit</code> timestamp (EEPROM addr 331-336)</li>
+                <li>Date-range — произвольный диапазон через два календарика</li>
+            </ul>
+            <h3>Что в архиве</h3>
+            <ul style="margin-left:20px;color:var(--text-muted);line-height:1.8">
+                <li>Сводка периода: Δ веса, кол-во записей, разбивка по дням</li>
+                <li>Лента дней — карточка на день с месячными группировками</li>
+                <li>🔴 Маркер аномалии — если падение веса > alert_delta</li>
+                <li>Скачать CSV за период (стриминг)</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <h2>🔌 REST API эндпоинты</h2>
+            <p>Сайт использует JSON API — можно дёргать из своих скриптов / Home Assistant.</p>
+
+            <h3>📊 Данные и управление весами</h3>
 
             <div class="api-endpoint">
-                <span class="api-method get">GET</span>
-                <span class="api-url">/api/data</span>
-                <p style="margin-top: 10px; color: var(--text-muted);">
-                    Возвращает все показания в формате JSON
-                </p>
+                <span class="api-method get">GET</span><span class="api-url">/api/data</span>
+                <p style="margin-top:8px">JSON с текущими данными: вес, температура, батарея, время, статус Wi-Fi, <code>keepLeftSec</code> (до auto-sleep) и т.д.</p>
             </div>
 
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/tare</span>
+                <p style="margin-top:8px">Тарировать весы (обнулить).</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/save</span>
+                <p style="margin-top:8px">«📍 Зафиксировать» — сохранить текущий вес как эталон + дату.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/keepalive</span>
+                <p style="margin-top:8px">«☕ Продлить +10 мин» — отодвигает auto-sleep.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/settings</span>
+                <p style="margin-top:8px">Применить настройки: <code>emaAlpha</code>, <code>alertDelta</code>, <code>calibWeight</code>, <code>autoSleepSec</code>.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/calib/set</span>
+                <p style="margin-top:8px">🆕 Точная калибровка через сайт. Параметры: <code>knownWeightKg</code>.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/ntp</span>
+                <p style="margin-top:8px">Синхронизировать DS3231 с NTP (нужен режим STA + интернет).</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/reboot</span>
+                <p style="margin-top:8px">Перезагрузка ESP32.</p>
+            </div>
+
+            <h3>📜 Лог замеров (LittleFS)</h3>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/api/log</span>
+                <p style="margin-top:8px">Скачать CSV-лог из LittleFS. Поля: <code>datetime,weight_kg,temp_c,bat_v,bat_pct</code>.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/api/log/json</span>
+                <p style="margin-top:8px">🆕 JSON-лог для графика (с throttle 30 сек на сервере, чтобы не нагружать).</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/log/clear</span>
+                <p style="margin-top:8px">Очистить лог.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/api/daystat</span>
+                <p style="margin-top:8px">🆕 Дневная статистика (мин/макс/среднее веса).</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/api/period?from=YYYY-MM-DD&to=YYYY-MM-DD</span>
+                <p style="margin-top:8px"><strong style="color:var(--success)">🆕 v5.0.16</strong> JSON-стрим записей за произвольный период. Используется вкладкой 📅 Архив. Поля: datetime, weight_kg, temp_c, bat_v, bat_pct.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/api/log?from=YYYY-MM-DD&to=YYYY-MM-DD</span>
+                <p style="margin-top:8px"><strong style="color:var(--success)">🆕 v5.0.16</strong> CSV за диапазон дат (стриминг). Старый формат <code>?date=YYYY-MM-DD</code> совместим.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/api/last-visit</span>
+                <p style="margin-top:8px"><strong style="color:var(--success)">🆕 v5.0.17</strong> Timestamp прошлого открытия сайта (Unix). Для пресета «↩ С прошлого визита» в Архиве. Первый вызов за boot возвращает старое значение из EEPROM и обновляет на «сейчас» (если прошло >1 часа). Последующие в той же сессии — кешированное значение.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/archive</span>
+                <p style="margin-top:8px"><strong style="color:var(--success)">🆕 v5.0.16</strong> Alias на главный SPA. Удобно для прямой ссылки на вкладку Архив (закладки браузера).</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/manifest.json</span>
+                <p style="margin-top:8px"><strong style="color:var(--success)">🆕 v5.0.16</strong> PWA-манифест: name, short_name, icons, theme_color #f5a623, display standalone.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/sw.js</span>
+                <p style="margin-top:8px"><strong style="color:var(--success)">🆕 v5.0.16</strong> Service-worker для PWA. Кеширует HTML и иконку для offline-доступа. API-запросы всегда идут в сеть.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/icon.svg</span>
+                <p style="margin-top:8px"><strong style="color:var(--success)">🆕 v5.0.16</strong> SVG-иконка пчелы с ульем для PWA. Масштабируется без потерь.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/chart</span>
+                <p style="margin-top:8px">🆕 Полноэкранная страница графика с тач-курсором.</p>
+            </div>
+
+            <h3>📱 Telegram</h3>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/tg/settings</span>
+                <p style="margin-top:8px">🆕 Сохранить Telegram <code>token</code> + <code>chat_id</code>.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/tg/test</span>
+                <p style="margin-top:8px">🆕 Отправить тестовое сообщение через CF Worker.</p>
+            </div>
+
+            <h3>📶 Wi-Fi и доступ</h3>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/wifi/settings</span>
+                <p style="margin-top:8px">🆕 Сменить режим (AP/STA), SSID/пароль домашнего роутера, пароль AP.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/auth/password</span>
+                <p style="margin-top:8px">🆕 Сменить пароль admin для входа в веб-панель.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/auth/ota</span>
+                <p style="margin-top:8px">🆕 Сменить пароль OTA (для будущей прошивки по воздуху).</p>
+            </div>
+
+            <h3>💾 Backup</h3>
+
+            <div class="api-endpoint">
+                <span class="api-method get">GET</span><span class="api-url">/api/backup</span>
+                <p style="margin-top:8px">🆕 Скачать backup всех настроек (JSON): EEPROM, Wi-Fi, Telegram, расписание.</p>
+            </div>
+
+            <div class="api-endpoint">
+                <span class="api-method post">POST</span><span class="api-url">/api/backup/restore</span>
+                <p style="margin-top:8px">🆕 Восстановить настройки из ранее скачанного backup.</p>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📦 Пример ответа /api/data</h2>
             <div class="code-block">
                 <code>{
-  "weight": 45.67,
-  "ref": 44.50,
-  "prev": 45.20,
-  "temp": 25.3,
-  "hum": 65.2,
-  "rtcT": 24.8,
-  "sensor": true,
-  "wifi": true,
-  "datetime": "21.02.26 14:30",
-  "uptime": "0d 02:15:30",
-  "wakeups": 15,
-  "cf": 2280.00,
-  "offset": -12345,
-  "batV": 3.85,
-  "batPct": 75,
-  "heap": 150000
+  "weight": 4.42,                          // кг (после EMA + dead-band)
+  "prevWeight": 4.08,                      // зафиксированный эталон
+  "prevWeightDate": "2026-05-05 23:04",    // дата фиксации эталона
+  "lastReportWeight": 4.40,                // вес последнего TG-отчёта
+  "tempC": 27.5,                           // улей (DS18B20)
+  "rtcTempC": 28.0,                        // воздух (RTC DS3231)
+  "batV": 3.85,                            // напряжение батареи
+  "batPct": 78,                            // % заряда (3.0 В = 0%, 4.2 В = 100%)
+  "datetime": "2026-05-09 14:30:22",       // время DS3231
+  "wifiOk": true,                          // подключён к роутеру (STA) или AP активен
+  "keepLeftSec": 540,                      // секунд до auto-sleep
+  "uptimeSec": 1234,                       // время работы с последнего пробуждения
+  "wakeCount": 42,                         // счётчик пробуждений (Экран 6)
+  "calibrationFactor": 432167.0,           // коэффициент калибровки HX711
+  "fwVersion": "5.0.15"
 }</code>
             </div>
-
-            <div class="api-endpoint">
-                <span class="api-method post">POST</span>
-                <span class="api-url">/api/tare</span>
-                <p style="margin-top: 10px; color: var(--text-muted);">
-                    Выполнить тарировку (обнуление веса)
-                </p>
-            </div>
-
-            <div class="api-endpoint">
-                <span class="api-method post">POST</span>
-                <span class="api-url">/api/save</span>
-                <p style="margin-top: 10px; color: var(--text-muted);">
-                    Сохранить текущий вес как эталон
-                </p>
-            </div>
-
-            <div class="api-endpoint">
-                <span class="api-method post">POST</span>
-                <span class="api-url">/api/settings</span>
-                <p style="margin-top: 10px; color: var(--text-muted);">
-                    Изменить настройки (JSON body)
-                </p>
-                <div class="code-block" style="margin-top: 10px;">
-                    <code>{
-  "alertDelta": 0.5,
-  "calibWeight": 1000,
-  "emaAlpha": 0.2
-}</code>
-                </div>
-            </div>
-
-            <div class="api-endpoint">
-                <span class="api-method post">POST</span>
-                <span class="api-url">/api/ntp</span>
-                <p style="margin-top: 10px; color: var(--text-muted);">
-                    Синхронизировать время NTP (только STA)
-                </p>
-            </div>
-
-            <div class="api-endpoint">
-                <span class="api-method post">POST</span>
-                <span class="api-url">/api/reboot</span>
-                <p style="margin-top: 10px; color: var(--text-muted);">
-                    Перезагрузить устройство
-                </p>
+            <div class="tip">
+                <strong>💡 Интеграция в Home Assistant:</strong> можно сделать REST sensor с URL <code>http://192.168.4.X/api/data</code> — и все поля доступны как entities в HA. Подходит для дашбордов и автоматизаций.
             </div>
         </section>
 
         <section class="card">
-            <h2>📱 Примеры использования API</h2>
-            
-            <h3>JavaScript (fetch)</h3>
-            <div class="code-block">
-                <code><span class="code-comment">// Получить данные</span>
-fetch(<span class="code-string">'/api/data'</span>)
-  .then(r => r.json())
-  .then(d => console.log(<span class="code-string">'Weight:'</span>, d.weight));
+            <h2>📊 График веса с тач-курсором</h2>
+            <p>На странице «График» (или <code>/chart</code> для полноэкранного режима) — интерактивная кривая веса по времени:</p>
 
-<span class="code-comment">// Тарировка</span>
-fetch(<span class="code-string">'/api/tare'</span>, {method: <span class="code-string">'POST'</span>})
-  .then(r => r.json())
-  .then(d => console.log(d.msg));
+            <ul style="margin-left:20px;color:var(--text-muted)">
+                <li><strong>Палец / мышь по графику</strong> → курсор показывает значение в точке (вес и время)</li>
+                <li><strong>Зелёная линия</strong> = вес. <strong>Оранжевая</strong> = температура улья (DS18B20)</li>
+                <li><strong>Точки фиксации эталона</strong> отмечены вертикальной линией</li>
+                <li>Период: 1 день / 7 дней / 30 дней — переключатель сверху</li>
+                <li>Данные подгружаются с throttle 30 сек чтобы не грузить ESP32</li>
+            </ul>
 
-<span class="code-comment">// Изменить настройки</span>
-fetch(<span class="code-string">'/api/settings'</span>, {
-  method: <span class="code-string">'POST'</span>,
-  headers: {<span class="code-string">'Content-Type'</span>: <span class="code-string">'application/json'</span>},
-  body: JSON.stringify({alertDelta: 0.3})
-});</code>
-            </div>
-
-            <h3>Python (requests)</h3>
-            <div class="code-block">
-                <code><span class="code-keyword">import</span> requests
-
-<span class="code-comment"># Получить данные</span>
-r = requests.get(<span class="code-string">'http://192.168.4.1/api/data'</span>, 
-                 auth=(<span class="code-string">'admin'</span>, <span class="code-string">'beehive'</span>))
-data = r.json()
-print(<span class="code-string">f"Weight: {data['weight']} kg"</span>)
-
-<span class="code-comment"># Тарировка</span>
-requests.post(<span class="code-string">'http://192.168.4.1/api/tare'</span>,
-              auth=(<span class="code-string">'admin'</span>, <span class="code-string">'beehive'</span>))
-
-<span class="code-comment"># Настройки</span>
-requests.post(<span class="code-string">'http://192.168.4.1/api/settings'</span>,
-              json={<span class="code-string">"alertDelta"</span>: 0.3},
-              auth=(<span class="code-string">'admin'</span>, <span class="code-string">'beehive'</span>))</code>
-            </div>
-
-            <h3>cURL</h3>
-            <div class="code-block">
-                <code><span class="code-comment"># Получить данные</span>
-curl -u admin:beehive http://192.168.4.1/api/data
-
-<span class="code-comment"># Тарировка</span>
-curl -u admin:beehive -X POST http://192.168.4.1/api/tare
-
-<span class="code-comment"># Настройки</span>
-curl -u admin:beehive -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"alertDelta":0.3}' \
-  http://192.168.4.1/api/settings</code>
+            <div class="tip">
+                <strong>💡 Полноэкранный график на телефоне:</strong> открой <code>http://192.168.4.1/chart</code> — это отдельная страница без меню, занимает весь экран. Удобно смотреть на телефоне в портретном режиме.
             </div>
         </section>
 
         <section class="card">
-            <h2>🔐 Безопасность</h2>
+            <h2>🔄 Wi-Fi: AP vs STA</h2>
+            <h3>Режим AP (по умолчанию)</h3>
+            <ul style="margin-left:20px;color:var(--text-muted)">
+                <li>ESP32 создаёт свою Wi-Fi сеть <code>BeehiveScale / 12345678</code></li>
+                <li>IP всегда <code>192.168.4.1</code></li>
+                <li>Подходит когда улей далеко от дома (нет роутера)</li>
+                <li>Минусы: нет интернета → нет NTP-синка и нет Telegram-отчётов (Telegram нужен только когда подключаешься телефоном к ESP32 и сам активируешь?)</li>
+            </ul>
+
+            <h3>Режим STA (подключение к роутеру)</h3>
+            <ul style="margin-left:20px;color:var(--text-muted)">
+                <li>ESP32 коннектится к домашнему Wi-Fi (SSID + пароль вводишь на сайте)</li>
+                <li>IP назначает роутер (DHCP). Смотри в роутере → клиенты → BeehiveScale</li>
+                <li>Подходит когда улей рядом с домом</li>
+                <li>Плюсы: <strong>работает Telegram, NTP, доступ из любой точки сети</strong></li>
+            </ul>
+
+            <div class="info-box">
+                <strong>ℹ️ Переключение в STA:</strong> сайт → «Wi-Fi» → выбрать STA → ввести SSID + пароль роутера → Сохранить. ESP32 перезагрузится, попробует подключиться. Если не получилось за 10 сек — возвращается в AP.
+            </div>
             <div class="warning">
-                <strong>⚠️ Важно:</strong> Веб-интерфейс использует Basic Auth авторизацию. 
-                Данные передаются в открытом виде (без HTTPS). Не используйте сложные пароли.
+                <strong>⚠️ Сброс Wi-Fi:</strong> зажми MENU 5 сек на главном экране — настройки Wi-Fi сбросятся на дефолт (AP / BeehiveScale / 12345678). Помогает если забыл пароль или ESP32 не подключается к новому роутеру.
             </div>
-            
-            <p style="margin-top: 15px;">
-                Для изменения логина/пароля отредактируйте <code>WebServerModule.h</code>:
-            </p>
-            <div class="code-block">
-                <code><span class="code-keyword">#define</span> WEB_ADMIN_USER    <span class="code-string">"admin"</span>
-<span class="code-keyword">#define</span> WEB_ADMIN_PASS    <span class="code-string">"beehive"</span></code>
+        </section>
+
+        <section class="card">
+            <h2>🛡️ Безопасность</h2>
+            <ul style="margin-left:20px;color:var(--text-muted)">
+                <li><strong>HTTP Basic Auth</strong> на всех <code>/api/*</code> и страницах настроек (admin / beehive по умолчанию)</li>
+                <li><strong>HTTPS не поддерживается</strong> — ESP32 не тянет TLS-сервер с приличной скоростью. Это нормально для локальной сети</li>
+                <li>Telegram-token хранится в EEPROM в открытом виде — но EEPROM недоступен снаружи (только через USB-консоль с физическим доступом)</li>
+                <li>В CF Worker есть проверка <code>X-Beehive-Secret</code> — посторонний не сможет дёргать релай от твоего имени</li>
+            </ul>
+
+            <div class="warning">
+                <strong>⚠️ Если выставляешь весы в STA-режим в публичную сеть</strong> (например офисный Wi-Fi гостевой) — обязательно смени пароли admin и AP на не-дефолтные. Иначе любой в той же сети сможет открыть твою панель.
             </div>
         </section>
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.17</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
-            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
+            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a> ·
+            <a href="06_telegram.html" style="color: var(--primary);">Дальше: Telegram →</a>
         </p>
     </footer>
 

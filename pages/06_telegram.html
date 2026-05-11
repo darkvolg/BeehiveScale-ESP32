@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📱 Telegram — BeehiveScale v4.1</title>
+    <title>📱 Telegram — BeehiveScale ESP32 v5.0.17</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -12,6 +12,7 @@
             --danger: #eb5757;
             --info: #56ccf2;
             --telegram: #0088cc;
+            --cf: #f48120;
             --dark: #0d0f0b;
             --card-bg: #141710;
             --card-light: #1c2018;
@@ -72,10 +73,11 @@
             counter-increment: step; content: counter(step);
             width: 50px; height: 50px; background: linear-gradient(135deg, var(--telegram) 0%, var(--info) 100%);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 1.3em; color: #000; flex-shrink: 0;
+            font-weight: bold; font-size: 1.3em; color: #fff; flex-shrink: 0;
         }
         .step h4 { color: var(--text); margin-bottom: 10px; font-size: 1.2em; }
         .step p { color: var(--text-muted); }
+        .step ul { color: var(--text-muted); margin: 8px 0 0 20px; }
 
         .code-block {
             background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px;
@@ -97,10 +99,27 @@
             padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
         }
 
+        .danger {
+            background: rgba(235, 87, 87, 0.1); border-left: 4px solid var(--danger);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+
         .info-box {
             background: rgba(86, 204, 242, 0.1); border-left: 4px solid var(--info);
             padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
         }
+
+        .cf-box {
+            background: rgba(244, 129, 32, 0.1); border-left: 4px solid var(--cf);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+        .cf-box strong { color: var(--cf); }
+
+        .tg-box {
+            background: rgba(0, 136, 204, 0.1); border-left: 4px solid var(--telegram);
+            padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0;
+        }
+        .tg-box strong { color: var(--telegram); }
 
         .breadcrumb { margin-bottom: 20px; padding: 10px 0; }
         .breadcrumb a { color: var(--primary); text-decoration: none; }
@@ -116,14 +135,38 @@
         }
         .table td { padding: 12px; border-bottom: 1px solid var(--border); }
         .table tr:hover { background: rgba(245, 166, 35, 0.05); }
+        .table code { background: #0a0a0a; padding: 2px 6px; border-radius: 3px; color: var(--primary); font-size: 0.9em; }
 
         .tg-message {
             background: rgba(0, 136, 204, 0.1); border: 1px solid var(--telegram);
-            border-radius: 10px; padding: 15px; margin: 15px 0;
-            font-family: monospace; font-size: 0.9em;
+            border-radius: 10px; padding: 18px; margin: 15px 0;
+            font-family: 'Segoe UI', sans-serif; font-size: 0.95em;
+            line-height: 1.7;
         }
 
         .tg-message strong { color: var(--telegram); }
+
+        .arch-diagram {
+            background: #0a0a0a;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .arch-step {
+            display: inline-block;
+            background: var(--card-light);
+            padding: 12px 18px;
+            border-radius: 10px;
+            margin: 10px 6px;
+            border: 2px solid var(--border);
+            font-size: 0.95em;
+        }
+        .arch-step.esp { border-color: var(--primary); color: var(--primary); }
+        .arch-step.cf { border-color: var(--cf); color: var(--cf); }
+        .arch-step.tg { border-color: var(--telegram); color: var(--telegram); }
+        .arch-arrow { color: var(--text-muted); font-size: 1.4em; vertical-align: middle; padding: 0 6px; }
 
         footer {
             text-align: center; padding: 30px; color: var(--text-muted);
@@ -135,6 +178,7 @@
             .nav-tab { padding: 10px 15px; font-size: 0.9em; }
             .step { flex-direction: column; }
             .step::before { width: 40px; height: 40px; font-size: 1.1em; }
+            .arch-step { display: block; margin: 8px 0; }
         }
     </style>
 </head>
@@ -149,8 +193,8 @@
         </div>
 
         <header>
-            <h1>📱 Telegram уведомления</h1>
-            <p>Настройка бота для получения уведомлений о состоянии улья</p>
+            <h1>📱 Telegram через Cloudflare Worker</h1>
+            <p>Отчёты по расписанию — через CF Worker-релай. Работает у любого провайдера (Beeline и др.)</p>
         </header>
 
         <nav class="nav-tabs">
@@ -164,142 +208,81 @@
         </nav>
 
         <section class="card">
-            <h2>🤖 Создание бота</h2>
-            
-            <div class="steps">
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Откройте @BotFather</h4>
-                        <p>В Telegram найдите официального бота <strong>@BotFather</strong> (синяя галочка).</p>
-                    </div>
-                </div>
+            <h2>💡 Зачем Cloudflare Worker?</h2>
+            <p>На прошивке v4.1 (ESP8266) ESP отправлял запрос напрямую на <code>api.telegram.org</code>. У провайдера <strong>Beeline</strong> (и некоторых других в РФ) этот домен заблокирован — отчёты не приходили, в Serial были ошибки <code>CONNECTION_REFUSED</code>.</p>
 
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Отправьте /newbot</h4>
-                        <p>BotFather попросит придумать имя и username для бота.</p>
-                        <div class="tg-message">
-                            <strong>BotFather:</strong> Choose a name for your bot<br>
-                            <strong>Вы:</strong> Beehive Monitor Bot
-                        </div>
-                        <div class="tg-message">
-                            <strong>BotFather:</strong> Choose a username for your bot<br>
-                            <strong>Вы:</strong> beehive_monitor_bot
-                        </div>
-                    </div>
-                </div>
+            <p style="margin-top:10px">В v5 ESP32 шлёт запрос на <strong>наш Cloudflare Worker</strong> (<code>beehive-relay.darkvolg.workers.dev</code>), а Worker уже форвардит его в <code>api.telegram.org</code>. Cloudflare провайдеры не блокируют — они нужны для половины интернета.</p>
 
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Сохраните токен</h4>
-                        <p>BotFather выдаст токен бота:</p>
-                        <div class="tg-message">
-                            <strong>BotFather:</strong> Done! Congratulations on your new bot.<br>
-                            You can find it at t.me/beehive_monitor_bot<br><br>
-                            Use this token to access the HTTP API:<br>
-                            <code>1234567890:AABcDeFgHiJkLmNoPqRsTuVwXyZ123456</code>
-                        </div>
-                    </div>
-                </div>
+            <div class="arch-diagram">
+                <div class="arch-step esp">🐝 ESP32 (улей)</div>
+                <span class="arch-arrow">→ HTTPS →</span>
+                <div class="arch-step cf">☁️ Cloudflare Worker</div>
+                <span class="arch-arrow">→ HTTPS →</span>
+                <div class="arch-step tg">💬 api.telegram.org</div>
+                <span class="arch-arrow">→</span>
+                <div class="arch-step tg">📱 Твой телефон</div>
             </div>
 
-            <div class="warning">
-                <strong>⚠️ Важно:</strong> Никогда не передавайте токен бота третьим лицам! 
-                Токен даёт полный контроль над ботом.
+            <div class="cf-box">
+                <strong>☁️ Что делает Worker:</strong> принимает POST с заголовком <code>X-Beehive-Secret</code> + JSON body <code>{token, chat_id, text, parse_mode}</code>. Проверяет секрет (защита от чужих запросов). Если ОК — форвардит в <code>https://api.telegram.org/bot&lt;TOKEN&gt;/sendMessage</code> и возвращает результат обратно.
+            </div>
+            <div class="tip">
+                <strong>💡 CF Worker уже развёрнут</strong> на нашем общем endpoint <code>beehive-relay.darkvolg.workers.dev</code>. Тебе ничего не надо делать — просто в скетче зашит этот URL и общий секрет. Бесплатный план CF: 100k запросов в день — для 100 ульев с почасовыми отчётами всё равно остаётся огромный запас.
             </div>
         </section>
 
         <section class="card">
-            <h2>📍 Получение Chat ID</h2>
-            
-            <h3>Способ 1: Личный чат</h3>
+            <h2>⚙️ Настройка с нуля (5 шагов)</h2>
+
             <div class="steps">
                 <div class="step">
                     <div class="step-content">
-                        <h4>Найдите своего бота</h4>
-                        <p>В Telegram найдите бота по username (например, @beehive_monitor_bot).</p>
+                        <h4>Создать бота через @BotFather</h4>
+                        <p>В Telegram найди <strong>@BotFather</strong>, напиши <code>/newbot</code>, придумай:</p>
+                        <ul>
+                            <li><strong>Display name</strong> — имя видимое в чате (например, «Улей 5 — мой»)</li>
+                            <li><strong>Username</strong> — должен заканчиваться на <code>_bot</code> (например, <code>my_hive5_bot</code>)</li>
+                        </ul>
+                        <p style="margin-top:8px">BotFather пришлёт <strong>Token</strong> — длинная строка вида <code>1234567890:AAFxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>. Скопируй её.</p>
                     </div>
                 </div>
 
                 <div class="step">
                     <div class="step-content">
-                        <h4>Нажмите Start</h4>
-                        <p>Начните диалог с ботом, нажав кнопку <strong>«Запустить»</strong> или отправьте <code>/start</code>.</p>
+                        <h4>Узнать свой Chat ID через @userinfobot</h4>
+                        <p>Найди в Telegram <strong>@userinfobot</strong>, напиши ему любое сообщение. Он пришлёт твой <strong>Chat ID</strong> — число (для личных чатов положительное, для групп — со знаком минус, например <code>-1001234567890</code>).</p>
                     </div>
                 </div>
 
                 <div class="step">
                     <div class="step-content">
-                        <h4>Откройте URL в браузере</h4>
-                        <p>Подставьте ваш токен в URL:</p>
-                        <div class="code-block">
-                            <code>https://api.telegram.org/bot&lt;YOUR_TOKEN&gt;/getUpdates</code>
+                        <h4>Открыть бота из шага 1 и нажать «Start»</h4>
+                        <div class="danger" style="margin:10px 0">
+                            <strong>❌ Это обязательно!</strong> Иначе бот не сможет тебе писать — Telegram блокирует первое сообщение от бота к пользователю который не нажал /start.
                         </div>
-                        <p>Пример:</p>
-                        <div class="code-block">
-                            <code>https://api.telegram.org/bot1234567890:AABcDeFgHiJkLmNoPqRsTuVwXyZ123456/getUpdates</code>
-                        </div>
+                        <p>Открой своего бота (через ссылку BotFather или поиском по username), нажми <code>/start</code> или кнопку «Запустить».</p>
                     </div>
                 </div>
 
                 <div class="step">
                     <div class="step-content">
-                        <h4>Найдите Chat ID в ответе</h4>
-                        <p>В JSON ответе найдите поле <code>"chat":{"id":...}</code>:</p>
-                        <div class="code-block">
-                            <code>{
-  "ok": true,
-  "result": [{
-    "message": {
-      "chat": {
-        "id": <strong>123456789</strong>,
-        "first_name": "John",
-        "type": "private"
-      }
-    }
-  }]
-}</code>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <h3>Способ 2: Канал или группа</h3>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Создайте канал/группу</h4>
-                        <p>Создайте канал или группу в Telegram.</p>
+                        <h4>Зайти на сайт весов → раздел «Telegram»</h4>
+                        <p>Подключись к Wi-Fi <code>BeehiveScale</code>, открой <code>http://192.168.4.1</code>, перейди в раздел «📱 Telegram». Вставь:</p>
+                        <ul>
+                            <li><strong>Token</strong> — из шага 1</li>
+                            <li><strong>Chat ID</strong> — из шага 2</li>
+                        </ul>
+                        <p style="margin-top:8px">Нажми «💾 Сохранить» — настройки запишутся в EEPROM ESP32.</p>
                     </div>
                 </div>
 
                 <div class="step">
                     <div class="step-content">
-                        <h4>Добавьте бота</h4>
-                        <p>Добавьте бота в канал/группу как участника.</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Сделайте бота администратором</h4>
-                        <p>Для отправки сообщений бот должен быть администратором.</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Перешлите сообщение из канала</h4>
-                        <p>Отправьте любое сообщение в канал, затем перешлите его боту @userinfobot или используйте @getmyid_bot.</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Получите ID канала</h4>
-                        <p>ID канала обычно начинается с <code>-100</code>:</p>
-                        <div class="tg-message">
-                            <strong>ID:</strong> -1001234567890
+                        <h4>Проверить — кнопка «Тестовое сообщение»</h4>
+                        <p>На том же сайте нажми кнопку «📨 Тестовое сообщение». Через 2–3 секунды в Telegram должно прийти приветствие от твоего бота.</p>
+                        <p style="margin-top:8px">Если пришло — всё работает. Дальше отчёты будут приходить по расписанию (см. раздел «Расписание» на сайте).</p>
+                        <div class="warning" style="margin-top:10px">
+                            <strong>⚠️ Если не пришло</strong> — смотри раздел «Что может пойти не так» ниже на этой странице.
                         </div>
                     </div>
                 </div>
@@ -307,196 +290,166 @@
         </section>
 
         <section class="card">
-            <h2>⚙️ Настройка в коде</h2>
-            <p>Откройте файл <code>Connectivity.h</code> и вставьте полученные значения:</p>
-            
-            <div class="code-block">
-                <code><span class="code-comment">// Токен бота от @BotFather</span>
-<span class="code-keyword">#define</span> TG_BOT_TOKEN     <span class="code-string">"1234567890:AABcDeFgHiJkLmNoPqRsTuVwXyZ"</span>
+            <h2>📨 Что приходит в отчёте</h2>
+            <p>Отчёт шлётся в Telegram <strong>каждый раз когда срабатывает расписание</strong> (например, в 09:00 и 21:00). Пример сообщения:</p>
 
-<span class="code-comment">// ID чата (личный или канал)</span>
-<span class="code-keyword">#define</span> TG_CHAT_ID       <span class="code-string">"-1001234567890"</span>
-
-<span class="code-comment">// Порог изменения веса для тревоги (кг)</span>
-<span class="code-keyword">#define</span> TG_ALERT_DELTA_KG   <span class="code-number">1.0f</span>
-
-<span class="code-comment">// Интервал отчётов (6 часов = 21600000 мс)</span>
-<span class="code-keyword">#define</span> TG_REPORT_INTERVAL  <span class="code-number">21600000UL</span></code>
+            <div class="tg-message">
+                <strong>📊 Отчёт: улей</strong><br>
+                🕐 <strong>Время:</strong> 09.05.2026 21:00:10<br>
+                ⚖️ <strong>Вес:</strong> 4.42 кг<br>
+                🎯 <strong>Эталон:</strong> 4.08 кг (зафикс. 05.05, 4 дн назад)<br>
+                🎯 <strong>От зафикс. точки:</strong> +0.34 кг<br>
+                📈 <strong>С прошлого замера:</strong> +0.02 кг<br>
+                🌡 <strong>Температура:</strong> 27.5 °C<br>
+                🔋 <strong>Батарея:</strong> 3.85 В (78 %)
             </div>
 
-            <div class="warning">
-                <strong>⚠️ Важно:</strong> После изменения файла загрузите новую прошивку на ESP32.
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>📨 Типы уведомлений</h2>
-            
+            <h3>Поля отчёта</h3>
             <table class="table">
-                <tr>
-                    <th>Тип</th>
-                    <th>Триггер</th>
-                    <th>Интервал</th>
-                    <th>Пример</th>
-                </tr>
-                <tr>
-                    <td style="color: var(--danger);"><strong>🚨 Тревога</strong></td>
-                    <td>Изменение веса ≥ TG_ALERT_DELTA</td>
-                    <td>Однократно</td>
-                    <td>Кража улья, падение</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--info);"><strong>📊 Отчёт</strong></td>
-                    <td>По таймеру</td>
-                    <td>TG_REPORT_INTERVAL</td>
-                    <td>Регулярный мониторинг</td>
-                </tr>
+                <tr><th>Поле</th><th>Источник</th></tr>
+                <tr><td>⚖️ <strong>Вес</strong></td><td>Текущий замер с HX711 (после EMA + dead-band)</td></tr>
+                <tr><td>🎯 <strong>Эталон</strong> (+ дата)</td><td><code>prevWeight</code> + <code>prevWeightDate</code> (дата фиксации) из EEPROM</td></tr>
+                <tr><td>🎯 <strong>От зафикс. точки</strong></td><td>Текущий вес − эталон. Δ за весь сезон / неделю</td></tr>
+                <tr><td>📈 <strong>С прошлого замера</strong></td><td>Текущий вес − <code>lastReportWeight</code> (вес последнего TG-отчёта). Δ за день/часы</td></tr>
+                <tr><td>🌡 <strong>Температура</strong></td><td>DS18B20 в улье (если датчик подключён). Иначе DS3231</td></tr>
+                <tr><td>🔋 <strong>Батарея</strong></td><td>ADC GPIO34 → пересчёт через делитель 2:1</td></tr>
             </table>
-
-            <h3 style="margin-top: 20px;">Пример сообщения тревоги</h3>
-            <div class="tg-message">
-                <strong>⚠️ TREVOGA: uley</strong><br>
-                Vremya: 21.02.26 14:30<br>
-                Ves: <strong>45.32 kg</strong><br>
-                Temp: 25.3 C
-            </div>
-
-            <h3>Пример отчёта</h3>
-            <div class="tg-message">
-                <strong>📊 Otchet: uley</strong><br>
-                Vremya: 21.02.26 14:30<br>
-                Ves: 45.32 kg<br>
-                Temp: 25.3 C<br>
-                Vlazhn: 65.2 %
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>🔧 Настройка порога тревоги</h2>
-            
-            <p>Порог срабатывания тревоги можно настроить двумя способами:</p>
-            
-            <h3>1. В коде (Connectivity.h)</h3>
-            <div class="code-block">
-                <code><span class="code-keyword">#define</span> TG_ALERT_DELTA_KG   <span class="code-number">1.0f</span>  <span class="code-comment">// 1 кг</span></code>
-            </div>
-
-            <h3>2. Через веб-интерфейс</h3>
-            <p>Откройте веб-интерфейс → раздел «Быстрые настройки» → «Порог тревоги Telegram»:</p>
-            <ul style="margin-left: 20px; margin-top: 10px;">
-                <li><strong>0.1-0.3 кг:</strong> Высокая чувствительность (частые уведомления)</li>
-                <li><strong>0.5-1.0 кг:</strong> Средняя чувствительность (рекомендуется)</li>
-                <li><strong>1.5-3.0 кг:</strong> Низкая чувствительность (только значительные изменения)</li>
-            </ul>
 
             <div class="tip">
-                <strong>💡 Совет:</strong> Для мониторинга взятка (когда пчёлы приносят нектар) 
-                установите порог 0.3-0.5 кг. Для охраны от кражи — 1-2 кг.
+                <strong>💡 HTML-форматирование:</strong> отчёт использует <code>parse_mode: "HTML"</code> — теги <code>&lt;b&gt;</code> отображаются жирным шрифтом. Если приходят теги в виде текста — обнови прошивку до v5.0.1+.
             </div>
         </section>
 
         <section class="card">
-            <h2>⏱ Интервал отчётов</h2>
-            <p>Регулярные отчёты отправляются с заданным интервалом:</p>
-            
-            <div class="code-block">
-                <code><span class="code-comment">// В Connectivity.h</span>
-<span class="code-keyword">#define</span> TG_REPORT_INTERVAL  <span class="code-number">21600000UL</span>  <span class="code-comment">// 6 часов</span></code>
+            <h2>⏰ Привязка отчётов к расписанию</h2>
+            <p>В v4.1 отчёты слались по интервалу (например, каждые 6 часов). В v5 отчёт привязан к <strong>расписанию</strong> — конкретное время суток.</p>
+
+            <div class="tg-box">
+                <strong>📅 Как это работает:</strong> на сайте «Расписание» ты задаёшь время (например, 09:00 + 21:00). ESP32 пишет alarm в DS3231, уходит в deep sleep, просыпается ровно в это время → делает замер → шлёт отчёт через CF Worker → возвращается в сон. Расход батареи минимальный.
             </div>
 
-            <table class="table" style="max-width: 500px;">
-                <tr><th>Значение (мс)</th><th>Интервал</th></tr>
-                <tr><td>3600000</td><td>1 час</td></tr>
-                <tr><td>7200000</td><td>2 часа</td></tr>
-                <tr><td>21600000</td><td>6 часов</td></tr>
-                <tr><td>43200000</td><td>12 часов</td></tr>
-                <tr><td>86400000</td><td>24 часа</td></tr>
+            <h3>Сценарии расписания</h3>
+            <table class="table">
+                <tr><th>Сценарий</th><th>Время в расписании</th><th>Цель</th></tr>
+                <tr><td>Минимальный</td><td>21:00</td><td>1 отчёт в день — итог за сутки. Батарея живёт максимально долго (~40 дней)</td></tr>
+                <tr><td>Стандартный</td><td>09:00 + 21:00</td><td>Утром «что осталось», вечером «что прибавили». ~30 дней автономии</td></tr>
+                <tr><td>Подробный</td><td>06:00 + 12:00 + 18:00 + 22:00</td><td>4 отчёта в день. Видно динамику взятка по часам. ~20 дней</td></tr>
+                <tr><td>Отладка</td><td>каждый час</td><td>Проверка работы прошивки. Жрёт батарею за неделю</td></tr>
             </table>
+
+            <div class="warning">
+                <strong>⚠️ Если время в DS3231 неправильное</strong> — расписание не сработает. Сначала синхронизируй: сайт → «Настройки → Часы → Sync NTP» (нужен интернет, режим STA). Без интернета — установи время вручную через сайт или Serial-команду <code>SETTIME</code>.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🛠️ Cloudflare Worker (для разработчика)</h2>
+            <p>Если хочешь развернуть свой собственный CF Worker (например, со своим секретом) — исходник в репозитории: <code>cloudflare-worker/src/index.js</code>. Деплой через <code>wrangler deploy</code>.</p>
+
+            <h3>Endpoint и формат запроса</h3>
+            <table class="table">
+                <tr><th>Параметр</th><th>Значение</th></tr>
+                <tr><td>URL</td><td><code>POST https://beehive-relay.darkvolg.workers.dev/sendMessage</code></td></tr>
+                <tr><td>Заголовок аутентификации</td><td><code>X-Beehive-Secret: &lt;общий секрет&gt;</code></td></tr>
+                <tr><td>Content-Type</td><td><code>application/json</code></td></tr>
+                <tr>
+                    <td>Body</td>
+                    <td>
+                        <code>{ "token": "&lt;TG_BOT_TOKEN&gt;", "chat_id": &lt;ID&gt;, "text": "&lt;HTML&gt;", "parse_mode": "HTML" }</code>
+                    </td>
+                </tr>
+            </table>
+
+            <h3>Ответы Worker</h3>
+            <table class="table">
+                <tr><th>HTTP код</th><th>Что значит</th></tr>
+                <tr><td>200</td><td>OK, сообщение доставлено в Telegram</td></tr>
+                <tr><td>401</td><td>Неверный <code>X-Beehive-Secret</code></td></tr>
+                <tr><td>400</td><td>Неверный JSON body, отсутствуют обязательные поля</td></tr>
+                <tr><td>403 / 404 от Telegram</td><td>Возвращается как есть. Обычно — неверный <code>token</code> или <code>chat_id</code></td></tr>
+                <tr><td>500</td><td>Внутренняя ошибка Worker (редко)</td></tr>
+            </table>
+
+            <h3>Пример curl-запроса</h3>
+            <div class="code-block">
+                <code>curl -X POST https://beehive-relay.darkvolg.workers.dev/sendMessage \
+  -H "Content-Type: application/json" \
+  -H "X-Beehive-Secret: &lt;секрет&gt;" \
+  -d '{
+    "token": "1234567890:AAFxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "chat_id": 123456789,
+    "text": "&lt;b&gt;Тест&lt;/b&gt; от консоли",
+    "parse_mode": "HTML"
+  }'</code>
+            </div>
+
+            <div class="cf-box">
+                <strong>☁️ Лимит CF Workers (бесплатный план):</strong> 100 000 запросов в день. Для пасеки на 100 ульев с отчётами каждый час: 100 × 24 = 2400 запросов в день. Запас в ~40 раз.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>❌ Что может пойти не так</h2>
+
+            <h3>«Тестовое сообщение» не приходит</h3>
+            <table class="table">
+                <tr><th>Симптом</th><th>Причина</th><th>Решение</th></tr>
+                <tr>
+                    <td>Ошибка <code>401 Unauthorized</code></td>
+                    <td>Неправильный Token бота</td>
+                    <td>Перепроверь Token. Без пробелов, без кавычек. Можно перевыдать через @BotFather → /token</td>
+                </tr>
+                <tr>
+                    <td>Ошибка <code>400 Bad Request</code> или <code>chat not found</code></td>
+                    <td>Неправильный Chat ID или ты не нажал /start в боте</td>
+                    <td>Перепроверь Chat ID через @userinfobot. Открой бота и нажми /start</td>
+                </tr>
+                <tr>
+                    <td><code>CONNECTION_REFUSED</code> / <code>CONNECTION_LOST</code></td>
+                    <td>Нет интернета или Wi-Fi не подключился к роутеру</td>
+                    <td>Проверь Экран 6 LCD: должно быть W:OK. Перевключи STA-режим. Проверь что роутер раздаёт интернет</td>
+                </tr>
+                <tr>
+                    <td>Ошибка от Worker <code>X-Beehive-Secret invalid</code></td>
+                    <td>В прошивке зашит неверный секрет</td>
+                    <td>Сверь <code>TG_RELAY_SECRET</code> в <code>Connectivity.h</code> с тем что в CF Worker. Перепрошей</td>
+                </tr>
+                <tr>
+                    <td>Сообщение пришло, но <code>&lt;b&gt;</code> видны как текст</td>
+                    <td>Старая прошивка без <code>parse_mode: HTML</code></td>
+                    <td>Обнови прошивку до v5.0.1+ (в v5.0.17 это уже работает)</td>
+                </tr>
+                <tr>
+                    <td>Тест работает, но по расписанию ничего не приходит</td>
+                    <td>Расписание не настроено или RTC ERROR</td>
+                    <td>Сайт → Расписание (поставь время). Проверь Экран 5 (время) и Экран 6 (счётчик пробуждений N)</td>
+                </tr>
+            </table>
+
+            <h3>Telegram приходит, но в неправильное время</h3>
+            <p>Время DS3231 не синхронизировано с реальным. Зайди на сайт → «Настройки → Часы → Sync NTP». Это работает только в режиме STA с интернетом. Без интернета — установи вручную.</p>
+        </section>
+
+        <section class="card">
+            <h2>🔒 Безопасность Telegram-данных</h2>
+            <ul style="margin-left:20px;color:var(--text-muted)">
+                <li><strong>Token бота</strong> хранится в EEPROM ESP32 в открытом виде. Доступен только при физическом доступе к плате через USB-консоль или dump прошивки</li>
+                <li><strong>Worker не логирует</strong> tokens и chat_id (только метрики количества запросов)</li>
+                <li>Между ESP32 ↔ Worker и Worker ↔ Telegram — <strong>HTTPS (TLS)</strong>. Прослушать в локальной сети нельзя</li>
+                <li>Если Token утёк — перевыдать в BotFather: <code>/token</code> → выбрать бота → новый токен. Старый сразу инвалидируется</li>
+            </ul>
 
             <div class="info-box">
-                <strong>ℹ️ Примечание:</strong> Отчёты отправляются только при наличии WiFi соединения. 
-                В режиме deep sleep отчёты отправляются после пробуждения.
+                <strong>ℹ️ Можно ли использовать одного бота на нескольких ульях?</strong> Да. Создай группу в Telegram, добавь бота, узнай chat_id группы (через @userinfobot — пересланное из группы). Поставь этот chat_id во всех ульях. Все отчёты будут падать в одну группу — удобно для пасеки на N ульев.
             </div>
-        </section>
-
-        <section class="card">
-            <h2>🔍 Проверка работы</h2>
-            
-            <div class="steps">
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Загрузите прошивку</h4>
-                        <p>Убедитесь, что токен и Chat ID введены правильно.</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Откройте Serial монитор</h4>
-                        <p>Установите скорость 115200 бод.</p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Проверьте подключение WiFi</h4>
-                        <p>В логе должно быть: <code>[WiFi] Connected</code></p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Проверьте отправку Telegram</h4>
-                        <p>При изменении веса или по таймеру в логе появится: <code>[TG] Message sent OK</code></p>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <div class="step-content">
-                        <h4>Проверьте Telegram</h4>
-                        <p>Сообщение должно прийти в чат или канал.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="card">
-            <h2>❓ Частые проблемы</h2>
-            
-            <table class="table">
-                <tr>
-                    <th>Проблема</th>
-                    <th>Причина</th>
-                    <th>Решение</th>
-                </tr>
-                <tr>
-                    <td>«[TG] Error code: 401»</td>
-                    <td>Неверный токен</td>
-                    <td>Проверьте токен от @BotFather</td>
-                </tr>
-                <tr>
-                    <td>«[TG] Error code: 400»</td>
-                    <td>Неверный Chat ID</td>
-                    <td>Проверьте Chat ID (для каналов -100...)</td>
-                </tr>
-                <tr>
-                    <td>«[TG] Error code: 403»</td>
-                    <td>Бот не администратор</td>
-                    <td>Добавьте бота как админа в канал</td>
-                </tr>
-                <tr>
-                    <td>Нет уведомлений</td>
-                    <td>Нет WiFi</td>
-                    <td>Проверьте подключение к интернету</td>
-                </tr>
-            </table>
         </section>
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale v4.1</strong> — Система мониторинга пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.17</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
-            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
+            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a> ·
+            <a href="07_troubleshooting.html" style="color: var(--primary);">Дальше: Неисправности →</a>
         </p>
     </footer>
 
