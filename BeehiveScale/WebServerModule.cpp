@@ -2429,16 +2429,36 @@ static void _handleManifest() {
 }
 
 // ─── /icon.svg  GET — иконка приложения (SVG для PWA-манифеста) ─────────
+// v5.0.18: новая минималистичная иконка по образу Gemini-сгенерированной
+// (icon.png в docs/assets/) — стилизованная пчела на медовом скруглённом квадрате.
 static void _handleIcon() {
   static const char ICON_SVG[] PROGMEM =
     "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 192 192\">"
-    "<rect width=\"192\" height=\"192\" fill=\"#0d0f0b\"/>"
-    "<circle cx=\"96\" cy=\"96\" r=\"56\" fill=\"#f5a623\"/>"
-    "<rect x=\"66\" y=\"78\" width=\"60\" height=\"8\" fill=\"#0d0f0b\"/>"
-    "<rect x=\"66\" y=\"94\" width=\"60\" height=\"8\" fill=\"#0d0f0b\"/>"
-    "<rect x=\"66\" y=\"110\" width=\"60\" height=\"8\" fill=\"#0d0f0b\"/>"
-    "<ellipse cx=\"66\" cy=\"66\" rx=\"22\" ry=\"14\" fill=\"#ffffff\" opacity=\"0.85\"/>"
-    "<ellipse cx=\"126\" cy=\"66\" rx=\"22\" ry=\"14\" fill=\"#ffffff\" opacity=\"0.85\"/>"
+    // Медовый скруглённый квадрат (фон)
+    "<rect width=\"192\" height=\"192\" rx=\"36\" fill=\"#f5a623\"/>"
+    // Тонкое внутреннее свечение (более тёмный круг для глубины)
+    "<circle cx=\"96\" cy=\"100\" r=\"72\" fill=\"#e8901a\" opacity=\"0.5\"/>"
+    // Антенны пчелы
+    "<path d=\"M86 52 Q82 42 78 38\" stroke=\"#1a1a1a\" stroke-width=\"3.5\" fill=\"none\" stroke-linecap=\"round\"/>"
+    "<path d=\"M106 52 Q110 42 114 38\" stroke=\"#1a1a1a\" stroke-width=\"3.5\" fill=\"none\" stroke-linecap=\"round\"/>"
+    "<circle cx=\"78\" cy=\"38\" r=\"3.5\" fill=\"#1a1a1a\"/>"
+    "<circle cx=\"114\" cy=\"38\" r=\"3.5\" fill=\"#1a1a1a\"/>"
+    // Голова пчелы (круглая)
+    "<circle cx=\"96\" cy=\"62\" r=\"14\" fill=\"#1a1a1a\"/>"
+    // Тельце пчелы (овал)
+    "<ellipse cx=\"96\" cy=\"110\" rx=\"20\" ry=\"32\" fill=\"#1a1a1a\"/>"
+    // Полоски на тельце (медовые контрастные)
+    "<rect x=\"76\" y=\"96\" width=\"40\" height=\"5\" fill=\"#f5a623\"/>"
+    "<rect x=\"76\" y=\"112\" width=\"40\" height=\"5\" fill=\"#f5a623\"/>"
+    "<rect x=\"78\" y=\"128\" width=\"36\" height=\"5\" fill=\"#f5a623\"/>"
+    // Жало (внизу)
+    "<path d=\"M92 140 L96 150 L100 140 Z\" fill=\"#1a1a1a\"/>"
+    // Левое крыло (белое полупрозрачное)
+    "<ellipse cx=\"68\" cy=\"82\" rx=\"22\" ry=\"14\" fill=\"#ffffff\" opacity=\"0.92\" transform=\"rotate(-15 68 82)\"/>"
+    // Правое крыло (белое полупрозрачное)
+    "<ellipse cx=\"124\" cy=\"82\" rx=\"22\" ry=\"14\" fill=\"#ffffff\" opacity=\"0.92\" transform=\"rotate(15 124 82)\"/>"
+    // Платформа-весы под пчелой
+    "<rect x=\"72\" y=\"154\" width=\"48\" height=\"5\" rx=\"2\" fill=\"#1a1a1a\"/>"
     "</svg>";
   _srv.sendHeader("Cache-Control", "public, max-age=2592000");
   _srv.send_P(200, "image/svg+xml", ICON_SVG);

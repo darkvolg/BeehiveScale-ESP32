@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 17
-#define FW_VERSION_SUFFIX ""  // 5.0.17 — feat: пресет "С прошлого визита" в Архиве. EEPROM хранит timestamp прошлого открытия web (addr 331-336), при заходе на вкладку Архив автоматически подставляются даты с прошлого визита по сегодня. Новый эндпоинт /api/last-visit.
+#define FW_VERSION_PATCH 18
+#define FW_VERSION_SUFFIX ""  // 5.0.18 — chore: обновлена PWA-иконка. Минималистичная стилизованная пчела на скруглённом медовом квадрате (по образу AI-сгенерированного icon.png). Заменён простой геометрический SVG в _handleIcon().
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
