@@ -6,6 +6,8 @@
 
 **Умные пчелиные весы с ESP32 — автономный мониторинг улья**
 
+🌍 **Язык:** **🇷🇺 Русский** · [🇬🇧 English](README.en.md)
+
 ![Version](https://img.shields.io/badge/version-v5.0.17-f5a623?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-ESP32--WROOM--32-blue?style=flat-square)
 ![Framework](https://img.shields.io/badge/framework-Arduino-00979d?style=flat-square)
