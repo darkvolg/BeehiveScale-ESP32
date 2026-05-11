@@ -649,3 +649,21 @@ bool load_last_temp(float &tempC) {
   if (isnan(tempC) || tempC < -55.0f || tempC > 125.0f) return false;
   return true;
 }
+
+void save_last_visit(uint32_t unixtime) {
+  if (unixtime < 1546300800UL) return;  // <2019-01-01 — RTC не настроен, мусор
+  byte magic = EEPROM_MAGIC_LAST_VISIT_VALUE;
+  EEPROM.put(EEPROM_ADDR_LAST_VISIT_MAGIC, magic);
+  EEPROM.put(EEPROM_ADDR_LAST_VISIT,       unixtime);
+  EEPROM.commit();
+}
+
+uint32_t load_last_visit() {
+  byte magic = 0;
+  EEPROM.get(EEPROM_ADDR_LAST_VISIT_MAGIC, magic);
+  if (magic != EEPROM_MAGIC_LAST_VISIT_VALUE) return 0;
+  uint32_t ts = 0;
+  EEPROM.get(EEPROM_ADDR_LAST_VISIT, ts);
+  if (ts < 1546300800UL) return 0;
+  return ts;
+}

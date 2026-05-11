@@ -14,6 +14,7 @@ using WebServerCompat = WebServer;
 #include "Memory.h"
 #include "Connectivity.h"  // для ntp_sync_time()
 #include "Logger.h"
+#include "RTC_Module.h"    // для rtc_now() — last-visit timestamp
 #ifdef USE_SD_CARD
 #include <SPI.h>
 #include <SD.h>
@@ -806,8 +807,10 @@ input[type=checkbox]{width:auto}
       <button class="btn" onclick="archPreset(2)" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;font-size:12px">3 дня</button>
       <button class="btn" onclick="archPreset(6)" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;font-size:12px">Неделя</button>
       <button class="btn" onclick="archPreset(29)" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;font-size:12px">Месяц</button>
+      <button class="btn" id="arch-since-btn" onclick="archSinceLastVisit()" style="background:var(--amber);border:1px solid var(--amber);color:#1a1a2e;padding:6px 12px;font-size:12px;display:none">↩ С прошлого визита</button>
       <button class="btn" onclick="archPreset(-1)" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;font-size:12px">Всё</button>
     </div>
+    <div id="arch-last-visit-info" style="font-size:12px;color:var(--text3);margin-top:8px;display:none"></div>
   </div>
 
   <div class="card" id="arch-summary" style="margin-bottom:10px;display:none">
@@ -1599,13 +1602,50 @@ function autoRefresh(){
 
 // ── Archive ───────────────────────────────────────────────────────────
 let _archInited=false;
+let _archLastVisit=0;  // Unix-секунды последнего визита (для пресета "С прошлого визита")
 function archFmtDate(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function archFmtFriendly(d){
+  const p=n=>String(n).padStart(2,'0');
+  const now=new Date();
+  const diffH=(now-d)/3600000;
+  const date=p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear();
+  const time=p(d.getHours())+':'+p(d.getMinutes());
+  if(diffH<24)return 'сегодня в '+time;
+  if(diffH<48)return 'вчера в '+time;
+  const days=Math.floor(diffH/24);
+  return date+' ('+days+' дн. назад)';
+}
 function archInit(){
   if(_archInited)return;
   _archInited=true;
   const today=new Date();
+  // По умолчанию — последняя неделя (фоллбэк если /api/last-visit недоступен)
   const weekAgo=new Date(today.getTime()-6*86400000);
   document.getElementById('arch-from').value=archFmtDate(weekAgo);
+  document.getElementById('arch-to').value=archFmtDate(today);
+  // Подтягиваем "С прошлого визита" — если есть, переключаемся на него
+  fetch('/api/last-visit').then(r=>r.json()).then(d=>{
+    if(d&&d.lastVisit&&d.lastVisit>0){
+      _archLastVisit=d.lastVisit;
+      const visitDate=new Date(d.lastVisit*1000);
+      document.getElementById('arch-since-btn').style.display='inline-block';
+      document.getElementById('arch-last-visit-info').style.display='block';
+      document.getElementById('arch-last-visit-info').textContent='Прошлый визит: '+archFmtFriendly(visitDate);
+      // Если прошлый визит >1 дня назад — автоматически выставляем его как "с"
+      const diffDays=(today-visitDate)/86400000;
+      if(diffDays>=1){
+        document.getElementById('arch-from').value=archFmtDate(visitDate);
+        document.getElementById('arch-to').value=archFmtDate(today);
+      }
+    }
+    archLoad();
+  }).catch(()=>{archLoad();});
+}
+function archSinceLastVisit(){
+  if(!_archLastVisit){toast('Нет данных о прошлом визите',true);return;}
+  const visitDate=new Date(_archLastVisit*1000);
+  const today=new Date();
+  document.getElementById('arch-from').value=archFmtDate(visitDate);
   document.getElementById('arch-to').value=archFmtDate(today);
   archLoad();
 }
@@ -2440,6 +2480,48 @@ static void _handleArchive() {
   _sendProgmemChunked(PAGE_HTML);
 }
 
+// ─── /api/last-visit  GET — Unix timestamp прошлого визита + обновление ──
+// Семантика: первый вызов за boot возвращает СТАРОЕ значение (то что хочет видеть
+// пользователь в пресете "С прошлого визита"). Если прошло >1 часа с прошлого
+// визита — EEPROM обновляется на "сейчас" (фиксируем новый визит).
+// Все последующие вызовы в той же сессии возвращают ту же кешированную старую
+// величину, чтобы повторное открытие вкладки "Архив" не сбрасывало пресет на
+// "только что". При power-cycle кеш сбрасывается — нормально, визиты редки.
+static uint32_t _lastVisitCached = 0;
+static bool     _lastVisitInited = false;
+
+static void _handleLastVisit() {
+  if (!_auth()) return;
+  _activity();
+
+  // Текущее время из RTC (Unix epoch)
+  uint32_t now = 0;
+  TimeStamp ts = rtc_now();
+  if (ts.valid) {
+    DateTime dt(ts.year, ts.month, ts.day, ts.hour, ts.minute, ts.second);
+    now = dt.unixtime();
+  }
+
+  if (!_lastVisitInited) {
+    _lastVisitInited = true;
+    _lastVisitCached = load_last_visit();
+    // Если есть валидное "сейчас" — обновляем EEPROM при достаточном разрыве
+    // (>1 часа) либо если ранее не было записи.
+    if (now >= 1546300800UL) {
+      bool needUpdate = false;
+      if (_lastVisitCached == 0) needUpdate = true;
+      else if (now > _lastVisitCached && (now - _lastVisitCached) > 3600UL) needUpdate = true;
+      if (needUpdate) save_last_visit(now);
+    }
+  }
+
+  StaticJsonDocument<128> doc;
+  doc["lastVisit"] = _lastVisitCached;  // 0 если ни разу не было визитов
+  doc["serverNow"] = now;               // 0 если RTC не готов
+  String out; serializeJson(doc, out);
+  _srv.send(200, "application/json", out);
+}
+
 // ─── /api/daystat  GET — суточная статистика (фичи 12, 17) ──────────────
 static void _handleDayStat() {
   if (!_auth()) return;
@@ -2781,6 +2863,7 @@ void webserver_init(WebData &data, WebActions &actions) {
     _srv.on("/chart",            HTTP_GET,  _handleChart);
     _srv.on("/archive",          HTTP_GET,  _handleArchive);
     _srv.on("/api/period",       HTTP_GET,  _handlePeriod);
+    _srv.on("/api/last-visit",   HTTP_GET,  _handleLastVisit);
     _srv.on("/manifest.json",    HTTP_GET,  _handleManifest);
     _srv.on("/icon.svg",         HTTP_GET,  _handleIcon);
     _srv.on("/sw.js",            HTTP_GET,  _handleServiceWorker);

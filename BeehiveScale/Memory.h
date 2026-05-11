@@ -63,7 +63,11 @@
 #define EEPROM_ADDR_TEMP_MAGIC        326  // 1 байт magic
 #define EEPROM_MAGIC_TEMP_VALUE       0xAA
 #define EEPROM_ADDR_LAST_TEMP_C       327  // float, 4 байта
-// 331..383 reserved for future fields
+// ─── Last web visit (v5.0.17) — для пресета "С прошлого визита" в архиве ─
+#define EEPROM_ADDR_LAST_VISIT_MAGIC  331  // 1 байт
+#define EEPROM_MAGIC_LAST_VISIT_VALUE 0xAB
+#define EEPROM_ADDR_LAST_VISIT        332  // uint32_t, 4 байта — Unix timestamp последнего web-визита
+// 336..383 reserved for future fields
 #define EEPROM_SIZE              384  // расширено под credentials-блок
 
 // Веб-настройки (alertDelta, calibWeight, emaAlpha)
@@ -163,5 +167,11 @@ bool load_last_report(float &weight);
 // отправки TG-отчёта. Сохраняется после каждого валидного чтения, читается в setup().
 void save_last_temp(float tempC);
 bool load_last_temp(float &tempC);
+
+// Last web visit — Unix timestamp последнего открытия web-интерфейса.
+// Используется для пресета "С прошлого визита" в архивной вкладке.
+// 0 = ни разу не было визитов (или EEPROM пуст).
+void     save_last_visit(uint32_t unixtime);
+uint32_t load_last_visit();
 
 #endif

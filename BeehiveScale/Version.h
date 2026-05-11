@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 16
-#define FW_VERSION_SUFFIX ""  // 5.0.16 — feat: вкладка "Архив" с выбором периода (с/по + пресеты), лента дней с цветными маркерами аномалий, экспорт CSV за диапазон. PWA: установка как приложение на телефон (manifest+SW), оффлайн-кеш HTML. Новые API: /api/period?from&to, /api/log?from&to, /manifest.json, /sw.js, /icon.svg.
+#define FW_VERSION_PATCH 17
+#define FW_VERSION_SUFFIX ""  // 5.0.17 — feat: пресет "С прошлого визита" в Архиве. EEPROM хранит timestamp прошлого открытия web (addr 331-336), при заходе на вкладку Архив автоматически подставляются даты с прошлого визита по сегодня. Новый эндпоинт /api/last-visit.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
