@@ -42,6 +42,12 @@ size_t   log_stream_json(Stream &out, int maxRows = 50);
 // Стримит CSV только за указанную дату (формат: "DD.MM.YYYY") прямо в поток
 // Возвращает кол-во строк; если date пустая — возвращает весь файл
 size_t   log_stream_csv_date(Stream &out, const String &date);
+// Стримит CSV за диапазон дат (включительно). Формат from/to: "YYYY-MM-DD" или "DD.MM.YYYY".
+// Пустые from/to означают "без нижней/верхней границы". Возвращает кол-во строк.
+size_t   log_stream_csv_range(Stream &out, const String &from, const String &to);
+// Стримит JSON-массив записей за диапазон дат: [{"dt":"...","w":..,"t":..,"b":..},...]
+// Формат from/to: "YYYY-MM-DD" или "DD.MM.YYYY". Возвращает кол-во строк.
+size_t   log_stream_period_json(Stream &out, const String &from, const String &to);
 // Первая дата в логе (DD.MM.YYYY) — для подсчёта дней наблюдений
 bool     log_first_date(char *buf, size_t bufLen);
 // Суточная статистика: min/max вес и температура за сегодня

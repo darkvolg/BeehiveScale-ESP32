@@ -656,6 +656,169 @@ size_t log_stream_csv_date(Stream &out, const String &date) {
   return count;
 }
 
+// ─── Нормализация даты к компактному виду "YYYYMMDD" для лекс-сравнения ──
+// Входы: "YYYY-MM-DD", "DD.MM.YYYY", или пусто. Возвращает true если успешно.
+static bool _date_to_yyyymmdd(const char *src, int srcLen, char out[9]) {
+  if (srcLen < 10 || !src) return false;
+  if (src[4] == '-') {
+    // YYYY-MM-DD
+    memcpy(out, src, 4);     // YYYY
+    memcpy(out + 4, src + 5, 2);  // MM
+    memcpy(out + 6, src + 8, 2);  // DD
+  } else if (src[2] == '.') {
+    // DD.MM.YYYY
+    memcpy(out, src + 6, 4); // YYYY
+    memcpy(out + 4, src + 3, 2);  // MM
+    memcpy(out + 6, src, 2);      // DD
+  } else {
+    return false;
+  }
+  out[8] = '\0';
+  // Проверяем что все 8 символов — цифры
+  for (int i = 0; i < 8; i++) if (out[i] < '0' || out[i] > '9') return false;
+  return true;
+}
+
+// Внутренний хелпер: ходит по строкам лога, для каждой записи в диапазоне
+// вызывает onRow(buf, pos) и onPreRow() перед первой записью.
+// Возвращает кол-во обработанных строк.
+typedef void (*RowEmitFn)(const char *buf, int pos, void *ctx);
+static size_t _stream_filter_range(const String &from, const String &to,
+                                   RowEmitFn onRow, void *ctx,
+                                   bool *anyEmitted = nullptr) {
+  if (!_fs_ok() || !_fs_exists(LOG_FILE)) return 0;
+  File f = _fs_open_read(LOG_FILE);
+  if (!f) return 0;
+
+  char fromCmp[9] = {0}, toCmp[9] = {0};
+  bool hasFrom = _date_to_yyyymmdd(from.c_str(), from.length(), fromCmp);
+  bool hasTo   = _date_to_yyyymmdd(to.c_str(),   to.length(),   toCmp);
+
+  char buf[128];
+  int pos = 0;
+  bool headerSkipped = false;
+  size_t count = 0;
+  int byteCount = 0;
+
+  auto processLine = [&]() {
+    if (pos == 0) return;
+    buf[pos] = '\0';
+    if (!headerSkipped) { headerSkipped = true; pos = 0; return; }
+    if (pos > 8 && memcmp(buf, "datetime", 8) == 0) { pos = 0; return; }
+    if (pos > 11 && memcmp(buf, "\xEF\xBB\xBF" "datetime", 11) == 0) { pos = 0; return; }
+    if (pos < 10) { pos = 0; return; }
+    // Первые 10 байт строки лога = "DD.MM.YYYY" — конвертируем в YYYYMMDD для сравнения
+    char rowCmp[9];
+    if (!_date_to_yyyymmdd(buf, 10, rowCmp)) { pos = 0; return; }
+    if (hasFrom && memcmp(rowCmp, fromCmp, 8) < 0) { pos = 0; return; }
+    if (hasTo   && memcmp(rowCmp, toCmp,   8) > 0) { pos = 0; return; }
+    onRow(buf, pos, ctx);
+    count++;
+    pos = 0;
+  };
+
+  while (f.available()) {
+    int c = f.read();
+    if (c < 0) break;
+    if ((++byteCount & 1023) == 0) yield();
+    if (c == '\n' || c == '\r') {
+      processLine();
+    } else {
+      if (pos < (int)sizeof(buf) - 1) buf[pos++] = (char)c;
+    }
+  }
+  // Последняя строка без \n
+  if (pos > 0) processLine();
+  f.close();
+  if (anyEmitted) *anyEmitted = (count > 0);
+  return count;
+}
+
+// ─── Стрим CSV за диапазон дат ───────────────────────────────────────────
+struct _CsvCtx { Stream *out; };
+static void _emit_csv_row(const char *buf, int pos, void *ctx) {
+  _CsvCtx *c = (_CsvCtx*)ctx;
+  c->out->write((const uint8_t*)buf, pos);
+  c->out->print('\n');
+}
+
+size_t log_stream_csv_range(Stream &out, const String &from, const String &to) {
+  out.print(CSV_HEADER);
+  _CsvCtx ctx; ctx.out = &out;
+  return _stream_filter_range(from, to, _emit_csv_row, &ctx);
+}
+
+// ─── Стрим JSON за диапазон дат: [{"dt":"...","w":..,"t":..,"b":..},...] ─
+struct _JsonCtx { Stream *out; bool first; };
+static void _emit_json_row(const char *buf, int pos, void *ctx) {
+  _JsonCtx *c = (_JsonCtx*)ctx;
+  // Поля CSV: datetime;weight;temp;humidity;bat → s1..s4
+  int s1=-1,s2=-1,s3=-1,s4=-1;
+  for (int i = 0; i < pos; i++) {
+    if (buf[i] == ';') {
+      if      (s1 < 0) s1 = i;
+      else if (s2 < 0) s2 = i;
+      else if (s3 < 0) s3 = i;
+      else if (s4 < 0) { s4 = i; break; }
+    }
+  }
+  if (s1 < 0 || s2 < 0 || s3 < 0 || s4 < 0) return;
+  int wLen = s2 - s1 - 1;
+  int tLen = s3 - s2 - 1;
+  int bLen = pos - s4 - 1;
+
+  // commaToPoint и valid-чек (вес 0..500)
+  char cb[16];
+  // Парсим вес для валидации
+  {
+    char wb[16];
+    int n = wLen >= (int)sizeof(wb) ? (int)sizeof(wb)-1 : wLen;
+    for (int i = 0; i < n; i++) wb[i] = (buf[s1+1+i] == ',') ? '.' : buf[s1+1+i];
+    wb[n] = '\0';
+    float w = atof(wb);
+    if (isnan(w) || isinf(w) || w < -5.0f || w > 500.0f) return;
+  }
+
+  if (!c->first) c->out->print(',');
+  c->first = false;
+  c->out->print(F("{\"dt\":\""));
+  // dt = первые s1 символов
+  c->out->write((const uint8_t*)buf, s1);
+  c->out->print(F("\",\"w\":"));
+  // commaToPoint inline
+  {
+    int n = wLen >= (int)sizeof(cb) ? (int)sizeof(cb)-1 : wLen;
+    for (int i = 0; i < n; i++) cb[i] = (buf[s1+1+i] == ',') ? '.' : buf[s1+1+i];
+    cb[n] = '\0';
+    c->out->print(cb);
+  }
+  c->out->print(F(",\"t\":"));
+  if (tLen <= 0) c->out->print(F("-99"));
+  else {
+    int n = tLen >= (int)sizeof(cb) ? (int)sizeof(cb)-1 : tLen;
+    for (int i = 0; i < n; i++) cb[i] = (buf[s2+1+i] == ',') ? '.' : buf[s2+1+i];
+    cb[n] = '\0';
+    c->out->print(cb);
+  }
+  c->out->print(F(",\"b\":"));
+  if (bLen <= 0) c->out->print('0');
+  else {
+    int n = bLen >= (int)sizeof(cb) ? (int)sizeof(cb)-1 : bLen;
+    for (int i = 0; i < n; i++) cb[i] = (buf[s4+1+i] == ',') ? '.' : buf[s4+1+i];
+    cb[n] = '\0';
+    c->out->print(cb);
+  }
+  c->out->print('}');
+}
+
+size_t log_stream_period_json(Stream &out, const String &from, const String &to) {
+  out.print('[');
+  _JsonCtx ctx; ctx.out = &out; ctx.first = true;
+  size_t n = _stream_filter_range(from, to, _emit_json_row, &ctx);
+  out.print(']');
+  return n;
+}
+
 // ─── Первая дата в логе (DD.MM.YYYY) для подсчёта дней наблюдений ────────
 // Возвращает true и заполняет buf (минимум 11 символов) датой первой записи
 bool log_first_date(char *buf, size_t bufLen) {

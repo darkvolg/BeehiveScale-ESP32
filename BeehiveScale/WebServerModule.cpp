@@ -89,6 +89,13 @@ static const char PAGE_HTML[] PROGMEM = R"rawhtml(
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>🐝 BeehiveScale</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#f5a623">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Beehive">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -304,6 +311,7 @@ input[type=checkbox]{width:auto}
 
 <div class="tabs">
   <button class="tab active"  onclick="nav('main')">⌂ Главная</button>
+  <button class="tab"         onclick="nav('archive')">📅 Архив</button>
   <button class="tab"         onclick="nav('chart')">📈 График + Экспорт</button>
   <button class="tab"         onclick="nav('wifi')">📶 Wi-Fi</button>
   <button class="tab"         onclick="nav('settings')">⚙ Настройки</button>
@@ -784,6 +792,45 @@ input[type=checkbox]{width:auto}
   </div>
 </div>
 
+<!-- ═══════════════ ARCHIVE ═══════════════ -->
+<div class="section" id="sec-archive">
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-title">📅 Выбор периода</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+      <label style="font-size:13px;color:var(--text2)">С: <input type="date" id="arch-from" style="background:var(--bg);color:var(--text);border:1px solid var(--border);padding:6px;border-radius:4px;font-family:var(--mono)"></label>
+      <label style="font-size:13px;color:var(--text2)">По: <input type="date" id="arch-to" style="background:var(--bg);color:var(--text);border:1px solid var(--border);padding:6px;border-radius:4px;font-family:var(--mono)"></label>
+      <button class="btn btn-amber" onclick="archLoad()" style="padding:6px 14px">🔄 Загрузить</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn" onclick="archPreset(0)" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;font-size:12px">Сегодня</button>
+      <button class="btn" onclick="archPreset(2)" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;font-size:12px">3 дня</button>
+      <button class="btn" onclick="archPreset(6)" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;font-size:12px">Неделя</button>
+      <button class="btn" onclick="archPreset(29)" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;font-size:12px">Месяц</button>
+      <button class="btn" onclick="archPreset(-1)" style="background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;font-size:12px">Всё</button>
+    </div>
+  </div>
+
+  <div class="card" id="arch-summary" style="margin-bottom:10px;display:none">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div><span style="color:var(--text2);font-size:13px">Период:</span> <b id="arch-range">—</b></div>
+      <div><span style="color:var(--text2);font-size:13px">Записей:</span> <b id="arch-count">—</b></div>
+      <div><span style="color:var(--text2);font-size:13px">Σ за период:</span> <b id="arch-delta" style="color:var(--green)">—</b></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-title">📊 По дням</div>
+    <div id="arch-list" style="font-size:14px;color:var(--text2)">Выберите период и нажмите «Загрузить»</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⬇ Скачать</div>
+    <button class="btn btn-blue" style="width:100%;margin-bottom:6px" onclick="archDownloadRange()">📥 CSV за выбранный период</button>
+    <button class="btn btn-green" style="width:100%" onclick="window.open('/api/log','_blank')">📥 Весь лог CSV</button>
+    <div style="font-size:12px;color:var(--text3);margin-top:8px">Файлы откроются в Excel / LibreOffice. Разделитель «;», десятичная запятая.</div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -815,13 +862,14 @@ function nav(id) {
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
-  const idx = {main:0,chart:1,wifi:2,settings:3,calib:4,tg:5,api:6};
+  const idx = {main:0,archive:1,chart:2,wifi:3,settings:4,calib:5,tg:6,api:7};
   document.querySelectorAll('.tab')[idx[id]].classList.add('active');
   if (id==='chart') renderCharts();
   if (id==='api')   refreshApiView();
   if (id==='settings'||id==='tg') loadConfig(true);
   if (id==='wifi') loadConfig(true);
   if (id==='calib') { fetchData(); }   // немедленно обновить cf-live, ofs-live, wiz-w
+  if (id==='archive') archInit();
 }
 
 // ── Refresh bar ───────────────────────────────────────────────────────
@@ -1549,6 +1597,138 @@ function autoRefresh(){
   setTimeout(autoRefresh,REFRESH);
 }
 
+// ── Archive ───────────────────────────────────────────────────────────
+let _archInited=false;
+function archFmtDate(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function archInit(){
+  if(_archInited)return;
+  _archInited=true;
+  const today=new Date();
+  const weekAgo=new Date(today.getTime()-6*86400000);
+  document.getElementById('arch-from').value=archFmtDate(weekAgo);
+  document.getElementById('arch-to').value=archFmtDate(today);
+  archLoad();
+}
+function archPreset(daysBack){
+  const today=new Date();
+  document.getElementById('arch-to').value=archFmtDate(today);
+  if(daysBack<0){document.getElementById('arch-from').value='';}
+  else{const d=new Date(today.getTime()-daysBack*86400000);document.getElementById('arch-from').value=archFmtDate(d);}
+  archLoad();
+}
+function archDownloadRange(){
+  const f=document.getElementById('arch-from').value;
+  const t=document.getElementById('arch-to').value;
+  if(!f&&!t){toast('Выберите период',true);return;}
+  const qs=[];if(f)qs.push('from='+f);if(t)qs.push('to='+t);
+  window.open('/api/log?'+qs.join('&'),'_blank');
+}
+// Группировка записей по дате (DD.MM.YYYY) + расчёт min/max/средний вес и темп
+function archGroup(rows){
+  const days={};
+  for(const r of rows){
+    if(!r.dt||r.dt.length<10)continue;
+    const day=r.dt.substring(0,10);
+    if(!days[day])days[day]={day,entries:[],wMin:Infinity,wMax:-Infinity,tMin:Infinity,tMax:-Infinity,wFirst:r.w,wLast:r.w};
+    const d=days[day];
+    d.entries.push(r);
+    if(r.w<d.wMin)d.wMin=r.w;
+    if(r.w>d.wMax)d.wMax=r.w;
+    if(r.t>-90){if(r.t<d.tMin)d.tMin=r.t;if(r.t>d.tMax)d.tMax=r.t;}
+    d.wLast=r.w;
+  }
+  return Object.values(days).sort((a,b)=>{
+    // DD.MM.YYYY → сравниваем как YYYYMMDD
+    const ka=a.day.substring(6,10)+a.day.substring(3,5)+a.day.substring(0,2);
+    const kb=b.day.substring(6,10)+b.day.substring(3,5)+b.day.substring(0,2);
+    return kb.localeCompare(ka);  // новые сверху
+  });
+}
+function archLoad(){
+  const f=document.getElementById('arch-from').value;
+  const t=document.getElementById('arch-to').value;
+  const list=document.getElementById('arch-list');
+  list.innerHTML='⏳ Загрузка...';
+  document.getElementById('arch-summary').style.display='none';
+  const qs=[];if(f)qs.push('from='+f);if(t)qs.push('to='+t);
+  fetch('/api/period'+(qs.length?'?'+qs.join('&'):''))
+    .then(r=>r.json())
+    .then(rows=>{
+      if(!rows||rows.length===0){list.innerHTML='<div style="color:var(--text3);padding:10px 0">Нет записей за выбранный период.</div>';return;}
+      const days=archGroup(rows);
+      // Сводка
+      const sortedAsc=[...rows].sort((a,b)=>{
+        const ka=a.dt.substring(6,10)+a.dt.substring(3,5)+a.dt.substring(0,2)+a.dt.substring(11);
+        const kb=b.dt.substring(6,10)+b.dt.substring(3,5)+b.dt.substring(0,2)+b.dt.substring(11);
+        return ka.localeCompare(kb);
+      });
+      const wFirst=sortedAsc[0].w,wLast=sortedAsc[sortedAsc.length-1].w;
+      const delta=wLast-wFirst;
+      document.getElementById('arch-range').textContent=sortedAsc[0].dt.substring(0,10)+' → '+sortedAsc[sortedAsc.length-1].dt.substring(0,10);
+      document.getElementById('arch-count').textContent=rows.length+' (дней: '+days.length+')';
+      const dEl=document.getElementById('arch-delta');
+      dEl.textContent=(delta>=0?'+':'')+delta.toFixed(2)+' кг';
+      dEl.style.color=delta>0?'var(--green)':(delta<-0.5?'var(--red)':'var(--text)');
+      document.getElementById('arch-summary').style.display='block';
+      // Получаем порог alert_delta из текущих настроек (для подсветки аномалий)
+      const alertDelta=window._alertDeltaCache||1.0;
+      // Рендерим список
+      let html='';
+      // Месячные группы
+      let curMonth='';
+      const monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+      // Пересчитываем дельты день-к-дню (на отсортированном по возрастанию массиве)
+      const daysAsc=[...days].reverse();
+      for(let i=0;i<daysAsc.length;i++){
+        if(i>0)daysAsc[i].deltaPrev=daysAsc[i].wLast-daysAsc[i-1].wLast;
+        else daysAsc[i].deltaPrev=null;
+      }
+      // Рендер сверху вниз — новые первыми
+      for(const d of days){
+        const dt=d.day;
+        const month=dt.substring(3,5),year=dt.substring(6,10);
+        const monthKey=month+'/'+year;
+        if(monthKey!==curMonth){
+          curMonth=monthKey;
+          html+='<div style="font-size:12px;color:var(--amber);margin:14px 0 6px;letter-spacing:1px">'+monthNames[parseInt(month)-1].toUpperCase()+' '+year+'</div>';
+        }
+        // Метка/цвет
+        let marker='⚪';
+        let markerColor='var(--text3)';
+        if(d.deltaPrev!==null){
+          if(d.deltaPrev<-alertDelta){marker='🔴';markerColor='var(--red)';}
+          else if(d.deltaPrev>0.1){marker='🟢';markerColor='var(--green)';}
+          else if(d.deltaPrev<-0.1){marker='🟡';markerColor='var(--amber)';}
+        }
+        // Дни недели
+        const parts=dt.split('.');
+        const jsDate=new Date(parts[2]+'-'+parts[1]+'-'+parts[0]);
+        const dow=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][jsDate.getDay()];
+        // Записи дня
+        let entriesHtml='';
+        for(const e of d.entries){
+          const time=e.dt.substring(11,16);
+          entriesHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span style="color:var(--text2)">'+time+'</span><span><b>'+e.w.toFixed(2)+'</b> кг'+(e.t>-90?' · '+e.t.toFixed(1)+'°C':'')+'</span></div>';
+        }
+        const deltaText=d.deltaPrev===null?'':' <span style="color:'+(d.deltaPrev>=0?'var(--green)':'var(--red)')+';font-size:12px">('+(d.deltaPrev>=0?'+':'')+d.deltaPrev.toFixed(2)+' кг)</span>';
+        html+='<div style="border-left:3px solid '+markerColor+';padding:8px 10px;margin-bottom:6px;background:var(--bg);border-radius:4px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b>'+dt+' '+dow+' '+marker+'</b><span style="font-size:13px;color:var(--text2)">'+d.wLast.toFixed(2)+' кг'+deltaText+'</span></div>'+entriesHtml+'<div style="font-size:11px;color:var(--text3);margin-top:4px">Мин/Макс: '+d.wMin.toFixed(2)+'–'+d.wMax.toFixed(2)+' кг'+(d.tMin<Infinity?' · T: '+d.tMin.toFixed(1)+'–'+d.tMax.toFixed(1)+'°C':'')+'</div></div>';
+      }
+      list.innerHTML=html;
+    })
+    .catch(()=>{list.innerHTML='<div style="color:var(--red);padding:10px 0">Ошибка загрузки</div>';});
+  // Параллельно подтягиваем alertDelta из /api/config (один раз)
+  if(!window._alertDeltaCache){
+    fetch('/api/config').then(r=>r.json()).then(c=>{window._alertDeltaCache=c.alertDelta||1.0;}).catch(()=>{});
+  }
+}
+
+// ── PWA: service worker registration ──────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+
 // ── Init ──────────────────────────────────────────────────────────────
 updateWiz();
 fetchData();
@@ -2065,7 +2245,37 @@ static void _handleAuthOta() {
   _sendJson(true, "OTA пароль сохранён. Вступит в силу после перезагрузки.");
 }
 
-// ─── /api/log  GET — скачать CSV-лог (опционально: ?date=YYYY-MM-DD) ─────
+// ─── Stream-обёртка над WebServerCompat (для chunked transfer без heap-аккумуляции) ─
+class _WebChunkStream : public Stream {
+public:
+  WebServerCompat &srv;
+  char buf[256];
+  uint16_t pos;
+  _WebChunkStream(WebServerCompat &s) : srv(s), pos(0) {}
+  size_t write(uint8_t c) override {
+    buf[pos++] = (char)c;
+    if (pos >= sizeof(buf)) _flush_buf();
+    return 1;
+  }
+  size_t write(const uint8_t *b, size_t s) override {
+    size_t sent = 0;
+    while (sent < s) {
+      size_t n = (s - sent > 512) ? 512 : (s - sent);
+      if (pos > 0) _flush_buf();
+      srv.sendContent((const char*)(b + sent), n);
+      sent += n;
+      yield();
+    }
+    return s;
+  }
+  void _flush_buf() { if (pos > 0) { srv.sendContent(buf, pos); pos = 0; } }
+  int available() override { return 0; }
+  int read()      override { return -1; }
+  int peek()      override { return -1; }
+  void flush()    override { _flush_buf(); }
+};
+
+// ─── /api/log  GET — скачать CSV-лог (опционально: ?date=YYYY-MM-DD или ?from=&to=) ─
 static void _handleLog() {
   if (!_auth()) return;
   static unsigned long _lastLogCsvReq = 0;
@@ -2076,16 +2286,34 @@ static void _handleLog() {
     return;
   }
   String date = _srv.arg("date");  // "" если параметр не передан
-  // Санитизация: только цифры, '-' и '.', длина ≤10 (защита от HTTP header injection)
-  if (date.length() > 0) {
-    if (date.length() > 10) date = date.substring(0, 10);
-    for (unsigned int i = 0; i < date.length(); i++) {
-      char ch = date[i];
-      if (!isdigit(ch) && ch != '-' && ch != '.') {
-        _srv.send(400, "text/plain", "Bad date");
-        return;
-      }
+  String dFrom = _srv.arg("from");
+  String dTo   = _srv.arg("to");
+  // Санитизация всех 3 параметров: только цифры, '-' и '.', длина ≤10
+  auto sanitizeDate = [](String &d) -> bool {
+    if (d.length() == 0) return true;
+    if (d.length() > 10) d = d.substring(0, 10);
+    for (unsigned int i = 0; i < d.length(); i++) {
+      char ch = d[i];
+      if (!isdigit(ch) && ch != '-' && ch != '.') return false;
     }
+    return true;
+  };
+  if (!sanitizeDate(date) || !sanitizeDate(dFrom) || !sanitizeDate(dTo)) {
+    _srv.send(400, "text/plain", "Bad date");
+    return;
+  }
+  // Если задан диапазон from/to — приоритет над date
+  if (dFrom.length() > 0 || dTo.length() > 0) {
+    String fname = "beehive_" +
+                   (dFrom.length() ? dFrom : String("start")) + "_" +
+                   (dTo.length()   ? dTo   : String("end"))   + ".csv";
+    _srv.sendHeader("Content-Disposition", "attachment; filename=\"" + fname + "\"");
+    _srv.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    _srv.send(200, "text/csv; charset=utf-8", "");
+    _WebChunkStream cs(_srv);
+    log_stream_csv_range(cs, dFrom, dTo);
+    cs.flush();
+    return;
   }
   if (date.length() == 0) {
     // Без фильтра — стримим весь файл напрямую
@@ -2109,39 +2337,107 @@ static void _handleLog() {
     _srv.sendHeader("Content-Disposition", "attachment; filename=\"" + fname + "\"");
     _srv.setContentLength(CONTENT_LENGTH_UNKNOWN);
     _srv.send(200, "text/csv; charset=utf-8", "");
-    {
-      class ChunkStream : public Stream {
-      public:
-        WebServerCompat &srv;
-        char buf[256];
-        uint16_t pos;
-        ChunkStream(WebServerCompat &s) : srv(s), pos(0) {}
-        size_t write(uint8_t c) override {
-          buf[pos++] = (char)c;
-          if (pos >= sizeof(buf)) _flush_buf();
-          return 1;
-        }
-        size_t write(const uint8_t *b, size_t s) override {
-          size_t sent = 0;
-          while (sent < s) {
-            size_t n = (s - sent > 512) ? 512 : (s - sent);
-            if (pos > 0) _flush_buf();
-            srv.sendContent((const char*)(b + sent), n);
-            sent += n;
-            yield();  // WDT safe: не блокировать loop при стриме CSV
-          }
-          return s;
-        }
-        void _flush_buf() { if (pos > 0) { srv.sendContent(buf, pos); pos = 0; } }
-        int available() override { return 0; }
-        int read()      override { return -1; }
-        int peek()      override { return -1; }
-        void flush()    override { _flush_buf(); }
-      } cs(_srv);
-      log_stream_csv_date(cs, date);
-      cs.flush();
-    }
+    _WebChunkStream cs(_srv);
+    log_stream_csv_date(cs, date);
+    cs.flush();
   }
+}
+
+// ─── /api/period  GET — JSON записей за диапазон ?from=&to= ──────────────
+// Для страницы "Архив": клиент группирует по датам и рисует ленту.
+static void _handlePeriod() {
+  if (!_auth()) return;
+  static unsigned long _lastPeriodReq = 0;
+  if (!_rate_limit(_lastPeriodReq, 1000UL)) return;
+  _activity();
+  if (!log_exists()) {
+    _srv.send(200, "application/json", "[]");
+    return;
+  }
+  String dFrom = _srv.arg("from");
+  String dTo   = _srv.arg("to");
+  auto sanitizeDate = [](String &d) -> bool {
+    if (d.length() == 0) return true;
+    if (d.length() > 10) d = d.substring(0, 10);
+    for (unsigned int i = 0; i < d.length(); i++) {
+      char ch = d[i];
+      if (!isdigit(ch) && ch != '-' && ch != '.') return false;
+    }
+    return true;
+  };
+  if (!sanitizeDate(dFrom) || !sanitizeDate(dTo)) {
+    _srv.send(400, "text/plain", "Bad date");
+    return;
+  }
+  _srv.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  _srv.send(200, "application/json", "");
+  _WebChunkStream cs(_srv);
+  log_stream_period_json(cs, dFrom, dTo);
+  cs.flush();
+}
+
+// ─── /manifest.json  GET — PWA-манифест ──────────────────────────────────
+static void _handleManifest() {
+  _activity();
+  static const char MANIFEST[] PROGMEM =
+    "{\"name\":\"BeehiveScale\",\"short_name\":\"Beehive\","
+    "\"start_url\":\"/\",\"display\":\"standalone\",\"orientation\":\"portrait\","
+    "\"background_color\":\"#0d0f0b\",\"theme_color\":\"#f5a623\","
+    "\"description\":\"Пчеловодные весы — мониторинг улья\","
+    "\"icons\":[{\"src\":\"/icon.svg\",\"sizes\":\"any\",\"type\":\"image/svg+xml\",\"purpose\":\"any maskable\"}]}";
+  _srv.send_P(200, "application/manifest+json", MANIFEST);
+}
+
+// ─── /icon.svg  GET — иконка приложения (SVG для PWA-манифеста) ─────────
+static void _handleIcon() {
+  static const char ICON_SVG[] PROGMEM =
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 192 192\">"
+    "<rect width=\"192\" height=\"192\" fill=\"#0d0f0b\"/>"
+    "<circle cx=\"96\" cy=\"96\" r=\"56\" fill=\"#f5a623\"/>"
+    "<rect x=\"66\" y=\"78\" width=\"60\" height=\"8\" fill=\"#0d0f0b\"/>"
+    "<rect x=\"66\" y=\"94\" width=\"60\" height=\"8\" fill=\"#0d0f0b\"/>"
+    "<rect x=\"66\" y=\"110\" width=\"60\" height=\"8\" fill=\"#0d0f0b\"/>"
+    "<ellipse cx=\"66\" cy=\"66\" rx=\"22\" ry=\"14\" fill=\"#ffffff\" opacity=\"0.85\"/>"
+    "<ellipse cx=\"126\" cy=\"66\" rx=\"22\" ry=\"14\" fill=\"#ffffff\" opacity=\"0.85\"/>"
+    "</svg>";
+  _srv.sendHeader("Cache-Control", "public, max-age=2592000");
+  _srv.send_P(200, "image/svg+xml", ICON_SVG);
+}
+
+// ─── /sw.js  GET — service worker для PWA (offline-кеш) ──────────────────
+static void _handleServiceWorker() {
+  // Кеш: главная страница + manifest + icon. API-запросы НЕ кешируем — нужны свежие данные.
+  // При оффлайне: страница и иконка работают; данные грузятся как только Wi-Fi появится.
+  static const char SW_JS[] PROGMEM =
+    "const C='beehive-v1';"
+    "const A=['/','/manifest.json','/icon.svg'];"
+    "self.addEventListener('install',e=>{"
+      "e.waitUntil(caches.open(C).then(c=>c.addAll(A)).then(()=>self.skipWaiting()));"
+    "});"
+    "self.addEventListener('activate',e=>{"
+      "e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));"
+    "});"
+    "self.addEventListener('fetch',e=>{"
+      "const u=new URL(e.request.url);"
+      // API-запросы — только сеть (свежие данные)
+      "if(u.pathname.startsWith('/api/')){return;}"
+      // Прочее — сеть с фоллбэком на кеш
+      "e.respondWith(fetch(e.request).then(r=>{"
+        "if(r&&r.status===200&&e.request.method==='GET'){"
+          "const cp=r.clone();caches.open(C).then(c=>c.put(e.request,cp));"
+        "}"
+        "return r;"
+      "}).catch(()=>caches.match(e.request).then(m=>m||caches.match('/'))));"
+    "});";
+  _srv.sendHeader("Cache-Control", "no-cache");
+  _srv.send_P(200, "application/javascript", SW_JS);
+}
+
+// ─── /archive  GET — alias на главный SPA (раздел "Архив") ──────────────
+static void _handleArchive() {
+  if (!_auth()) return;
+  _activity();
+  _sendProgmemChunked(PAGE_HTML);
 }
 
 // ─── /api/daystat  GET — суточная статистика (фичи 12, 17) ──────────────
@@ -2483,6 +2779,11 @@ void webserver_init(WebData &data, WebActions &actions) {
     _srv.on("/api/log/clear",    HTTP_POST, _handleLogClear);
     _srv.on("/api/log/json",     HTTP_GET,  _handleLogJson);
     _srv.on("/chart",            HTTP_GET,  _handleChart);
+    _srv.on("/archive",          HTTP_GET,  _handleArchive);
+    _srv.on("/api/period",       HTTP_GET,  _handlePeriod);
+    _srv.on("/manifest.json",    HTTP_GET,  _handleManifest);
+    _srv.on("/icon.svg",         HTTP_GET,  _handleIcon);
+    _srv.on("/sw.js",            HTTP_GET,  _handleServiceWorker);
     _srv.on("/api/tg/settings",  HTTP_POST, _handleTgSettings);
     _srv.on("/api/tg/test",      HTTP_POST, _handleTgTest);
     _srv.on("/api/calib/set",    HTTP_POST, _handleCalibSet);
