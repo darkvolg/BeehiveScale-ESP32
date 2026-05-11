@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/logo.svg" alt="BeehiveScale ESP32" width="160" height="160"/>
+<img src="docs/assets/logo.png" alt="BeehiveScale ESP32" width="200" height="200"/>
 
 # BeehiveScale ESP32
 
