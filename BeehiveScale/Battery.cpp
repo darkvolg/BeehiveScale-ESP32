@@ -1,12 +1,18 @@
 #include "Battery.h"
+#include "Memory.h"
 
-static float _batSmoothed = 0.0f;
+static float _batSmoothed   = 0.0f;
 static bool  _batInitialized = false;
+static float _batRatio      = BAT_DIVIDER_RATIO_DEFAULT;  // v5.0.19: динамический, из EEPROM
+
+// Напряжение на пине ADC (до умножения на ratio). Для калибровки через сайт.
+float bat_read_raw_adc_voltage() {
+  int raw = analogRead(BAT_PIN);
+  return raw * 3.3f / BAT_ADC_MAX;
+}
 
 static float bat_read_raw() {
-  int raw = analogRead(BAT_PIN);
-  float vAdc = raw * 3.3f / BAT_ADC_MAX;
-  return vAdc * BAT_DIVIDER_RATIO;
+  return bat_read_raw_adc_voltage() * _batRatio;
 }
 
 void bat_init() {
@@ -16,6 +22,11 @@ void bat_init() {
   // (В Core 3.0+ ESP-IDF переименовал ADC_ATTEN_DB_11 → ADC_ATTEN_DB_12, но Arduino-enum стабилен.)
   analogSetAttenuation(ADC_11db);
 #endif
+  // v5.0.19: загружаем калибровочный коэф. делителя из EEPROM (если есть)
+  float saved = 0.0f;
+  if (load_bat_calib(saved)) {
+    _batRatio = saved;
+  }
   // Усреднение по 10 выборкам при старте для стабильности
   float sum = 0;
   for (int i = 0; i < 10; i++) {
@@ -47,4 +58,16 @@ int bat_percent() {
   else if (v >= BAT_VMIN) pct = (v - BAT_VMIN) / (3.40f - BAT_VMIN) * 5.0f; // 3.00-3.40 → 0-5%
   else pct = 0.0f;
   return constrain((int)pct, 0, 100);
+}
+
+float bat_get_ratio() {
+  return _batRatio;
+}
+
+void bat_set_ratio(float r) {
+  if (isnan(r) || r < 1.5f || r > 3.0f) return;
+  _batRatio = r;
+  save_bat_calib(r);
+  // Сбрасываем EMA-сглаживание, чтобы новые показания сразу применились
+  _batSmoothed = bat_read_raw();
 }

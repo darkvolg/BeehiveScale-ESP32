@@ -8,7 +8,7 @@
 
 🌍 **Язык:** **🇷🇺 Русский** · [🇬🇧 English](README.en.md)
 
-![Version](https://img.shields.io/badge/version-v5.0.18-f5a623?style=flat-square)
+![Version](https://img.shields.io/badge/version-v5.0.19-f5a623?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-ESP32--WROOM--32-blue?style=flat-square)
 ![Framework](https://img.shields.io/badge/framework-Arduino-00979d?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
@@ -155,7 +155,7 @@ pio run -e esp32dev -t upload
 ## 🌐 Использование
 
 1. **Подключи питание** через TP4056 (заряд) + MT3608 (Boost 5В) → VIN ESP32.
-2. **На LCD** появится splash «Vesy Pchelovod v5.0.18».
+2. **На LCD** появится splash «Vesy Pchelovod v5.0.19».
 3. **На телефоне** найди Wi-Fi сеть `BeehiveScale`, пароль `12345678`.
 4. **Открой в браузере** `http://192.168.4.1`. Логин `admin` / `beehive`.
 5. **Откалибруй** через сайт → Калибровка → поставь гирю → введи вес → Сохранить.
@@ -230,7 +230,7 @@ pio run -e esp32dev -t upload
 - [x] Cloudflare Worker для Telegram (v5.0.0)
 - [x] Графики на сайте с тач-курсором (v5.0.13)
 - [x] Вкладка Архив + PWA (v5.0.16)
-- [x] Пресет «С прошлого визита» (v5.0.18)
+- [x] Пресет «С прошлого визита» (v5.0.19)
 - [ ] **Фаза P3:** DS3231 alarm wake вместо timer wakeup (точность ±2 мин/год)
 - [ ] **Фаза P4:** PCB v2, IP65 корпус, P-MOSFET для LCD off
 - [ ] Солнечная панель 5W 6V + MPPT (CN3791)

@@ -8,7 +8,7 @@
 
 🌍 **Language:** [🇷🇺 Русский](README.md) · **🇬🇧 English**
 
-![Version](https://img.shields.io/badge/version-v5.0.18-f5a623?style=flat-square)
+![Version](https://img.shields.io/badge/version-v5.0.19-f5a623?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-ESP32--WROOM--32-blue?style=flat-square)
 ![Framework](https://img.shields.io/badge/framework-Arduino-00979d?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
@@ -155,7 +155,7 @@ pio run -e esp32dev -t upload
 ## 🌐 Usage
 
 1. **Connect power** through TP4056 (charge) + MT3608 (Boost 5V) → ESP32 VIN.
-2. **LCD splash** "Vesy Pchelovod v5.0.18" appears.
+2. **LCD splash** "Vesy Pchelovod v5.0.19" appears.
 3. **On phone** find Wi-Fi network `BeehiveScale`, password `12345678`.
 4. **Open in browser** `http://192.168.4.1`. Login `admin` / `beehive`.
 5. **Calibrate** via web → Calibration → place known weight → enter value → Save.
@@ -232,7 +232,7 @@ Detailed: [📖 user manual](manual.html).
 - [x] Cloudflare Worker for Telegram (v5.0.0)
 - [x] Web charts with touch cursor (v5.0.13)
 - [x] Archive tab + PWA (v5.0.16)
-- [x] "Since last visit" preset (v5.0.18)
+- [x] "Since last visit" preset (v5.0.19)
 - [ ] **Phase P3:** DS3231 alarm wake instead of timer wakeup (±2 min/year accuracy)
 - [ ] **Phase P4:** PCB v2, IP65 enclosure, P-MOSFET for LCD off
 - [ ] Solar panel 5W 6V + MPPT (CN3791)

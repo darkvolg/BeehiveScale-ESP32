@@ -15,6 +15,7 @@ using WebServerCompat = WebServer;
 #include "Connectivity.h"  // для ntp_sync_time()
 #include "Logger.h"
 #include "RTC_Module.h"    // для rtc_now() — last-visit timestamp
+#include "Battery.h"       // для калибровки делителя через /api/battery/calib (v5.0.19)
 #ifdef USE_SD_CARD
 #include <SPI.h>
 #include <SD.h>
@@ -726,6 +727,33 @@ input[type=checkbox]{width:auto}
       </div>
       <div style="font-size:13px;color:var(--text3);margin-top:10px;line-height:1.7">
         Подберите Cal.Factor так, чтобы показание<br>совпало с реальной массой эталонного груза.
+      </div>
+    </div>
+    <div class="card full">
+      <div class="card-title">🔋 Калибровка батареи</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:10px;line-height:1.6">
+        Реальные резисторы делителя имеют разброс ±1-5%, плюс ADC ESP32 нелинейный.
+        Если показание на сайте отличается от <b>реального напряжения банки</b> (замерь мультиметром на BAT-пине модуля питания), откалибруй коэффициент.
+      </div>
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label>Сейчас прошивка показывает</label>
+          <div style="font-size:18px;color:var(--amber);font-weight:bold"><span id="bcal-shown">--</span> В</div>
+          <div style="font-size:11px;color:var(--text3)">ADC сырое: <span id="bcal-adc">--</span> В · Коэф.: <span id="bcal-ratio">--</span></div>
+        </div>
+        <div>
+          <label>Реальное напряжение (с мультиметра)</label>
+          <input type="number" id="bcal-real" step="0.01" min="1.5" max="5.5" placeholder="напр. 4.10">
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-green" onclick="batCalibAuto()">⚙ Откалибровать автоматически</button>
+        <button class="btn btn-blue"  onclick="batCalibLoad()">↺ Обновить</button>
+        <button class="btn btn-amber" onclick="batCalibReset()">↻ Сбросить на 2.0 (заводское)</button>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-top:10px;line-height:1.6">
+        <b>Как работает:</b> ввёл реальное напряжение → прошивка рассчитала новый коэф. из ADC-сырого значения → сохранила в EEPROM навсегда (переживает прошивку).<br>
+        <b>Когда калибровать:</b> один раз при первой сборке делителя, потом раз в сезон если есть смещение >0.1 В.
       </div>
     </div>
   </div>
@@ -1576,6 +1604,38 @@ function applyCalib(){
   apiFetch('/api/calib/set',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
     .then(r=>r.json()).then(d=>{toast(d.msg||'OK',!d.ok);if(d.ok)fetchData();}).catch(()=>toast('Нет связи',true));
 }
+
+// ── Battery calibration (v5.0.19) ─────────────────────────────────────
+function batCalibLoad(){
+  fetch('/api/battery/calib').then(r=>r.json()).then(d=>{
+    document.getElementById('bcal-shown').textContent=(d.smoothed||d.batV||0).toFixed(2);
+    document.getElementById('bcal-adc').textContent=(d.adcV||0).toFixed(3);
+    document.getElementById('bcal-ratio').textContent=(d.ratio||0).toFixed(3);
+  }).catch(()=>{});
+}
+function batCalibAuto(){
+  const real=parseFloat(document.getElementById('bcal-real').value);
+  if(isNaN(real)||real<1.5||real>5.5){toast('Введи реальное напряжение (1.5-5.5 В)',true);return;}
+  apiFetch('/api/battery/calib',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({realVoltage:real})})
+    .then(r=>r.json()).then(d=>{
+      if(d.status==='ok'){toast('Откалибровано! Коэф: '+d.ratio.toFixed(3));batCalibLoad();fetchData();}
+      else toast('Ошибка калибровки',true);
+    }).catch(()=>toast('Нет связи',true));
+}
+function batCalibReset(){
+  if(!confirm('Сбросить коэффициент батареи на 2.0 (заводское)?'))return;
+  apiFetch('/api/battery/calib',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ratio:2.0})})
+    .then(r=>r.json()).then(d=>{
+      if(d.status==='ok'){toast('Сброшено на 2.0');batCalibLoad();fetchData();}
+    }).catch(()=>toast('Нет связи',true));
+}
+// Авто-загрузка при переключении на вкладку Калибровка
+(function(){
+  const origNav=window.nav;
+  if(typeof origNav==='function'){
+    window.nav=function(id){origNav(id);if(id==='calib')batCalibLoad();};
+  }
+})();
 
 // ── API viewer ────────────────────────────────────────────────────────
 function refreshApiView(){
@@ -2542,6 +2602,75 @@ static void _handleLastVisit() {
   _srv.send(200, "application/json", out);
 }
 
+// ─── /api/battery/calib  GET/POST — калибровка делителя батареи (v5.0.19) ─
+// GET  → возвращает текущий ratio + сырое напряжение ADC + рассчитанное напряжение
+// POST → принимает либо ratio (точный коэф), либо realVoltage (авто-расчёт)
+static void _handleBatteryCalib() {
+  if (!_auth()) return;
+  _activity();
+
+  if (_srv.method() == HTTP_GET) {
+    StaticJsonDocument<192> doc;
+    float adcV = bat_read_raw_adc_voltage();
+    float ratio = bat_get_ratio();
+    doc["ratio"]    = ratio;
+    doc["adcV"]     = adcV;             // напряжение на пине ESP32 (до умножения)
+    doc["batV"]     = adcV * ratio;     // итоговое (равно bat_voltage без сглаживания)
+    doc["smoothed"] = bat_voltage();    // что прошивка показывает в UI (с EMA)
+    String out; serializeJson(doc, out);
+    _srv.send(200, "application/json", out);
+    return;
+  }
+
+  if (_srv.method() == HTTP_POST) {
+    if (!_csrf()) return;
+    if (!_srv.hasArg("plain")) { _srv.send(400, "text/plain", "No body"); return; }
+
+    StaticJsonDocument<128> in;
+    DeserializationError err = deserializeJson(in, _srv.arg("plain"));
+    if (err) { _srv.send(400, "text/plain", "Bad JSON"); return; }
+
+    float newRatio = 0.0f;
+    if (in.containsKey("ratio")) {
+      // Точный ввод: пользователь сам подбирает коэффициент
+      newRatio = in["ratio"].as<float>();
+    } else if (in.containsKey("realVoltage")) {
+      // Авто-расчёт: пользователь ввёл реальное напряжение с мультиметра
+      float real = in["realVoltage"].as<float>();
+      float adcV = bat_read_raw_adc_voltage();
+      if (adcV < 0.1f || isnan(adcV) || isnan(real)) {
+        _srv.send(400, "text/plain", "ADC reading invalid");
+        return;
+      }
+      if (real < 1.5f || real > 5.5f) {
+        _srv.send(400, "text/plain", "Real voltage out of range (1.5-5.5V expected)");
+        return;
+      }
+      newRatio = real / adcV;
+    } else {
+      _srv.send(400, "text/plain", "Need 'ratio' or 'realVoltage'");
+      return;
+    }
+
+    if (isnan(newRatio) || newRatio < 1.5f || newRatio > 3.0f) {
+      _srv.send(400, "text/plain", "Ratio out of safe range (1.5-3.0)");
+      return;
+    }
+
+    bat_set_ratio(newRatio);
+
+    StaticJsonDocument<128> doc;
+    doc["status"]   = "ok";
+    doc["ratio"]    = newRatio;
+    doc["batV"]     = bat_voltage();
+    String out; serializeJson(doc, out);
+    _srv.send(200, "application/json", out);
+    return;
+  }
+
+  _srv.send(405, "text/plain", "Method not allowed");
+}
+
 // ─── /api/daystat  GET — суточная статистика (фичи 12, 17) ──────────────
 static void _handleDayStat() {
   if (!_auth()) return;
@@ -2884,6 +3013,8 @@ void webserver_init(WebData &data, WebActions &actions) {
     _srv.on("/archive",          HTTP_GET,  _handleArchive);
     _srv.on("/api/period",       HTTP_GET,  _handlePeriod);
     _srv.on("/api/last-visit",   HTTP_GET,  _handleLastVisit);
+    _srv.on("/api/battery/calib",HTTP_GET,  _handleBatteryCalib);
+    _srv.on("/api/battery/calib",HTTP_POST, _handleBatteryCalib);
     _srv.on("/manifest.json",    HTTP_GET,  _handleManifest);
     _srv.on("/icon.svg",         HTTP_GET,  _handleIcon);
     _srv.on("/sw.js",            HTTP_GET,  _handleServiceWorker);

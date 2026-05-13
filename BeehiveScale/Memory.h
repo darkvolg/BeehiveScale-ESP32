@@ -67,7 +67,11 @@
 #define EEPROM_ADDR_LAST_VISIT_MAGIC  331  // 1 байт
 #define EEPROM_MAGIC_LAST_VISIT_VALUE 0xAB
 #define EEPROM_ADDR_LAST_VISIT        332  // uint32_t, 4 байта — Unix timestamp последнего web-визита
-// 336..383 reserved for future fields
+// ─── Battery divider calibration (v5.0.19) — поправка под реальные резисторы делителя
+#define EEPROM_ADDR_BAT_CALIB_MAGIC   336  // 1 байт
+#define EEPROM_MAGIC_BAT_CALIB_VALUE  0xAC
+#define EEPROM_ADDR_BAT_CALIB_RATIO   337  // float, 4 байта — коэф. делителя (default 2.0 для 100k/100k)
+// 341..383 reserved for future fields
 #define EEPROM_SIZE              384  // расширено под credentials-блок
 
 // Веб-настройки (alertDelta, calibWeight, emaAlpha)
@@ -173,5 +177,9 @@ bool load_last_temp(float &tempC);
 // 0 = ни разу не было визитов (или EEPROM пуст).
 void     save_last_visit(uint32_t unixtime);
 uint32_t load_last_visit();
+
+// Battery divider calibration ratio (v5.0.19)
+void save_bat_calib(float ratio);
+bool load_bat_calib(float &ratio);
 
 #endif

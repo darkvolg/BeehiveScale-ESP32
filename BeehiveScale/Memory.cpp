@@ -667,3 +667,25 @@ uint32_t load_last_visit() {
   if (ts < 1546300800UL) return 0;
   return ts;
 }
+
+// ─── Battery divider calibration ratio (v5.0.19) ─────────────────────────
+// Сохраняет поправку коэффициента делителя в EEPROM. Дефолт 2.0 (R1=R2=100k),
+// но реальные резисторы и ADC ESP32 имеют погрешность ±5-10%, поэтому
+// пользователь корректирует через сайт.
+// Валидация: разумный диапазон 1.5–3.0 (защита от мусора в EEPROM).
+void save_bat_calib(float ratio) {
+  if (isnan(ratio) || ratio < 1.5f || ratio > 3.0f) return;
+  byte magic = EEPROM_MAGIC_BAT_CALIB_VALUE;
+  EEPROM.put(EEPROM_ADDR_BAT_CALIB_MAGIC, magic);
+  EEPROM.put(EEPROM_ADDR_BAT_CALIB_RATIO, ratio);
+  EEPROM.commit();
+}
+
+bool load_bat_calib(float &ratio) {
+  byte magic = 0;
+  EEPROM.get(EEPROM_ADDR_BAT_CALIB_MAGIC, magic);
+  if (magic != EEPROM_MAGIC_BAT_CALIB_VALUE) return false;
+  EEPROM.get(EEPROM_ADDR_BAT_CALIB_RATIO, ratio);
+  if (isnan(ratio) || ratio < 1.5f || ratio > 3.0f) return false;
+  return true;
+}

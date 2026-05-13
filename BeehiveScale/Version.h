@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 18
-#define FW_VERSION_SUFFIX ""  // 5.0.18 — chore: обновлена PWA-иконка. Минималистичная стилизованная пчела на скруглённом медовом квадрате (по образу AI-сгенерированного icon.png). Заменён простой геометрический SVG в _handleIcon().
+#define FW_VERSION_PATCH 19
+#define FW_VERSION_SUFFIX ""  // 5.0.19 — feat: калибровка делителя батареи через сайт. Новый блок в "Калибровка" → ввёл реальное напряжение с мультиметра → авто-расчёт коэффициента → сохранение в EEPROM addr 336-340. Endpoint /api/battery/calib (GET/POST). Без перепрошивки можно подкрутить точность показаний батареи на 5-10%.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
