@@ -778,12 +778,39 @@ input[type=checkbox]{width:auto}
         ✓ Резкое изменение веса (порог: <b id="tg-thresh" style="color:var(--amber)">-- кг</b>)<br>
         ✓ Роение — быстрая потеря веса<br>
         ✓ Кража — резкое изменение<br>
-        ✓ Низкий заряд батареи (&lt; 3.5 В)<br>
-        ✓ Восстановление соединения<br>
+        ✓ Регулярный отчёт по расписанию<br>
         ✓ Тестовое сообщение (кнопка Тест)
       </div>
       <div style="font-size:13px;color:var(--text3);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         Для работы Telegram нужен режим Wi-Fi <b style="color:var(--amber)">STA</b> (подключение к роутеру)
+      </div>
+    </div>
+    <div class="card full">
+      <div class="card-title">⚠ Пороги алертов (v5.0.20)</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:12px;line-height:1.7">
+        Пороговые алерты — Telegram-уведомление при превышении границ. Анти-спам: каждый алерт шлётся <b>один раз</b>, повторно — только после возврата в норму (гистерезис 0.1В для батареи, 2°C для температуры).
+      </div>
+      <div class="form-row">
+        <label>🔋 Низкая батарея — напряжение ниже (В, 0=выкл)</label>
+        <input type="number" id="alrt-bat" step="0.05" min="0" max="5" placeholder="напр. 3.6">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Рекомендуется <b>3.4–3.6 В</b> — даст время приехать заменить банку до полного разряда (DW01 защита срабатывает при ~3.0 В).</div>
+      </div>
+      <div class="form-row">
+        <label>❄️ Низкая температура — ниже °C (0=выкл)</label>
+        <input type="number" id="alrt-tlow" step="0.5" min="-50" max="50" placeholder="напр. -10">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Для зимовки: -10 ÷ -15 °C — критическое подмерзание клуба.</div>
+      </div>
+      <div class="form-row">
+        <label>🔥 Высокая температура — выше °C (0=выкл)</label>
+        <input type="number" id="alrt-thigh" step="0.5" min="-50" max="80" placeholder="напр. 38">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Лето: 38–42 °C — перегрев улья на солнце.</div>
+      </div>
+      <div class="form-row">
+        <label><input type="checkbox" id="alrt-rtc" style="margin-right:6px;vertical-align:middle"> ⏰ Алерт при RTC-ошибке (села CR2032 на DS3231)</label>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="alertsSave()">💾 Сохранить</button>
+        <button class="btn btn-blue"  onclick="alertsLoad()">↺ Загрузить</button>
       </div>
     </div>
   </div>
@@ -1629,13 +1656,40 @@ function batCalibReset(){
       if(d.status==='ok'){toast('Сброшено на 2.0');batCalibLoad();fetchData();}
     }).catch(()=>toast('Нет связи',true));
 }
-// Авто-загрузка при переключении на вкладку Калибровка
+// Авто-загрузка при переключении на вкладку Калибровка / Telegram
 (function(){
   const origNav=window.nav;
   if(typeof origNav==='function'){
-    window.nav=function(id){origNav(id);if(id==='calib')batCalibLoad();};
+    window.nav=function(id){
+      origNav(id);
+      if(id==='calib')batCalibLoad();
+      if(id==='tg')alertsLoad();
+    };
   }
 })();
+
+// ── Telegram alerts (v5.0.20) ─────────────────────────────────────────
+function alertsLoad(){
+  fetch('/api/alerts').then(r=>r.json()).then(d=>{
+    document.getElementById('alrt-bat').value   = (d.batLowV  > 0) ? d.batLowV  : '';
+    document.getElementById('alrt-tlow').value  = (d.tempLow  != 0) ? d.tempLow  : '';
+    document.getElementById('alrt-thigh').value = (d.tempHigh != 0) ? d.tempHigh : '';
+    document.getElementById('alrt-rtc').checked = !!d.rtcEn;
+  }).catch(()=>{});
+}
+function alertsSave(){
+  const body = {
+    batLowV:  parseFloat(document.getElementById('alrt-bat').value)   || 0,
+    tempLow:  parseFloat(document.getElementById('alrt-tlow').value)  || 0,
+    tempHigh: parseFloat(document.getElementById('alrt-thigh').value) || 0,
+    rtcEn:    document.getElementById('alrt-rtc').checked
+  };
+  apiFetch('/api/alerts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(r=>r.json()).then(d=>{
+      if(d.status==='ok')toast('Сохранено');
+      else toast('Ошибка',true);
+    }).catch(()=>toast('Нет связи',true));
+}
 
 // ── API viewer ────────────────────────────────────────────────────────
 function refreshApiView(){
@@ -2671,6 +2725,59 @@ static void _handleBatteryCalib() {
   _srv.send(405, "text/plain", "Method not allowed");
 }
 
+// ─── /api/alerts  GET/POST — настройки Telegram-алертов (v5.0.20) ───────
+// GET  → возвращает текущие пороги {batLowV, tempLow, tempHigh, rtcEn}
+// POST → сохраняет {batLowV, tempLow, tempHigh, rtcEn} в EEPROM
+static void _handleAlerts() {
+  if (!_auth()) return;
+  _activity();
+
+  if (_srv.method() == HTTP_GET) {
+    AlertSettings a; load_alerts(a);
+    StaticJsonDocument<160> doc;
+    doc["batLowV"]  = a.batLowV;
+    doc["tempLow"]  = a.tempLow;
+    doc["tempHigh"] = a.tempHigh;
+    doc["rtcEn"]    = a.rtcEn;
+    String out; serializeJson(doc, out);
+    _srv.send(200, "application/json", out);
+    return;
+  }
+
+  if (_srv.method() == HTTP_POST) {
+    if (!_csrf()) return;
+    if (!_srv.hasArg("plain")) { _srv.send(400, "text/plain", "No body"); return; }
+
+    StaticJsonDocument<192> in;
+    DeserializationError err = deserializeJson(in, _srv.arg("plain"));
+    if (err) { _srv.send(400, "text/plain", "Bad JSON"); return; }
+
+    AlertSettings a; load_alerts(a);  // начинаем с текущих значений
+    if (in.containsKey("batLowV"))  a.batLowV  = in["batLowV"].as<float>();
+    if (in.containsKey("tempLow"))  a.tempLow  = in["tempLow"].as<float>();
+    if (in.containsKey("tempHigh")) a.tempHigh = in["tempHigh"].as<float>();
+    if (in.containsKey("rtcEn"))    a.rtcEn    = in["rtcEn"].as<bool>();
+
+    // Валидация
+    if (isnan(a.batLowV)  || a.batLowV  < 0.0f   || a.batLowV  > 5.0f)  { _srv.send(400, "text/plain", "batLowV out of range (0..5)"); return; }
+    if (isnan(a.tempLow)  || a.tempLow  < -55.0f || a.tempLow  > 85.0f) { _srv.send(400, "text/plain", "tempLow out of range"); return; }
+    if (isnan(a.tempHigh) || a.tempHigh < -55.0f || a.tempHigh > 85.0f) { _srv.send(400, "text/plain", "tempHigh out of range"); return; }
+
+    save_alerts(a);
+    StaticJsonDocument<160> doc;
+    doc["status"]   = "ok";
+    doc["batLowV"]  = a.batLowV;
+    doc["tempLow"]  = a.tempLow;
+    doc["tempHigh"] = a.tempHigh;
+    doc["rtcEn"]    = a.rtcEn;
+    String out; serializeJson(doc, out);
+    _srv.send(200, "application/json", out);
+    return;
+  }
+
+  _srv.send(405, "text/plain", "Method not allowed");
+}
+
 // ─── /api/daystat  GET — суточная статистика (фичи 12, 17) ──────────────
 static void _handleDayStat() {
   if (!_auth()) return;
@@ -3015,6 +3122,8 @@ void webserver_init(WebData &data, WebActions &actions) {
     _srv.on("/api/last-visit",   HTTP_GET,  _handleLastVisit);
     _srv.on("/api/battery/calib",HTTP_GET,  _handleBatteryCalib);
     _srv.on("/api/battery/calib",HTTP_POST, _handleBatteryCalib);
+    _srv.on("/api/alerts",       HTTP_GET,  _handleAlerts);
+    _srv.on("/api/alerts",       HTTP_POST, _handleAlerts);
     _srv.on("/manifest.json",    HTTP_GET,  _handleManifest);
     _srv.on("/icon.svg",         HTTP_GET,  _handleIcon);
     _srv.on("/sw.js",            HTTP_GET,  _handleServiceWorker);

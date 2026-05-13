@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 19
-#define FW_VERSION_SUFFIX ""  // 5.0.19 — feat: калибровка делителя батареи через сайт. Новый блок в "Калибровка" → ввёл реальное напряжение с мультиметра → авто-расчёт коэффициента → сохранение в EEPROM addr 336-340. Endpoint /api/battery/calib (GET/POST). Без перепрошивки можно подкрутить точность показаний батареи на 5-10%.
+#define FW_VERSION_PATCH 20
+#define FW_VERSION_SUFFIX ""  // 5.0.20 — feat: настраиваемые Telegram-алерты (низкая батарея в В, температурные пороги низкий/высокий, RTC error). Анти-спам через гистерезис: каждый алерт шлётся 1 раз, повторно — только после возврата в норму. Новый endpoint /api/alerts, EEPROM addr 342-356 (magic 0xAD), модуль Alerts.h/cpp. UI в Telegram → блок "Пороги алертов".
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

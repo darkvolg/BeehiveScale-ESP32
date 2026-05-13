@@ -689,3 +689,38 @@ bool load_bat_calib(float &ratio) {
   if (isnan(ratio) || ratio < 1.5f || ratio > 3.0f) return false;
   return true;
 }
+
+// ─── Telegram alerts (v5.0.20) ────────────────────────────────────────────
+void save_alerts(const AlertSettings &a) {
+  byte magic = EEPROM_MAGIC_ALERTS_VALUE;
+  EEPROM.put(EEPROM_ADDR_ALERTS_MAGIC,    magic);
+  EEPROM.put(EEPROM_ADDR_ALERT_BAT_V,     a.batLowV);
+  EEPROM.put(EEPROM_ADDR_ALERT_TEMP_LOW,  a.tempLow);
+  EEPROM.put(EEPROM_ADDR_ALERT_TEMP_HIGH, a.tempHigh);
+  byte rtcEn = a.rtcEn ? 1 : 0;
+  EEPROM.put(EEPROM_ADDR_ALERT_RTC_EN,    rtcEn);
+  EEPROM.commit();
+}
+
+void load_alerts(AlertSettings &a) {
+  byte magic = 0;
+  EEPROM.get(EEPROM_ADDR_ALERTS_MAGIC, magic);
+  if (magic != EEPROM_MAGIC_ALERTS_VALUE) {
+    // Дефолты — всё выключено кроме RTC error
+    a.batLowV  = 0.0f;
+    a.tempLow  = 0.0f;
+    a.tempHigh = 0.0f;
+    a.rtcEn    = true;
+    return;
+  }
+  EEPROM.get(EEPROM_ADDR_ALERT_BAT_V,     a.batLowV);
+  EEPROM.get(EEPROM_ADDR_ALERT_TEMP_LOW,  a.tempLow);
+  EEPROM.get(EEPROM_ADDR_ALERT_TEMP_HIGH, a.tempHigh);
+  byte rtcEn = 0;
+  EEPROM.get(EEPROM_ADDR_ALERT_RTC_EN, rtcEn);
+  a.rtcEn = (rtcEn != 0);
+  // Санитизация мусора
+  if (isnan(a.batLowV)  || a.batLowV  < 0.0f || a.batLowV  > 5.0f)  a.batLowV  = 0.0f;
+  if (isnan(a.tempLow)  || a.tempLow  < -55.0f || a.tempLow  > 85.0f) a.tempLow  = 0.0f;
+  if (isnan(a.tempHigh) || a.tempHigh < -55.0f || a.tempHigh > 85.0f) a.tempHigh = 0.0f;
+}

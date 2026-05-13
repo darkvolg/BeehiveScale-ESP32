@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔌 Подключение — BeehiveScale ESP32 v5.0.19</title>
+    <title>🔌 Подключение — BeehiveScale ESP32 v5.0.20</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -373,7 +373,7 @@
                 <tr>
                     <td><span class="pin">D33 / GPIO33</span></td>
                     <td>DS3231 SQW <span style="color:#FF9800">опц.</span> — задел на P3</td>
-                    <td>DS3231 → SQW (INT). В v5.0.19 не задействован, паяем сейчас чтобы не перепаивать</td>
+                    <td>DS3231 → SQW (INT). В v5.0.20 не задействован, паяем сейчас чтобы не перепаивать</td>
                     <td><span class="wire-color" style="background:#aa88ff"></span>фиолетовый</td>
                 </tr>
                 <tr>
@@ -534,7 +534,7 @@
                 <tr><td><strong>GND</strong></td><td>→</td><td><span class="pin">GND</span></td><td>Земля</td></tr>
                 <tr><td><strong>SDA</strong></td><td>→</td><td><span class="pin">D21 / GPIO21</span></td><td>Параллельно LCD на одной шине</td></tr>
                 <tr><td><strong>SCL</strong></td><td>→</td><td><span class="pin">D22 / GPIO22</span></td><td>Параллельно LCD на одной шине</td></tr>
-                <tr><td><strong>SQW (INT)</strong> <span style="color:#FF9800">опц.</span></td><td>→</td><td><span class="pin">D33 / GPIO33</span></td><td>Alarm output → RTC GPIO ESP32. <b>Задел на P3</b> — в v5.0.19 не используется (расписание идёт через timer wakeup ESP32). Паяем сейчас чтобы потом не перепаивать</td></tr>
+                <tr><td><strong>SQW (INT)</strong> <span style="color:#FF9800">опц.</span></td><td>→</td><td><span class="pin">D33 / GPIO33</span></td><td>Alarm output → RTC GPIO ESP32. <b>Задел на P3</b> — в v5.0.20 не используется (расписание идёт через timer wakeup ESP32). Паяем сейчас чтобы потом не перепаивать</td></tr>
             </tbody>
         </table>
         <div class="tip">
@@ -639,7 +639,7 @@
                 <tr>
                     <td><strong>EXT0 (DS3231 alarm)</strong> <span style="color:#FF9800">опц.</span></td>
                     <td>D33 → LOW (от SQW)</td>
-                    <td>DS3231 alarm подтягивает SQW в LOW → ESP32 просыпается ровно по часам RTC. <b>Задел на P3</b>, в v5.0.19 не реализовано</td>
+                    <td>DS3231 alarm подтягивает SQW в LOW → ESP32 просыпается ровно по часам RTC. <b>Задел на P3</b>, в v5.0.20 не реализовано</td>
                 </tr>
                 <tr>
                     <td><strong>Кнопка MAIN</strong></td>
@@ -657,7 +657,7 @@
 </div>
 
 <footer>
-    <p><strong>🐝 BeehiveScale ESP32 v5.0.19</strong> — Умные весы для пчелиных ульев</p>
+    <p><strong>🐝 BeehiveScale ESP32 v5.0.20</strong> — Умные весы для пчелиных ульев</p>
     <p style="margin-top: 10px; font-size: 0.9em;">
         <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a> ·
         <a href="03_settings.html" style="color: var(--primary);">Дальше: Настройка →</a>

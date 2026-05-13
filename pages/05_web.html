@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌐 Веб-интерфейс — BeehiveScale ESP32 v5.0.19</title>
+    <title>🌐 Веб-интерфейс — BeehiveScale ESP32 v5.0.20</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -284,7 +284,7 @@
                 </tr>
                 <tr>
                     <td><strong>📅 Архив</strong> <span style="color:var(--success)">🆕 v5.0.16</span></td>
-                    <td>История замеров за выбранный период (Сегодня / 3 дня / Неделя / Месяц / Всё / <b>С прошлого визита</b> 🆕 v5.0.19 / произвольный диапазон). Лента дней с маркерами аномалий (🔴 при падении больше alert_delta). Скачивание CSV за период.</td>
+                    <td>История замеров за выбранный период (Сегодня / 3 дня / Неделя / Месяц / Всё / <b>С прошлого визита</b> 🆕 v5.0.20 / произвольный диапазон). Лента дней с маркерами аномалий (🔴 при падении больше alert_delta). Скачивание CSV за период.</td>
                 </tr>
                 <tr>
                     <td><strong>Расписание</strong> 🆕</td>
@@ -323,11 +323,11 @@
 
         <section class="card">
             <h2>📅 Вкладка Архив (v5.0.16+)</h2>
-            <p>История замеров за период с пресетами и аномалиями. Главная фишка v5.0.19 — пресет <b>«↩ С прошлого визита»</b>: автоматически выбирает диапазон с момента твоего последнего открытия сайта.</p>
+            <p>История замеров за период с пресетами и аномалиями. Главная фишка v5.0.20 — пресет <b>«↩ С прошлого визита»</b>: автоматически выбирает диапазон с момента твоего последнего открытия сайта.</p>
             <h3>Пресеты</h3>
             <ul style="margin-left:20px;color:var(--text-muted);line-height:1.8">
                 <li><b>Сегодня</b> · <b>3 дня</b> · <b>Неделя</b> · <b>Месяц</b> · <b>Всё</b> — скользящие окна</li>
-                <li><b>↩ С прошлого визита</b> 🆕 v5.0.19 — авто от <code>/api/last-visit</code> timestamp (EEPROM addr 331-336)</li>
+                <li><b>↩ С прошлого визита</b> 🆕 v5.0.20 — авто от <code>/api/last-visit</code> timestamp (EEPROM addr 331-336)</li>
                 <li>Date-range — произвольный диапазон через два календарика</li>
             </ul>
             <h3>Что в архиве</h3>
@@ -419,7 +419,7 @@
 
             <div class="api-endpoint">
                 <span class="api-method get">GET</span><span class="api-url">/api/last-visit</span>
-                <p style="margin-top:8px"><strong style="color:var(--success)">🆕 v5.0.19</strong> Timestamp прошлого открытия сайта (Unix). Для пресета «↩ С прошлого визита» в Архиве. Первый вызов за boot возвращает старое значение из EEPROM и обновляет на «сейчас» (если прошло >1 часа). Последующие в той же сессии — кешированное значение.</p>
+                <p style="margin-top:8px"><strong style="color:var(--success)">🆕 v5.0.20</strong> Timestamp прошлого открытия сайта (Unix). Для пресета «↩ С прошлого визита» в Архиве. Первый вызов за boot возвращает старое значение из EEPROM и обновляет на «сейчас» (если прошло >1 часа). Последующие в той же сессии — кешированное значение.</p>
             </div>
 
             <div class="api-endpoint">
@@ -574,7 +574,7 @@
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale ESP32 v5.0.19</strong> — Умные весы для пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.20</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
             <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a> ·
             <a href="06_telegram.html" style="color: var(--primary);">Дальше: Telegram →</a>

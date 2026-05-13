@@ -29,6 +29,7 @@
 #include "SleepManager.h"
 #include "WebServerModule.h"
 #include "Battery.h"
+#include "Alerts.h"      // v5.0.20: Telegram-алерты по батарее/температуре/RTC
 #include "Logger.h"
 
 // Pin mapping — ESP8266 vs ESP32. ESP32 — основная плата с 2026-05-05.
@@ -249,6 +250,7 @@ void setup() {
   sys.prevWeight = load_prev_weight(sys.lastSavedWeight);
 
   bat_init();
+  alerts_init();   // v5.0.20: загрузить настройки алертов из EEPROM
 
   if (sys.sensorReady) {
     scale.set_scale(sys.calibrationFactor);
@@ -477,6 +479,10 @@ void loop() {
       // пробуждение в 09:00, 14:00, 21:00 → одна отправка в Telegram с весом и дельтой.
       if (schedLog) tgReportPending = true;
       lastLogWrite = now;
+      // v5.0.20: проверяем алерты при каждой записи в лог
+      // (точно когда есть свежие значения батареи/температуры)
+      alerts_check(sys.batVoltage, sys.batPercent,
+                   sys.tempData.temperature, sys.currentTime.valid);
     }
   }
 #endif

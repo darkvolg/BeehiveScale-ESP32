@@ -71,7 +71,14 @@
 #define EEPROM_ADDR_BAT_CALIB_MAGIC   336  // 1 байт
 #define EEPROM_MAGIC_BAT_CALIB_VALUE  0xAC
 #define EEPROM_ADDR_BAT_CALIB_RATIO   337  // float, 4 байта — коэф. делителя (default 2.0 для 100k/100k)
-// 341..383 reserved for future fields
+// ─── Telegram alerts (v5.0.20) — пороги тревог для батареи, температуры, RTC
+#define EEPROM_ADDR_ALERTS_MAGIC      342  // 1 байт
+#define EEPROM_MAGIC_ALERTS_VALUE     0xAD
+#define EEPROM_ADDR_ALERT_BAT_V       343  // float, 4 байта — порог низкого напряжения батареи (0 = выкл)
+#define EEPROM_ADDR_ALERT_TEMP_LOW    347  // float, 4 байта — порог низкой температуры (0 = выкл)
+#define EEPROM_ADDR_ALERT_TEMP_HIGH   351  // float, 4 байта — порог высокой температуры (0 = выкл)
+#define EEPROM_ADDR_ALERT_RTC_EN      355  // bool, 1 байт — алерт при RTC error (0/1)
+// 356..383 reserved for future fields
 #define EEPROM_SIZE              384  // расширено под credentials-блок
 
 // Веб-настройки (alertDelta, calibWeight, emaAlpha)
@@ -181,5 +188,15 @@ uint32_t load_last_visit();
 // Battery divider calibration ratio (v5.0.19)
 void save_bat_calib(float ratio);
 bool load_bat_calib(float &ratio);
+
+// Telegram alerts (v5.0.20) — пороги тревог
+struct AlertSettings {
+  float batLowV;    // <= 0 — выкл
+  float tempLow;    // 0 — выкл (диапазон -50..+85)
+  float tempHigh;   // 0 — выкл
+  bool  rtcEn;      // true — отправлять алерт при RTC error
+};
+void save_alerts(const AlertSettings &a);
+void load_alerts(AlertSettings &a);  // если magic не валиден — дефолты
 
 #endif
