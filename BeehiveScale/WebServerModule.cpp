@@ -2677,7 +2677,7 @@ static void _handleBatteryCalib() {
   }
 
   if (_srv.method() == HTTP_POST) {
-    if (!_csrf()) return;
+    if (!_csrf_check()) return;
     if (!_srv.hasArg("plain")) { _srv.send(400, "text/plain", "No body"); return; }
 
     StaticJsonDocument<128> in;
@@ -2745,7 +2745,7 @@ static void _handleAlerts() {
   }
 
   if (_srv.method() == HTTP_POST) {
-    if (!_csrf()) return;
+    if (!_csrf_check()) return;
     if (!_srv.hasArg("plain")) { _srv.send(400, "text/plain", "No body"); return; }
 
     StaticJsonDocument<192> in;
