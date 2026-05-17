@@ -286,9 +286,15 @@ void setup() {
     Serial.println(F("[WiFi] Connected"));
     Serial.print(F("[WiFi] IP: "));
     Serial.println(WiFi.status() == WL_CONNECTED ? WiFi.localIP() : WiFi.softAPIP());
-    if (get_wifi_mode() == 1) {
-      ntp_sync_time();  // Синхронизация времени (только в STA режиме)
-    }
+    // v5.0.22: NTP sync на boot ОТКЛЮЧЕНА — вызывает Guru Meditation
+    // (InstrFetchProhibited) на ESP32 Arduino Core 3.0.7 при первом
+    // вызове configTime/getLocalTime после WiFi connect. DS3231 даёт
+    // точное время (±2 мин/год), NTP не критичен. Ручная синхронизация
+    // доступна через сайт (Настройки → Sync NTP / /api/ntp).
+    // TODO: исправить на esp_sntp_init() или дождаться фикса в Core.
+    // if (get_wifi_mode() == 1) {
+    //   ntp_sync_time();
+    // }
     start_webserver();
     // ArduinoOTA — обновление прошивки по воздуху. Пароль хранится в EEPROM,
     // дефолт "ota_beehive" при пустом блоке credentials (UI показывает warning).
