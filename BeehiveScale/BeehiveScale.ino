@@ -278,8 +278,10 @@ void setup() {
   // v5.0.21: понижаем TX power с 19.5dBm до 11dBm — снижает пик WiFi
   // с ~500мА до ~200мА. Дальность падает ~30% но в улье хватает.
   WiFi.setTxPower(WIFI_POWER_11dBm);
-  // Modem-sleep между передачами — снижает средний ток в active фазе
-  WiFi.setSleep(true);
+  // v5.0.23: setSleep(true) УБРАН — modem-sleep блокировал webserver
+  // запросы (страница открывалась но /api/data не возвращался). На
+  // active-фазе экономия минимальная, лучше стабильность.
+  WiFi.setSleep(false);
 #endif
   yield();
   if (sys.wifiOk) {
@@ -529,7 +531,11 @@ void loop() {
       webserver_stop();
       webServerStarted = false;
     }
-    ntp_loop();
+    // v5.0.23: ntp_loop() ОТКЛЮЧЁН — баг configTime/getLocalTime в ESP32
+    // Core 3.0.7 даёт Guru Meditation InstrFetchProhibited.
+    // DS3231 RTC даёт точное время самостоятельно. Ручной NTP остаётся
+    // через POST /api/ntp если пользователь нажмёт кнопку.
+    // ntp_loop();
   }
 
   if (sys.wifiOk && !webServerStarted) {
