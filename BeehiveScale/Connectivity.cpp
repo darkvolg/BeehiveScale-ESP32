@@ -73,7 +73,20 @@ bool wifi_connect() {
   Serial.print(F("[WiFi] Connecting to: "));
   Serial.println(ssid);
 
+  // v5.0.24: жёсткий reset WiFi-стека перед connect.
+  // После deep sleep wake WiFi-регистры остаются в "грязном" состоянии,
+  // WiFi.begin() крашит на PC 0x400e999e (InstrFetchProhibited в WiFi-стеке).
+  // Решение из ESP32 forum: WIFI_OFF → delay → WIFI_STA → disconnect → begin.
+#if defined(ESP32)
+  WiFi.persistent(false);              // не писать креды в NVS лишний раз
+  WiFi.mode(WIFI_OFF);
+  delay(100);
   WiFi.mode(WIFI_STA);
+  WiFi.disconnect(true, true);         // disable=true, eraseAP=true
+  delay(100);
+#else
+  WiFi.mode(WIFI_STA);
+#endif
   WiFi.begin(ssid, pass);
 
   _wifiStatus = WIFI_CONNECTING;

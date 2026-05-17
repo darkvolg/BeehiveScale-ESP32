@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 23
-#define FW_VERSION_SUFFIX ""  // 5.0.23 — fix: 1) ntp_loop() в main цикле тоже отключён (вызывал NTP несмотря на отключение в setup, тот же баг Core 3.0.7). 2) WiFi.setSleep(false) вернул — modem-sleep блокировал webserver запросы, страница открывалась но /api/data зависал.
+#define FW_VERSION_PATCH 24
+#define FW_VERSION_SUFFIX ""  // 5.0.24 — fix: жёсткий reset WiFi перед connect после deep sleep wake (WIFI_OFF→delay→WIFI_STA→disconnect→begin). Раньше каждый wake крашил на WiFi.begin() с Guru Meditation PC 0x400e999e — грязные WiFi-регистры после sleep. Теперь TG отчёты по расписанию работают стабильно.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
