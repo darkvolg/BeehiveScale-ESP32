@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeehiveScale ESP32 v5.0.20 — Руководство пользователя</title>
+    <title>BeehiveScale ESP32 v5.0.21 — Руководство пользователя</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -163,7 +163,7 @@
 
 <!-- HEADER -->
 <header>
-    <h1>🐝 BeehiveScale ESP32 v5.0.20</h1>
+    <h1>🐝 BeehiveScale ESP32 v5.0.21</h1>
     <p class="subtitle">Умные весы для пчеловода — Руководство пользователя</p>
     <div class="badges">
         <span class="badge">ESP32-WROOM-32</span>
@@ -285,7 +285,7 @@
     <div class="card">
         <h2>🆕 Что нового в v5.0.x по сравнению с v4.x (ESP8266)</h2>
         <table class="conn-table">
-            <thead><tr><th>Что</th><th>Раньше (v4.1, ESP8266)</th><th>Сейчас (v5.0.20, ESP32)</th></tr></thead>
+            <thead><tr><th>Что</th><th>Раньше (v4.1, ESP8266)</th><th>Сейчас (v5.0.21, ESP32)</th></tr></thead>
             <tbody>
                 <tr><td class="from">Микроконтроллер</td><td>NodeMCU ESP8266</td><td class="to">ESP32-WROOM-32 DevKit V1</td></tr>
                 <tr><td class="from">Deep Sleep wake</td><td>Только кнопкой RST (GPIO16 занят HX711)</td><td class="to">Просыпается по расписанию из DS3231 / по таймеру</td></tr>
@@ -452,7 +452,7 @@
         <!-- DS3231 -->
         <div class="comp-detail" id="detail-ds3231" style="display:none">
             <h2>🕐 DS3231 RTC — часы реального времени</h2>
-            <p style="color:var(--text-muted);margin-bottom:12px">Сверхточный модуль часов с термокомпенсированным кварцем. Хранит время даже когда ESP32 выключена — за счёт батарейки CR2032 (на годы). В прошивке v5.0.20 даёт точное время для логов и расписания. Пин SQW подведён к D33 как <b>задел на будущее</b> — для alarm-wake (фаза P3).</p>
+            <p style="color:var(--text-muted);margin-bottom:12px">Сверхточный модуль часов с термокомпенсированным кварцем. Хранит время даже когда ESP32 выключена — за счёт батарейки CR2032 (на годы). В прошивке v5.0.21 даёт точное время для логов и расписания. Пин SQW подведён к D33 как <b>задел на будущее</b> — для alarm-wake (фаза P3).</p>
             <table class="conn-table">
                 <thead><tr><th>DS3231</th><th></th><th>ESP32</th><th>Цвет</th></tr></thead>
                 <tbody>
@@ -788,7 +788,7 @@
             </svg>
         </div>
 
-        <h3>Таблица пинов проекта v5.0.20</h3>
+        <h3>Таблица пинов проекта v5.0.21</h3>
         <table class="conn-table">
             <thead><tr><th>Метка платы</th><th>GPIO</th><th>Направление</th><th>Назначение</th><th>Цвет провода</th></tr></thead>
             <tbody>
@@ -1009,7 +1009,7 @@
                 <tr><td class="from">GND</td><td class="arrow">→</td><td class="to">GND</td><td class="note">Земля</td></tr>
                 <tr><td class="from">SDA</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D21</span> <span class="col-d">GPIO21</span></td><td class="note">Та же шина I²C что и LCD</td></tr>
                 <tr><td class="from">SCL</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D22</span> <span class="col-d">GPIO22</span></td><td class="note">Та же шина I²C что и LCD</td></tr>
-                <tr><td class="from">SQW (INT) <span style="color:var(--warning)">опц.</span></td><td class="arrow">→</td><td class="to"><span class="col-gpio">D33</span> <span class="col-d">GPIO33</span></td><td class="note">Alarm output → ESP32 RTC GPIO. <b>Задел на P3</b> — в v5.0.20 не используется (расписание идёт через timer wakeup ESP32). Паяем сейчас, чтобы потом не перепаивать</td></tr>
+                <tr><td class="from">SQW (INT) <span style="color:var(--warning)">опц.</span></td><td class="arrow">→</td><td class="to"><span class="col-gpio">D33</span> <span class="col-d">GPIO33</span></td><td class="note">Alarm output → ESP32 RTC GPIO. <b>Задел на P3</b> — в v5.0.21 не используется (расписание идёт через timer wakeup ESP32). Паяем сейчас, чтобы потом не перепаивать</td></tr>
             </tbody>
         </table>
         <div class="tip"><strong>💡 CR2032</strong>Установите батарейку в держатель DS3231 — часы не сбросятся при выключении весов. Хватает на 5–10 лет.</div>
@@ -1083,7 +1083,7 @@
             <thead><tr><th>Способ</th><th>Триггер</th><th>Описание</th></tr></thead>
             <tbody>
                 <tr><td class="from">Timer wakeup</td><td><span class="col-gpio">esp_sleep_enable_timer_wakeup()</span></td><td class="note">Просыпается через N секунд. Для расписания (например, через 8 часов до 09:00)</td></tr>
-                <tr><td class="from">EXT0 wake (DS3231) <span style="color:var(--warning)">опц.</span></td><td><span class="col-gpio">D33 = LOW</span></td><td class="note">DS3231 alarm подтягивает SQW в LOW → ESP32 просыпается. <b>Не реализовано в v5.0.20</b> — задел на P3</td></tr>
+                <tr><td class="from">EXT0 wake (DS3231) <span style="color:var(--warning)">опц.</span></td><td><span class="col-gpio">D33 = LOW</span></td><td class="note">DS3231 alarm подтягивает SQW в LOW → ESP32 просыпается. <b>Не реализовано в v5.0.21</b> — задел на P3</td></tr>
                 <tr><td class="from">Кнопка MAIN</td><td><span class="col-gpio">D27 = LOW</span></td><td class="note">Можно настроить ext0/ext1 wake для ручного пробуждения</td></tr>
                 <tr><td class="from">Кнопка RST на плате</td><td><span class="col-gpio">RST = 0</span></td><td class="note">Полная перезагрузка (теряется RTC RAM, но не EEPROM)</td></tr>
             </tbody>
@@ -1340,7 +1340,7 @@ monitor_speed = 115200</pre>
                 <tr><td class="from">Сегодня</td><td class="note">Текущий день</td></tr>
                 <tr><td class="from">3 дня / Неделя / Месяц</td><td class="note">Скользящее окно с сегодня</td></tr>
                 <tr><td class="from">Всё</td><td class="note">С первой записи в логе</td></tr>
-                <tr><td class="from">↩ С прошлого визита <span style="color:var(--success)">🆕 v5.0.20</span></td><td class="note">Автоматически от последнего открытия сайта (например, «вчера в 18:42» или «3 дн. назад»). Не сбрасывается при переключении вкладок</td></tr>
+                <tr><td class="from">↩ С прошлого визита <span style="color:var(--success)">🆕 v5.0.21</span></td><td class="note">Автоматически от последнего открытия сайта (например, «вчера в 18:42» или «3 дн. назад»). Не сбрасывается при переключении вкладок</td></tr>
                 <tr><td class="from">Date-range</td><td class="note">Произвольный период через два календарика</td></tr>
             </tbody>
         </table>
@@ -1353,7 +1353,7 @@ monitor_speed = 115200</pre>
             <li><b>Скачать CSV за период:</b> для Excel или другой аналитики</li>
         </ul>
 
-        <div class="tip"><strong>💡 «С прошлого визита» — главная фишка v5.0.20</strong>Заходишь на сайт через неделю — Архив сам открывается на интервале «с прошлого визита по сегодня». Не надо вспоминать когда последний раз смотрел и крутить даты. Кнопка <b>«↩ С прошлого визита»</b> + подпись «Прошлый визит: 05.05.2026 (7 дн. назад)».</div>
+        <div class="tip"><strong>💡 «С прошлого визита» — главная фишка v5.0.21</strong>Заходишь на сайт через неделю — Архив сам открывается на интервале «с прошлого визита по сегодня». Не надо вспоминать когда последний раз смотрел и крутить даты. Кнопка <b>«↩ С прошлого визита»</b> + подпись «Прошлый визит: 05.05.2026 (7 дн. назад)».</div>
     </div>
 
     <div class="card">
@@ -1393,7 +1393,7 @@ monitor_speed = 115200</pre>
                 <tr><td class="from">/api/daystat</td><td>GET</td><td class="note">Дневная статистика (мин/макс/среднее)</td></tr>
                 <tr><td class="from">/api/period?from=&to=</td><td>GET</td><td class="note">🆕 v5.0.16 — JSON записей за диапазон дат (стриминг). Для вкладки Архив</td></tr>
                 <tr><td class="from">/api/log?from=&to=</td><td>GET</td><td class="note">🆕 v5.0.16 — CSV за диапазон дат. Старый <code>?date=</code> совместим</td></tr>
-                <tr><td class="from">/api/last-visit</td><td>GET</td><td class="note">🆕 v5.0.20 — Timestamp прошлого открытия web. Для пресета «С прошлого визита» в Архиве</td></tr>
+                <tr><td class="from">/api/last-visit</td><td>GET</td><td class="note">🆕 v5.0.21 — Timestamp прошлого открытия web. Для пресета «С прошлого визита» в Архиве</td></tr>
                 <tr><td class="from">/archive</td><td>GET</td><td class="note">🆕 v5.0.16 — Alias на главный SPA (прямая ссылка на вкладку Архив)</td></tr>
                 <tr><td class="from">/manifest.json</td><td>GET</td><td class="note">🆕 v5.0.16 — PWA-манифест (имя, иконка, theme-color)</td></tr>
                 <tr><td class="from">/sw.js</td><td>GET</td><td class="note">🆕 v5.0.16 — Service-worker для offline-кеша</td></tr>

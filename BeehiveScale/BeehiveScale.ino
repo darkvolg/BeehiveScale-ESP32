@@ -258,11 +258,29 @@ void setup() {
   }
 
   yield();
-  sys.wifiOk = wifi_init();  // Инициализация WiFi (AP или STA режим)
-  yield();
-
-  yield();
+  // v5.0.21: показываем splash и инициализируем датчики ПЕРЕД WiFi,
+  // даём 8 сек для стабилизации питания (Boost-преобразователь успевает
+  // зарядить капы, банка восстанавливается после пика boot). Только потом
+  // включаем WiFi (его пик 300-500мА — главный убийца слабого Boost'а
+  // типа MT3608, который защёлкивается по OCP при перегрузке).
   show_splash_screen();
+  yield();
+  // Показать "Init..." на LCD пока ждём стабилизации
+  lcd_clear_buf(lcd);
+  lcd_set_cursor(lcd, 0, 0); lcd_print_padded(lcd, "Vesy Pchelovod  ");
+  lcd_set_cursor(lcd, 0, 1); lcd_print_padded(lcd, "WiFi cherez 8s..");
+  // Делитель ожидания на короткие задержки чтобы watchdog не сработал
+  for (int i = 0; i < 80; i++) { delay(100); yield(); app_wdt_reset(); }
+  // Теперь WiFi (пик потребления отдельно, после стабилизации питания)
+  sys.wifiOk = wifi_init();
+  yield();
+#if defined(ESP32)
+  // v5.0.21: понижаем TX power с 19.5dBm до 11dBm — снижает пик WiFi
+  // с ~500мА до ~200мА. Дальность падает ~30% но в улье хватает.
+  WiFi.setTxPower(WIFI_POWER_11dBm);
+  // Modem-sleep между передачами — снижает средний ток в active фазе
+  WiFi.setSleep(true);
+#endif
   yield();
   if (sys.wifiOk) {
     Serial.println(F("[WiFi] Connected"));

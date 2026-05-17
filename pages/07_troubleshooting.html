@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔍 Неисправности — BeehiveScale ESP32 v5.0.20</title>
+    <title>🔍 Неисправности — BeehiveScale ESP32 v5.0.21</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -189,7 +189,7 @@
 
         <header>
             <h1>🔍 Устранение неисправностей</h1>
-            <p>Диагностика и FAQ для BeehiveScale ESP32 v5.0.20</p>
+            <p>Диагностика и FAQ для BeehiveScale ESP32 v5.0.21</p>
         </header>
 
         <nav class="nav-tabs">
@@ -323,7 +323,7 @@
             <div class="problem-box">
                 <h4>Время правильное, но расписание не срабатывает</h4>
                 <ul>
-                    <li>В прошивке v5.0.20 расписание работает через <b>timer wakeup ESP32</b> (внутренний таймер), а не DS3231 alarm. Пин SQW → D33 — это задел на будущее (фаза P3), сейчас в коде не используется</li>
+                    <li>В прошивке v5.0.21 расписание работает через <b>timer wakeup ESP32</b> (внутренний таймер), а не DS3231 alarm. Пин SQW → D33 — это задел на будущее (фаза P3), сейчас в коде не используется</li>
                     <li>Sleep guard 60 сек: если до следующего срабатывания меньше минуты, ESP32 не уходит в сон. Это нормально</li>
                     <li>На Экране 6 счётчик пробуждений N должен расти после каждого срабатывания. Если N=0 после нескольких срабатываний — расписание не настроено или сохранено некорректно</li>
                 </ul>
@@ -391,7 +391,7 @@
                     <li><strong>Батарея &lt; 3.0 В</strong> — защита DW01 на AS21 могла отключить банку. Подзаряди через microUSB AS21</li>
                     <li><strong>Кнопка RST</strong> на плате ESP32 — полная перезагрузка</li>
                     <li><strong>Экран 5:</strong> время на DS3231 правильное? Если RTC ERROR — расписание не работает</li>
-                    <li><strong>Экран 6:</strong> N (счётчик пробуждений) растёт? Если нет — расписание не настроено или таймер сна некорректен. В v5.0.20 wake идёт по timer (не по DS3231 alarm)</li>
+                    <li><strong>Экран 6:</strong> N (счётчик пробуждений) растёт? Если нет — расписание не настроено или таймер сна некорректен. В v5.0.21 wake идёт по timer (не по DS3231 alarm)</li>
                     <li><strong>USB-C в ESP32 подключён?</strong> При активном USB-сериал ESP32 не уходит в полный сон — отключи USB</li>
                 </ul>
             </div>
@@ -498,7 +498,7 @@
 
             <table class="table">
                 <tr><th>Шаг</th><th>Что проверить</th></tr>
-                <tr><td>1</td><td>Версия прошивки = <strong>v5.0.20</strong>? (Serial команда <code>STATUS</code> или Экран 6)</td></tr>
+                <tr><td>1</td><td>Версия прошивки = <strong>v5.0.21</strong>? (Serial команда <code>STATUS</code> или Экран 6)</td></tr>
                 <tr><td>2</td><td>Экран 8 «Диагностика» — все компоненты OK?</td></tr>
                 <tr><td>3</td><td>Партиция = <strong>Huge APP (3MB No OTA / 1MB SPIFFS)</strong>?</td></tr>
                 <tr><td>4</td><td>Библиотеки актуальные? Особенно <strong>ArduinoJson 6.x</strong> (НЕ 7.x!)</td></tr>
@@ -528,7 +528,7 @@
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale ESP32 v5.0.20</strong> — Умные весы для пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.21</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
             <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a>
         </p>

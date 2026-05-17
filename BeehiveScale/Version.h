@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 20
-#define FW_VERSION_SUFFIX ""  // 5.0.20 — feat: настраиваемые Telegram-алерты (низкая батарея в В, температурные пороги низкий/высокий, RTC error). Анти-спам через гистерезис: каждый алерт шлётся 1 раз, повторно — только после возврата в норму. Новый endpoint /api/alerts, EEPROM addr 342-356 (magic 0xAD), модуль Alerts.h/cpp. UI в Telegram → блок "Пороги алертов".
+#define FW_VERSION_PATCH 21
+#define FW_VERSION_SUFFIX ""  // 5.0.21 — fix: отложенный старт WiFi (8 сек после boot) + понижение TX power до 11dBm + modem-sleep. Решает защёлку MT3608 OCP при wake-up: пик ESP32+LCD+WiFi одновременно был 600-700мА → Boost защёлкивался → синий экран, нет TG. Теперь ESP32+LCD сначала (200мА), пауза 8с (капы заряжаются), затем WiFi отдельным пиком 200мА.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
