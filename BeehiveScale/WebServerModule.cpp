@@ -2323,6 +2323,43 @@ static void _handleCalibSet() {
   else _sendJson(false, "Нет данных для обновления");
 }
 
+// ─── /api/rtc/set  POST — установить дату/время RTC (v5.0.31) ─────────────
+// JSON body: {"datetime":"2026-05-22 19:30:00"} или {"y":2026,"mo":5,"d":22,"h":19,"mi":30,"s":0}
+// Используется когда DS3231 lost power и NTP недоступен (нет интернета).
+extern bool rtc_set(uint16_t y, uint8_t mo, uint8_t d, uint8_t h, uint8_t mi, uint8_t s);
+static void _handleRtcSet() {
+  if (!_auth()) return;
+  if (!_csrf_check()) return;
+  _activity();
+  if (_srv.method() != HTTP_POST) { _sendJson(false,"Только POST"); return; }
+  StaticJsonDocument<192> doc;
+  DeserializationError err = deserializeJson(doc, _srv.arg("plain"));
+  if (err) { _sendJson(false,"Ошибка JSON"); return; }
+
+  uint16_t y = 0; uint8_t mo = 0, d = 0, h = 0, mi = 0, s = 0;
+
+  if (doc.containsKey("datetime")) {
+    // Парсим "YYYY-MM-DD HH:MM:SS"
+    const char* dt = doc["datetime"];
+    if (sscanf(dt, "%hu-%hhu-%hhu %hhu:%hhu:%hhu", &y, &mo, &d, &h, &mi, &s) != 6) {
+      _sendJson(false, "Формат: YYYY-MM-DD HH:MM:SS"); return;
+    }
+  } else if (doc.containsKey("y")) {
+    y  = doc["y"].as<uint16_t>();
+    mo = doc["mo"].as<uint8_t>();
+    d  = doc["d"].as<uint8_t>();
+    h  = doc["h"].as<uint8_t>();
+    mi = doc["mi"].as<uint8_t>();
+    s  = doc["s"].as<uint8_t>();
+  } else { _sendJson(false, "Нет datetime или y/mo/d/h/mi/s"); return; }
+
+  if (rtc_set(y, mo, d, h, mi, s)) {
+    _sendJson(true, "RTC время установлено");
+  } else {
+    _sendJson(false, "Неверная дата/время");
+  }
+}
+
 // ─── /api/wifi/settings  POST — сохранить режим WiFi и credentials ──────
 static void _handleWifiSettings() {
   if (!_auth()) return;
@@ -3130,6 +3167,7 @@ void webserver_init(WebData &data, WebActions &actions) {
     _srv.on("/api/tg/settings",  HTTP_POST, _handleTgSettings);
     _srv.on("/api/tg/test",      HTTP_POST, _handleTgTest);
     _srv.on("/api/calib/set",    HTTP_POST, _handleCalibSet);
+    _srv.on("/api/rtc/set",      HTTP_POST, _handleRtcSet);   // v5.0.31: ручная установка времени
     _srv.on("/wifi",              HTTP_GET,  _handleWifi);
     _srv.on("/api/wifi/settings", HTTP_POST, _handleWifiSettings);
     _srv.on("/api/config",        HTTP_GET,  _handleConfig);

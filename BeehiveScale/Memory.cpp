@@ -668,6 +668,27 @@ uint32_t load_last_visit() {
   return ts;
 }
 
+// v5.0.44: Persistence для TG report timestamp.
+// При power-cut millis() сбрасывается каждый wake → interval-проверка TG не работает.
+// Сохраняем unix timestamp последнего успешного отчёта в EEPROM, сравниваем при boot.
+void save_last_tg_report_unix(uint32_t unixtime) {
+  if (unixtime < 1546300800UL) return;  // <2019-01-01 — мусор, RTC не настроен
+  byte magic = EEPROM_MAGIC_TG_LAST_REP_VAL;
+  EEPROM.put(EEPROM_ADDR_TG_LAST_REP_MAGIC, magic);
+  EEPROM.put(EEPROM_ADDR_TG_LAST_REP_UNIX, unixtime);
+  EEPROM.commit();
+}
+
+uint32_t load_last_tg_report_unix() {
+  byte magic = 0;
+  EEPROM.get(EEPROM_ADDR_TG_LAST_REP_MAGIC, magic);
+  if (magic != EEPROM_MAGIC_TG_LAST_REP_VAL) return 0;
+  uint32_t ts = 0;
+  EEPROM.get(EEPROM_ADDR_TG_LAST_REP_UNIX, ts);
+  if (ts < 1546300800UL) return 0;
+  return ts;
+}
+
 // ─── Battery divider calibration ratio (v5.0.19) ─────────────────────────
 // Сохраняет поправку коэффициента делителя в EEPROM. Дефолт 2.0 (R1=R2=100k),
 // но реальные резисторы и ADC ESP32 имеют погрешность ±5-10%, поэтому

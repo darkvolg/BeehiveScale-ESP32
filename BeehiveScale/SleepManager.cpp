@@ -1,9 +1,13 @@
 #include "SleepManager.h"
 #include "Temperature.h"
+#include "RTC_Module.h"
 
 #if defined(ESP32)
 #include <esp_sleep.h>
+#include <esp_wifi.h>
+#include <WiFi.h>
 #include "driver/rtc_io.h"
+#include "driver/uart.h"
 #endif
 
 #if defined(ESP32)
@@ -18,7 +22,18 @@ void sleep_init() {
   digitalWrite(PERIPHERAL_POWER_PIN, HIGH);
 #endif
 #if defined(ESP32)
+  // v5.0.27: освободить SLEEP_WAKEUP_PIN из RTC mux ПЕРЕД enable_ext0_wakeup.
+  // Без этого state накапливается между wake → конфликт RTC/PHY clock.
+  rtc_gpio_deinit((gpio_num_t)SLEEP_WAKEUP_PIN);
+
   esp_sleep_enable_ext0_wakeup((gpio_num_t)SLEEP_WAKEUP_PIN, LOW);
+
+  // v5.0.27: явно держим RTC domains ON во время deep sleep.
+  // По умолчанию в IDF 5.x они OFF для экономии — но это ломает ext0 wakeup latch
+  // и PHY calibration cache в RTC FAST RAM (Issue #9913).
+  esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+  esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_ON);
+  esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_ON);
 #endif
   Serial.println(F("[Sleep] Init OK"));
 }
@@ -66,29 +81,45 @@ void sleep_save_persistent(const SleepPersistData &data) {
 }
 
 void sleep_enter(uint64_t seconds) {
-  Serial.print(F("[Sleep] Going to sleep for "));
+  Serial.print(F("[PowerCut] sleep for "));
   Serial.print(seconds);
-  Serial.println(F(" sec..."));
+  Serial.println(F(" sec — programming DS3231 alarm..."));
   Serial.flush();
 
-#if PERIPHERAL_POWER_PIN >= 0
-  digitalWrite(PERIPHERAL_POWER_PIN, LOW);
 #if defined(ESP32)
-  rtc_gpio_init((gpio_num_t)PERIPHERAL_POWER_PIN);
-  rtc_gpio_set_direction((gpio_num_t)PERIPHERAL_POWER_PIN, RTC_GPIO_MODE_OUTPUT_ONLY);
-  rtc_gpio_set_level((gpio_num_t)PERIPHERAL_POWER_PIN, 0);
-#endif
-#endif
+  // ═══ v5.0.39 — TIMER DEEP SLEEP (без DS3231 alarm) ═══
+  //
+  // КОМПРОМИСС: hardware power-cut через DS3231 SQW не работает — chip одной партии
+  // (3 модуля HW-084) теряет state каждый power-off несмотря на VCC=4V always-on,
+  // CR2032=3.2V, явный clear EOSC. Альтернативы (cap фильтр, замена ZS-042) — потом.
+  //
+  // Текущий режим: НЕ отключаем MOSFET. ESP в esp_deep_sleep с internal timer.
+  // - MOSFET остаётся ON (HOLD через Alarm1 PerSecond не отключаем)
+  // - DS3231 alarm не используется — wake через esp_sleep_enable_timer_wakeup
+  // - Sleep current ~5-10 мА (ESP deep sleep + MT3608 Iq + AMS1117 Iq)
+  // - Автономия 30-60 дней без солнца, бесконечно с solar
+  // - Работает гарантированно — internal timer ESP не зависит от внешних компонентов
+  //
+  // Когда DS3231 module заменим на рабочий — вернуть hardware power-cut логику.
 
-#if defined(ESP32)
-  // ВАЖНО: НЕ вызывать esp_sleep_pd_config(RTC_PERIPH OFF) — конфликтует с EXT0 wake.
-  // НЕ вызывать Wire.end()/esp_wifi_deinit() — они вызывают NULL-pointer panic при deep sleep.
-  // ESP32 deep sleep сам автоматически отключает все peripherals и WiFi/BT.
-  // Реальный путь к низкому потреблению — P-MOSFET для отключения питания периферии (LCD, HX711).
+  // WiFi shutdown
+  WiFi.disconnect(true, false);
+  delay(100);
+  esp_wifi_stop();
+  delay(50);
+
+  Serial.print(F("[Sleep] esp_deep_sleep_start for "));
+  Serial.print((uint32_t)seconds);
+  Serial.println(F(" sec (timer wake, MOSFET stays ON)"));
+  Serial.flush();
+  uart_wait_tx_idle_polling(UART_NUM_0);
+
+  // Timer wakeup через internal ESP RTC oscillator (не зависит от DS3231)
   if (seconds > 0) {
-    esp_sleep_enable_timer_wakeup(seconds * 1000000ULL);
+    esp_sleep_enable_timer_wakeup((uint64_t)seconds * 1000000ULL);
   }
   esp_deep_sleep_start();
+
 #elif defined(ESP8266)
   // ESP8266 max deep sleep ~71 мин (32-битный мкс-таймер чипа). Передача большего значения
   // даёт неопределённое поведение — ESP может вообще не проснуться. Cap на 70 мин с запасом.

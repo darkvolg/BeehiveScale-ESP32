@@ -73,7 +73,9 @@ bool       ntp_sync_time();
 void       ntp_loop();
 
 bool tg_send_message(const String &text);
-bool tg_send_alert(float weight, float tempC, const String &datetime);
+// v5.0.26: refWeight — опорный вес для расчёта дельты в сообщении.
+// При первом срабатывании = prevWeight (эталон); при повторе = lastAlertWeight.
+bool tg_send_alert(float weight, float tempC, const String &datetime, float refWeight);
 // prevWeight — пользовательский опорный вес (для долгосрочной дельты, "от эталона")
 // prevWeightDate — Unix timestamp когда зафиксирован prevWeight (0 = не задано)
 // lastReportWeight — вес на момент прошлого TG-отчёта (для дельты "за сутки")

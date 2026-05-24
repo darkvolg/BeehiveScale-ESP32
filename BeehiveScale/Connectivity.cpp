@@ -15,11 +15,19 @@
 #include <WiFiClientSecure.h>
 #include <ESPmDNS.h>
 #include <esp_task_wdt.h>
+#include <esp_wifi.h>
+#include <esp_phy_init.h>
 #endif
 
 #define HTTP_TIMEOUT_MS  5000
 
 static WifiStatus _wifiStatus = WIFI_DISCONNECTED;
+
+#if defined(ESP32)
+// v5.0.26: _wifiRetryCount в RTC memory чтобы переживать ESP.restart().
+// Иначе при каждом SW_CPU_RESET счётчик сбрасывался и могла быть бесконечная петля.
+RTC_DATA_ATTR static uint8_t _wifiRetryCount = 0;
+#endif
 
 // Инициализация WiFi в режиме STA или AP.
 // Если выбран STA, но подключение не удалось за WIFI_TIMEOUT_MS — авто-fallback в AP,
@@ -73,17 +81,28 @@ bool wifi_connect() {
   Serial.print(F("[WiFi] Connecting to: "));
   Serial.println(ssid);
 
-  // v5.0.24: жёсткий reset WiFi-стека перед connect.
-  // После deep sleep wake WiFi-регистры остаются в "грязном" состоянии,
-  // WiFi.begin() крашит на PC 0x400e999e (InstrFetchProhibited в WiFi-стеке).
-  // Решение из ESP32 forum: WIFI_OFF → delay → WIFI_STA → disconnect → begin.
+  // v5.0.26: правильная последовательность init WiFi (по анализу 2 агентов + ESP32 forum).
+  // КРИТИЧНО: WiFi.mode(WIFI_STA) ДО WiFi.disconnect(true,true) — иначе disconnect трогает
+  // uninitialized station_handle (баг Arduino-ESP32 3.0.x, см. issues #9658, #9329, #9913).
+  // esp_wifi_stop() в начале — на случай если предыдущий boot оставил half-state в WiFi-драйвере.
 #if defined(ESP32)
+  // Cleanup any half-state from prior boot (ignore error если WiFi ещё не был init)
+  esp_wifi_stop();
+  delay(50);
+
   WiFi.persistent(false);              // не писать креды в NVS лишний раз
-  WiFi.mode(WIFI_OFF);
+  WiFi.mode(WIFI_STA);                 // СНАЧАЛА mode — инициализирует netif + event loop
   delay(100);
-  WiFi.mode(WIFI_STA);
-  WiFi.disconnect(true, true);         // disable=true, eraseAP=true
-  delay(100);
+  WiFi.disconnect(true, true);         // ТЕПЕРЬ безопасно стирать NVS-кэш WiFi
+  delay(200);
+
+  // Если это уже не первая попытка подряд — стереть PHY/RF calibration cache.
+  // Помогает при corruption калибровки после нескольких ESP.restart() циклов.
+  if (_wifiRetryCount >= 2) {
+    Serial.println(F("[WiFi] Erasing PHY calibration data (retry recovery)..."));
+    esp_phy_erase_cal_data_in_nvs();
+    delay(100);
+  }
 #else
   WiFi.mode(WIFI_STA);
 #endif
@@ -105,6 +124,12 @@ bool wifi_connect() {
         case WL_IDLE_STATUS: Serial.println(F("IDLE — слабый сигнал или роутер не отвечает")); break;
         default: Serial.println(s);
       }
+#if defined(ESP32)
+      // v5.0.27: ESP.restart() retry loop УБРАН — он накапливал RTC slow memory corruption
+      // между SW_CPU_RESET циклами. Теперь при WiFi timeout → возврат false → fallback на AP
+      // (в wifi_init), без принудительного перезапуска ESP.
+      _wifiRetryCount = 0;
+#endif
       return false;
     }
 #if defined(ESP32)
@@ -116,6 +141,9 @@ bool wifi_connect() {
     delay(10);
   }
   _wifiStatus = WIFI_CONNECTED;
+#if defined(ESP32)
+  _wifiRetryCount = 0;  // v5.0.26: сброс счётчика на успехе
+#endif
   Serial.print(F("[WiFi] Connected, IP: "));
   Serial.println(WiFi.localIP());
 
@@ -438,20 +466,34 @@ bool tg_send_message(const String &text) {
   return _tg_post(text.c_str());
 }
 
-bool tg_send_alert(float weight, float tempC, const String &datetime) {
-  char msg[256];
+bool tg_send_alert(float weight, float tempC, const String &datetime, float refWeight) {
+  char msg[384];
   char tempStr[16];
   if (tempC > -90) {
     snprintf(tempStr, sizeof(tempStr), "%.1f C", tempC);
   } else {
     snprintf(tempStr, sizeof(tempStr), "n/d");
   }
+  float delta = weight - refWeight;
+  const char* reason;
+  const char* emoji;
+  if (delta >= 0) {
+    reason = "резкий прирост веса";
+    emoji = "📈";
+  } else {
+    reason = "резкая убыль веса (роение/кража)";
+    emoji = "📉";
+  }
   snprintf(msg, sizeof(msg),
     "🚨 <b>ТРЕВОГА: улей</b>\n"
+    "Причина: %s %s\n"
+    "Изменение: <b>%s%.2f кг</b>\n"
     "Время: %s\n"
-    "Вес: <b>%.2f кг</b>\n"
+    "Вес: <b>%.2f кг</b> (было %.2f)\n"
     "Температура: %s",
-    datetime.c_str(), weight, tempStr);
+    emoji, reason,
+    (delta >= 0 ? "+" : ""), delta,
+    datetime.c_str(), weight, refWeight, tempStr);
   return _tg_post(msg);
 }
 

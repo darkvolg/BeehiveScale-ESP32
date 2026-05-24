@@ -16,9 +16,14 @@
 #endif
 
 // PERIPHERAL_POWER_PIN — high-side P-MOSFET для отключения LCD/HX711/RTC во сне.
-// У Геннадия P-MOSFET нет (заказа на Озоне не было), поэтому отключено на обеих платформах.
-// Если когда-то добавится — для ESP32 использовать свободный RTC GPIO (например 25 или 32).
+// Не используется в v5.0.30 — для power-cut используем AO3401 + GPIO25 HOLD (см. ниже).
 #define PERIPHERAL_POWER_PIN -1
+
+// v5.0.34: POWER_HOLD_PIN убран. DS3231 SQW open-drain напрямую к Gate AO3401 +
+// 1MΩ pullup Gate-Source. ESP не управляет MOSFET — латч работает на уровне RTC.
+// Цикл: alarm fires → SQW LOW → MOSFET ON → boot → ESP программирует next alarm +
+// clearAlarm → SQW HIGH → 1MΩ тянет Gate к Source → MOSFET OFF → power off.
+// GPIO25 теперь свободен для других нужд.
 
 struct SleepPersistData {
   uint32_t magic;

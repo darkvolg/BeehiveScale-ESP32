@@ -17,6 +17,8 @@
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <esp_task_wdt.h>
+#include <esp_sleep.h>
+#include <driver/rtc_io.h>
 #endif
 
 #include "Display.h"
@@ -163,13 +165,43 @@ void start_webserver();
 void check_auto_sleep();
 
 void setup() {
+#if defined(ESP32)
+  // ═══ v5.0.34 — DS3231 self-latching power-cut (no ESP HOLD pin) ═══
+  // Питание ESP контролируется ТОЛЬКО DS3231 SQW open-drain → AO3401 Gate.
+  // Когда DS3231 alarm fires → SQW LOW → MOSFET ON → ESP boot.
+  // ESP сам себя НЕ держит — DS3231 удерживает SQW LOW пока A1F=1.
+  // В sleep_enter() ESP программирует новый alarm и clearAlarm(A1F=0) → SQW HI-Z →
+  // 1MΩ pullup тянет Gate к Source → MOSFET OFF → power off.
+  //
+  // GPIO25 свободен (раньше был HOLD pin). Не используем.
+
+  // v5.0.27 фиксы остаются: CPU 240MHz + освобождение GPIO27 RTC mux
+  esp_sleep_wakeup_cause_t wakeCause = esp_sleep_get_wakeup_cause();
+  setCpuFrequencyMhz(240);
+  if (wakeCause != ESP_SLEEP_WAKEUP_UNDEFINED) {
+    rtc_gpio_deinit(GPIO_NUM_27);
+    gpio_reset_pin(GPIO_NUM_27);
+  }
+#endif
+
   Serial.begin(115200);
   Serial.println(F("\n[" FW_FULLNAME "] boot"));
 
 #if defined(ESP8266)
   ESP.wdtDisable();  // Отключаем программный WDT на время setup (ESP8266 ~3сек по умолчанию)
 #endif
+  // v5.0.26: WDT инициализируем СРАЗУ после Serial.begin (ДО любых delay).
   app_wdt_init();
+
+#if defined(ESP32)
+  // v5.0.27: после DEEPSLEEP_RESET дать ESP-IDF и RF-кальке 500мс на инициализацию.
+  if (wakeCause != ESP_SLEEP_WAKEUP_UNDEFINED) {
+    Serial.print(F("[Wake] cause=")); Serial.print(wakeCause);
+    Serial.print(F(", CPU=")); Serial.print(getCpuFrequencyMhz()); Serial.println(F(" MHz"));
+    delay(500);
+    esp_task_wdt_reset();
+  }
+#endif
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(MENU_BTN_PIN, INPUT_PULLUP);
   button_attach_interrupt(BUTTON_PIN, btnMain);
@@ -233,6 +265,17 @@ void setup() {
 
   bool rtcOk = rtc_init();
 
+#if defined(ESP32)
+  // v5.0.35: CRITICAL — после rtc_init() СРАЗУ включить HOLD через Alarm1 PerSecond.
+  // SQW pin DS3231 пойдёт LOW → удерживает AO3401 Gate LOW → MOSFET ON.
+  // Без этого после отпускания SW2 (или после wake от Alarm2 → ESP очищает A2F)
+  // SQW идёт HIGH → MOSFET закрывается → ESP теряет питание.
+  // С HOLD ESP может работать спокойно, пока сама не вызовет sleep_enter().
+  if (rtcOk) {
+    rtc_enable_persecond_hold();
+  }
+#endif
+
   if (!temp_init()) {
     Serial.println(F("[Temp] No sensor, readings disabled"));
   }
@@ -275,12 +318,9 @@ void setup() {
   sys.wifiOk = wifi_init();
   yield();
 #if defined(ESP32)
-  // v5.0.21: понижаем TX power с 19.5dBm до 11dBm — снижает пик WiFi
-  // с ~500мА до ~200мА. Дальность падает ~30% но в улье хватает.
+  // v5.0.21: понижаем TX power с 19.5dBm до 11dBm — снижает пик WiFi с ~500мА до ~200мА
   WiFi.setTxPower(WIFI_POWER_11dBm);
   // v5.0.23: setSleep(true) УБРАН — modem-sleep блокировал webserver
-  // запросы (страница открывалась но /api/data не возвращался). На
-  // active-фазе экономия минимальная, лучше стабильность.
   WiFi.setSleep(false);
 #endif
   yield();
@@ -288,15 +328,16 @@ void setup() {
     Serial.println(F("[WiFi] Connected"));
     Serial.print(F("[WiFi] IP: "));
     Serial.println(WiFi.status() == WL_CONNECTED ? WiFi.localIP() : WiFi.softAPIP());
-    // v5.0.22: NTP sync на boot ОТКЛЮЧЕНА — вызывает Guru Meditation
-    // (InstrFetchProhibited) на ESP32 Arduino Core 3.0.7 при первом
-    // вызове configTime/getLocalTime после WiFi connect. DS3231 даёт
-    // точное время (±2 мин/год), NTP не критичен. Ручная синхронизация
-    // доступна через сайт (Настройки → Sync NTP / /api/ntp).
-    // TODO: исправить на esp_sntp_init() или дождаться фикса в Core.
-    // if (get_wifi_mode() == 1) {
-    //   ntp_sync_time();
-    // }
+    // v5.0.31: NTP sync ВОЗВРАЩЁН (Core 3.1.3 фиксит баг ESP32 Core 3.0.7).
+    // При lost power RTC (после смены ESP32 / отключения CR2032) — без NTP
+    // sync alarm power-cut не работает корректно (программирует на invalid time).
+    if (get_wifi_mode() == 1 && WiFi.status() == WL_CONNECTED) {
+      // Sync только если STA mode + connected. В AP режиме NTP бесполезен.
+      if (rtc_lost_power()) {
+        Serial.println(F("[NTP] RTC lost power — forcing sync..."));
+        ntp_sync_time();
+      }
+    }
     start_webserver();
     // ArduinoOTA — обновление прошивки по воздуху. Пароль хранится в EEPROM,
     // дефолт "ota_beehive" при пустом блоке credentials (UI показывает warning).
@@ -562,15 +603,20 @@ void loop() {
       lastTsUpload = now;
     }
 
-    // Отправка TG-отчёта в двух случаях:
-    // 1. Сработало расписание (tgReportPending=true) — отправляем сразу в это пробуждение
-    // 2. Расписания нет, и просто прошёл интервал (для непрерывного режима без расписания)
+    // v5.0.45: УПРОЩЁННАЯ логика TG отправки.
+    //   - Если расписание: tgReportPending=true → TG на каждом scheduled wake
+    //   - Если расписания нет: TG шлётся ОДИН РАЗ за wake (cold boot) — каждое
+    //     пробуждение из power-cut sleep = новый TG отчёт (юзеру это интуитивно).
+    // Старый interval-check (tgRptMs vs millis/unix) удалён — был непонятен.
+    // tgRptMs=0 (TG отключён) — single switch для полного выключения TG.
     uint32_t tgRptMs = get_tg_report_interval_min() * 60000UL;
     uint8_t schedCnt = 0; { uint16_t st[8]; get_sched_times(st, schedCnt); }
+    static bool tgSentSinceBoot = false;
     bool doTgReport = false;
     if (tgReportPending) {
       doTgReport = true;
-    } else if (schedCnt == 0 && tgRptMs > 0 && now - lastTgReport >= tgRptMs) {
+    } else if (!tgSentSinceBoot && schedCnt == 0 && tgRptMs > 0) {
+      // Каждый cold-boot wake без расписания = один TG отчёт
       doTgReport = true;
     }
     if (doTgReport) {
@@ -600,6 +646,7 @@ void loop() {
                          persist.lastReportWeight, persist.hasLastReport)) {
         tgReportPending = false;
         lastTgReport = now;
+        tgSentSinceBoot = true;  // v5.0.45: блокировать повторную отправку в этом wake
         // После успешной отправки: текущий вес становится "вчерашним" для следующего отчёта.
         persist.lastReportWeight = sys.smoothedWeight;
         persist.hasLastReport = true;
@@ -623,21 +670,19 @@ void loop() {
   }
   persist.lastWeight = sys.smoothedWeight;
   persist.lastTempC = sys.tempData.temperature;
-  persist.wakeupCount++;
+  // v5.0.29: wakeupCount++ перенесён ВНУТРЬ sleep_enter() (инкремент после wake).
   sleep_save_persistent(persist);
-#if defined(ESP32)
-  esp_task_wdt_delete(NULL);
-#endif
   uint32_t sleepDur = sys.currentTime.valid
     ? sched_next_sec(sys.currentTime.hour, sys.currentTime.minute)
     : get_sleep_sec();
-  // Guard: sched_next_sec() может вернуть 0 в пограничном случае ровно на минуте расписания.
-  // Минимум 60 сек чтобы ESP не циклил "проснулся-уснул".
   if (sleepDur < 60) sleepDur = 60;
   Serial.print(F("[Sleep] Sleep for "));
   Serial.print(sleepDur);
   Serial.println(F(" sec"));
   sleep_enter(sleepDur);
+  // v5.0.29: Light sleep RETURNS — loop продолжается с этой точки.
+  // WiFi уже подключён (modem-sleep сохраняет association). Web/TG готовы.
+  lastActivityTime = millis();  // сброс idle-таймера на новый цикл активности
 #endif
 }
 
@@ -960,8 +1005,11 @@ void process_weight() {
     bool cooldownOk  = (now - lastAlertTime >= ALERT_COOLDOWN_MS);
     if ((firstAlert || repeatAlert) && sys.wifiOk && cooldownOk) {
       TimeStamp ts = rtc_now();
+      // v5.0.26: refWeight для расчёта дельты в сообщении.
+      // firstAlert → отсчёт от эталона (prevWeight); repeatAlert → от прошлого алерта.
+      float refW = firstAlert ? sys.prevWeight : persist.lastAlertWeight;
       tg_send_alert(sys.smoothedWeight, sys.tempData.temperature,
-                    rtc_format_datetime(ts));
+                    rtc_format_datetime(ts), refW);
       persist.alertSent    = true;
       persist.lastAlertWeight = sys.smoothedWeight;
       lastAlertTime = now;
@@ -1625,26 +1673,25 @@ void check_auto_sleep() {
   save_prev_weight(sys.prevWeight);   // сохраняем опорный вес дельты перед сном
   persist.lastWeight = sys.smoothedWeight;
   persist.lastTempC = sys.tempData.temperature;
-  persist.wakeupCount++;
+  // v5.0.29: wakeupCount++ перенесён внутрь sleep_enter() (после wake).
   sleep_save_persistent(persist);
 
-  // HX711 → power_down: standby ~1.5 мА → ~1 мкА. Просыпается scale.power_up() в setup().
+  // HX711 → power_down: standby ~1.5 мА → ~1 мкА. После wake → scale.power_up()
   scale.power_down();
 
-  // Уходим в deep sleep (пробуждение по кнопке GPIO 0)
-#if defined(ESP32)
-  esp_task_wdt_delete(NULL);
-#endif
   { uint32_t sleepDur = sys.currentTime.valid
       ? sched_next_sec(sys.currentTime.hour, sys.currentTime.minute)
       : get_sleep_sec();
-    // Защита от циклов "проснулся → уснул на 0 сек → проснулся": минимум 60 сек.
-    // Если попали в минуту расписания — sched_next_sec может вернуть 0 → не циклим, ждём минуту.
     if (sleepDur < 60) sleepDur = 60;
     Serial.print(F("[AutoSleep] Sleep for "));
     Serial.print(sleepDur);
     Serial.println(F(" sec"));
     sleep_enter(sleepDur);
+
+    // v5.0.29: light sleep returns here. Восстанавливаем HX711 и сбрасываем idle-таймер.
+    scale.power_up();
+    delay(50);  // дать HX711 проснуться
+    lastActivityTime = millis();
   }
 }
 

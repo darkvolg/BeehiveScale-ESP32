@@ -78,8 +78,19 @@
 #define EEPROM_ADDR_ALERT_TEMP_LOW    347  // float, 4 байта — порог низкой температуры (0 = выкл)
 #define EEPROM_ADDR_ALERT_TEMP_HIGH   351  // float, 4 байта — порог высокой температуры (0 = выкл)
 #define EEPROM_ADDR_ALERT_RTC_EN      355  // bool, 1 байт — алерт при RTC error (0/1)
-// 356..383 reserved for future fields
+
+// v5.0.44: persistence для TG report timestamp (для interval-mode TG без расписания).
+// Без этого при power-cut millis() сбрасывается каждый wake → interval-check fails forever.
+#define EEPROM_ADDR_TG_LAST_REP_MAGIC 356  // 1 байт
+#define EEPROM_MAGIC_TG_LAST_REP_VAL  0xAE
+#define EEPROM_ADDR_TG_LAST_REP_UNIX  357  // uint32_t, 4 байта — unix timestamp последнего успешного TG report
+
+// 361..383 reserved for future fields
 #define EEPROM_SIZE              384  // расширено под credentials-блок
+
+// v5.0.44: TG report timestamp persistence
+void     save_last_tg_report_unix(uint32_t unixtime);
+uint32_t load_last_tg_report_unix();
 
 // Веб-настройки (alertDelta, calibWeight, emaAlpha)
 void  web_settings_init();
