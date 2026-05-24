@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>BeehiveScale — Power-Cut модуль</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #f8f9fa;
+    color: #212529;
+    line-height: 1.6;
+  }
+  h1 {
+    color: #1a1a2e;
+    border-bottom: 3px solid #d32f2f;
+    padding-bottom: 10px;
+  }
+  h2 {
+    color: #1565c0;
+    margin-top: 40px;
+    padding: 8px 12px;
+    background: #e3f2fd;
+    border-left: 5px solid #1565c0;
+    border-radius: 3px;
+  }
+  h3 {
+    color: #2e7d32;
+    margin-top: 25px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15px 0;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+  }
+  th {
+    background: #1565c0;
+    color: #fff;
+    padding: 10px;
+    text-align: left;
+  }
+  td {
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  tr:hover { background: #f5f5f5; }
+  .warn {
+    background: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 12px 15px;
+    margin: 15px 0;
+    border-radius: 3px;
+  }
+  .danger {
+    background: #f8d7da;
+    border-left: 5px solid #d32f2f;
+    padding: 12px 15px;
+    margin: 15px 0;
+    border-radius: 3px;
+  }
+  .ok {
+    background: #d4edda;
+    border-left: 5px solid #2e7d32;
+    padding: 12px 15px;
+    margin: 15px 0;
+    border-radius: 3px;
+  }
+  .info {
+    background: #d1ecf1;
+    border-left: 5px solid #17a2b8;
+    padding: 12px 15px;
+    margin: 15px 0;
+    border-radius: 3px;
+  }
+  code {
+    background: #263238;
+    color: #aed581;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.95em;
+  }
+  pre {
+    background: #263238;
+    color: #aed581;
+    padding: 15px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: 'Consolas', monospace;
+  }
+  .step {
+    background: #fff;
+    border: 2px solid #1565c0;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+  }
+  .step-num {
+    display: inline-block;
+    background: #d32f2f;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 30px;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+  .pin-name {
+    display: inline-block;
+    background: #fff3e0;
+    border: 1px solid #ff9800;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: bold;
+  }
+  .checklist {
+    list-style: none;
+    padding-left: 0;
+  }
+  .checklist li {
+    padding: 8px 0;
+    border-bottom: 1px dashed #ccc;
+  }
+  .checklist li::before {
+    content: "☐ ";
+    font-size: 1.3em;
+    color: #1565c0;
+  }
+  .ascii {
+    font-family: 'Consolas', monospace;
+    white-space: pre;
+    background: #fff;
+    padding: 15px;
+    border: 2px solid #2e7d32;
+    border-radius: 6px;
+    font-size: 1.1em;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+
+<h1>BeehiveScale — Power-Cut модуль (v5.0.30)</h1>
+
+<div class="info">
+<b>Цель:</b> ESP32 физически выключается между циклами через P-MOSFET AO3401. DS3231 alarm включает питание. ESP сам себя выключает после работы. 100% надёжность — нет багов deep sleep WiFi.
+</div>
+
+<h2>1. Список деталей</h2>
+
+<table>
+<tr><th>#</th><th>Деталь</th><th>Кол-во</th><th>Примечание</th></tr>
+<tr><td>1</td><td>AO3401 P-MOSFET</td><td>1</td><td>Корпус SOT-23 (маркировка A19T)</td></tr>
+<tr><td>2</td><td>1N5819 Шоттки диод</td><td>2</td><td>D1 и D2</td></tr>
+<tr><td>3</td><td>Резистор 100kΩ</td><td>1</td><td>Pullup</td></tr>
+<tr><td>4</td><td>Тактовая кнопка</td><td>1</td><td>SW2 WAKE (momentary push-button)</td></tr>
+<tr><td>5</td><td>Тумблер ON/OFF</td><td>1</td><td>SW1 главный (на корпусе)</td></tr>
+<tr><td>6</td><td>Перфоборд</td><td>~2.5×3 см</td><td></td></tr>
+<tr><td>7</td><td>Провод</td><td>~50 см</td><td>МГТФ тонкий</td></tr>
+</table>
+
+<h2>2. Распиновка AO3401 (A19T)</h2>
+
+<p>Смотри сверху на маркировку <b>A19T</b>:</p>
+
+<div class="ascii">
+       Pin 3 (D — Drain)
+              │
+           ┌──┴──┐
+           │     │
+           │A19T │
+           │     │
+           └─┬─┬─┘
+             │ │
+          Pin1  Pin2
+           G    S
+        (Gate)(Source)
+</div>
+
+<ul>
+<li><span class="pin-name">Pin 3 = D (Drain)</span> — одиночная ножка <b>СВЕРХУ</b></li>
+<li><span class="pin-name">Pin 1 = G (Gate)</span> — нижняя <b>ЛЕВАЯ</b></li>
+<li><span class="pin-name">Pin 2 = S (Source)</span> — нижняя <b>ПРАВАЯ</b></li>
+</ul>
+
+<h2>3. Распиновка 1N5819 (диод)</h2>
+
+<div class="ascii">
+      Анод          Катод
+       ─────►├─────
+                    ↑
+              белая полоска
+</div>
+
+<p><b>Полоска</b> на корпусе диода = <b>катод</b>. Анод — противоположный конец без полоски.</p>
+
+<h2>4. Что соединять на плате (netlist)</h2>
+
+<table>
+<tr><th>#</th><th>Точка A</th><th>Точка B</th><th>Комментарий</th></tr>
+<tr><td>N1</td><td>AO3401 G (Pin 1)</td><td>Резистор 100k (один вывод)</td><td>Pullup начало</td></tr>
+<tr><td>N2</td><td>AO3401 S (Pin 2)</td><td>Резистор 100k (другой вывод)</td><td>Pullup конец</td></tr>
+<tr><td>N3</td><td>AO3401 G (Pin 1)</td><td>D1 анод (без полоски)</td><td>Управление от DS3231</td></tr>
+<tr><td>N4</td><td>AO3401 G (Pin 1)</td><td>D2 анод (без полоски)</td><td>Управление от ESP</td></tr>
+<tr><td>N5</td><td>AO3401 G (Pin 1)</td><td>SW2 кнопка (1 контакт)</td><td>WAKE кнопка</td></tr>
+<tr><td>N6</td><td>SW2 кнопка (другой контакт)</td><td>GND плата</td><td>Замыкание Gate на GND</td></tr>
+<tr><td>N7</td><td>D1 катод (с полоской)</td><td>Выходная площадка CTRL_RTC</td><td>К DS3231 INT</td></tr>
+<tr><td>N8</td><td>D2 катод (с полоской)</td><td>Выходная площадка CTRL_ESP</td><td>К ESP GPIO25</td></tr>
+</table>
+
+<div class="warn">
+<b>Важно:</b> в точке <span class="pin-name">AO3401 Gate</span> сходятся 4 вывода: резистор, D1 анод, D2 анод, SW2 контакт. Это <b>общая точка</b> — все на одной площадке перфоборда.
+</div>
+
+<h2>5. Выходные провода с платы (6 проводов наружу)</h2>
+
+<table>
+<tr><th>Провод</th><th>Цвет</th><th>Откуда на плате</th><th>Куда подключать</th></tr>
+<tr><td><b>VBAT_IN</b></td><td>🔴 красный</td><td>AO3401 Source (Pin 2)</td><td>→ SW1 → TP4056 OUT+</td></tr>
+<tr><td><b>VBAT_OUT</b></td><td>🔴 красный</td><td>AO3401 Drain (Pin 3)</td><td>→ MT3608 VIN+</td></tr>
+<tr><td><b>VCC_RTC</b></td><td>🟠 оранжевый</td><td>AO3401 Source (та же точка)</td><td>→ DS3231 VCC</td></tr>
+<tr><td><b>GND</b></td><td>⚫ чёрный</td><td>Площадка GND на плате</td><td>→ общая земля</td></tr>
+<tr><td><b>CTRL_RTC</b></td><td>🟢 зелёный</td><td>Катод D1</td><td>→ DS3231 INT/SQW</td></tr>
+<tr><td><b>CTRL_ESP</b></td><td>🔵 синий</td><td>Катод D2</td><td>→ ESP32 GPIO25</td></tr>
+</table>
+
+<h2>6. Пошаговая пайка платы</h2>
+
+<div class="step">
+<span class="step-num">1</span><b>Установка AO3401</b>
+<p>Положи AO3401 маркировкой A19T <b>вверх</b>. Ориентируй так чтобы Pin 3 (Drain) смотрел вверх, Pin 1 (Gate) — нижняя левая, Pin 2 (Source) — нижняя правая. Зафиксируй пинцетом, припаяй 3 ножки.</p>
+<p><b>Проверка:</b> multimeter continuity между всеми тремя пинами = <b>∞</b> (нет коротких).</p>
+</div>
+
+<div class="step">
+<span class="step-num">2</span><b>Резистор 100k (pullup)</b>
+<p>Один вывод резистора → <span class="pin-name">AO3401 Pin 1 (Gate)</span>. Другой → <span class="pin-name">AO3401 Pin 2 (Source)</span>.</p>
+<p><b>Проверка:</b> Ом между G и S = <b>~100kΩ</b>.</p>
+</div>
+
+<div class="step">
+<span class="step-num">3</span><b>Диод D1 (от DS3231)</b>
+<p>Анод (без полоски) → <span class="pin-name">AO3401 Gate</span> (там же где резистор).<br>
+Катод (с полоской) → краевая площадка → провод <b>CTRL_RTC</b>.</p>
+<p><b>Проверка:</b> диод-режим. Красный щуп на анод, чёрный на катод → ~0.2V. Обратно → ∞.</p>
+</div>
+
+<div class="step">
+<span class="step-num">4</span><b>Диод D2 (от ESP)</b>
+<p>Анод → <span class="pin-name">AO3401 Gate</span> (та же общая точка).<br>
+Катод → другая краевая площадка → провод <b>CTRL_ESP</b>.</p>
+</div>
+
+<div class="step">
+<span class="step-num">5</span><b>Кнопка SW2 (WAKE)</b>
+<p>Один контакт кнопки → <span class="pin-name">AO3401 Gate</span> (общая точка).<br>
+Другой контакт → площадка <b>GND</b> на плате.</p>
+<p><b>Проверка continuity:</b> кнопка не нажата → G↔GND = <b>∞</b>. Нажата → <b>0Ω</b> (звук).</p>
+</div>
+
+<div class="step">
+<span class="step-num">6</span><b>6 проводов наружу</b>
+<p>Припаяй провода по таблице из раздела 5. Длина каждого ~10–15 см.</p>
+</div>
+
+<h2>7. Проверка платы ДО установки (multimeter)</h2>
+
+<div class="warn">Все 4 теста должны пройти. Иначе НЕ ставь на боевое железо — перепаяй.</div>
+
+<table>
+<tr><th>Тест</th><th>Что проверить</th><th>Ожидаемый результат</th></tr>
+<tr><td>A</td><td>VBAT_IN ↔ GND</td><td>∞ (нет короткого)</td></tr>
+<tr><td>A</td><td>VBAT_OUT ↔ GND</td><td>∞</td></tr>
+<tr><td>A</td><td>VBAT_IN ↔ VBAT_OUT</td><td>∞ (MOSFET закрыт)</td></tr>
+<tr><td>B</td><td>VBAT_IN ↔ CTRL_RTC</td><td>~100kΩ (через резистор + анод D1)</td></tr>
+<tr><td>C</td><td>Замкни CTRL_RTC ↔ GND вручную. Ом VBAT_IN ↔ VBAT_OUT</td><td>близко к 0 (MOSFET открыт!)</td></tr>
+<tr><td>D</td><td>Нажми SW2. Ом VBAT_IN ↔ VBAT_OUT</td><td>близко к 0 (MOSFET открыт)</td></tr>
+</table>
+
+<h2>8. Установка в существующее железо</h2>
+
+<div class="danger">
+<b>ВНИМАНИЕ:</b> ESP32 GPIO33 — где раньше был подключён DS3231 INT — теперь <b>НЕ ИСПОЛЬЗУЕТСЯ</b>. Этот провод нужно отпаять от ESP (уже сделано). На будущее можно оставить пятак или использовать GPIO33 для чего-то другого.
+</div>
+
+<div class="step">
+<span class="step-num">1</span><b>Выключить всё</b>
+<ul>
+<li>USB отключить от ESP</li>
+<li>Тумблер 21700 в OFF (или вынь банку)</li>
+<li>Multimeter подтверди что VBAT = 0 на TP4056 OUT+</li>
+</ul>
+</div>
+
+<div class="step">
+<span class="step-num">2</span><b>Перерезать провод TP4056 OUT+ → MT3608 VIN+</b>
+<p>Найди провод между TP4056 OUT+ и MT3608 VIN+. Перережь посередине, зачисти концы, олудь.</p>
+</div>
+
+<div class="step">
+<span class="step-num">3</span><b>Установить SW1 (главный тумблер)</b>
+<p>Если уже есть на корпусе — пропусти. Иначе подключи SW1 в разрыв:</p>
+<ul>
+<li>Один контакт SW1 → TP4056 OUT+ (конец провода)</li>
+<li>Другой контакт SW1 → VBAT_IN платы</li>
+</ul>
+</div>
+
+<div class="step">
+<span class="step-num">4</span><b>Подключить плату к существующему железу</b>
+<ul>
+<li><b>VBAT_IN</b> → (через SW1) → TP4056 OUT+</li>
+<li><b>VBAT_OUT</b> → MT3608 VIN+</li>
+<li><b>GND</b> → общая земля (любая точка GND)</li>
+</ul>
+</div>
+
+<div class="step">
+<span class="step-num">5</span><b>DS3231 VCC переподключить</b>
+<p>Сейчас DS3231 VCC скорее всего идёт от ESP 3V3. <b>Отпаять</b> его оттуда. <b>Припаять</b> к проводу <b>VCC_RTC</b> платы.</p>
+<p>Теперь DS3231 получает питание от TP4056 OUT (через AO3401 Source) — всегда живёт когда SW1 ON.</p>
+</div>
+
+<div class="step">
+<span class="step-num">6</span><b>Подключить управление</b>
+<ul>
+<li><b>CTRL_RTC</b> → DS3231 <span class="pin-name">INT/SQW</span> pin</li>
+<li><b>CTRL_ESP</b> → ESP32 <span class="pin-name">GPIO25</span> pin</li>
+</ul>
+<p><b>Заметка:</b> ESP32 GPIO33 (где раньше был INT) — теперь свободен, можно оставить.</p>
+</div>
+
+<div class="step">
+<span class="step-num">7</span><b>Что НЕ трогать</b>
+<ul>
+<li>MT3608 → ESP VIN, LCD, HX711, DS18B20 — без изменений</li>
+<li>TP4056 IN+/IN-, B+/B- — без изменений</li>
+<li>21700 банка — без изменений</li>
+</ul>
+</div>
+
+<h2>9. Первый запуск</h2>
+
+<div class="step">
+<span class="step-num">1</span><b>Включить</b>
+<ul>
+<li>Тумблер 21700 → ON</li>
+<li>SW1 → ON</li>
+<li><b>Ничего не происходит</b> — это нормально (AO3401 закрыт по умолчанию)</li>
+</ul>
+</div>
+
+<div class="step">
+<span class="step-num">2</span><b>Триггер WAKE кнопкой</b>
+<p>Нажми SW2 (WAKE) на ~0.5 сек. ESP должен загрузиться:</p>
+<ul>
+<li>LCD загорается (splash screen)</li>
+<li>Serial Monitor: <code>[BeehiveScale v5.0.30] boot</code></li>
+<li>WiFi подключение</li>
+</ul>
+<p>Отпусти SW2 — ESP уже сам держит HOLD через GPIO25.</p>
+</div>
+
+<div class="step">
+<span class="step-num">3</span><b>Автоматический цикл</b>
+<p>После прошивки v5.0.30 ESP:</p>
+<ol>
+<li>Запрограммирует DS3231 alarm на +5 мин (или по расписанию)</li>
+<li>Сделает работу (WiFi, TG, измерения)</li>
+<li>Освободит GPIO25 → MOSFET закроется → ESP выключится</li>
+<li>Через 5 мин DS3231 alarm → ESP boot автоматически</li>
+</ol>
+</div>
+
+<h2>10. Поведение выключателей</h2>
+
+<h3>SW1 — главный тумблер</h3>
+<table>
+<tr><th>Состояние</th><th>Что происходит</th></tr>
+<tr><td><b>ON</b></td><td>Устройство работает. AO3401 управляет ESP. DS3231 запитан от TP4056.</td></tr>
+<tr><td><b>OFF</b></td><td>Всё обесточено. DS3231 на CR2032 backup (время идёт). ESP off.</td></tr>
+</table>
+
+<h3>SW2 — кнопка WAKE (momentary)</h3>
+<table>
+<tr><th>Действие</th><th>Результат</th></tr>
+<tr><td>Нажать</td><td>Gate → GND, MOSFET открывается, ESP boot</td></tr>
+<tr><td>Отпустить</td><td>ESP уже сам держит HOLD через GPIO25, продолжает работать</td></tr>
+</table>
+
+<h2>11. Если что-то не так</h2>
+
+<table>
+<tr><th>Симптом</th><th>Причина</th><th>Решение</th></tr>
+<tr><td>Нажимаю SW2 — ESP не включается</td><td>MOSFET не открывается</td><td>Проверь ориентацию AO3401, диодов, провод GPIO25→CTRL_ESP</td></tr>
+<tr><td>ESP включается на 1 сек и выключается</td><td>HOLD не работает</td><td>Проверь D2 ориентацию. В коде: setup() должен <code>pinMode(25,OUTPUT); digitalWrite(25,LOW);</code></td></tr>
+<tr><td>Banка садится за день</td><td>Утечка тока</td><td>SW1 OFF, multimeter mA в разрыв 21700+ → должно быть <0.5 мА</td></tr>
+<tr><td>DS3231 теряет время после SW1 OFF</td><td>CR2032 села</td><td>Замени CR2032, проверь контакт</td></tr>
+</table>
+
+<h2>12. Финальный чек-лист</h2>
+
+<ul class="checklist">
+<li>Плата собрана и проверена multimeter (4 теста)</li>
+<li>Плата установлена в разрыв TP4056 OUT+ → MT3608 VIN+</li>
+<li>SW1 установлен (внешний тумблер)</li>
+<li>DS3231 VCC переподключён к VCC_RTC платы</li>
+<li>DS3231 INT отпаян от ESP GPIO33 (старый коннект)</li>
+<li>CTRL_RTC подключён к DS3231 INT/SQW</li>
+<li>CTRL_ESP подключён к ESP GPIO25</li>
+<li>SW1 OFF → multimeter mA → <100 µA</li>
+<li>SW1 ON, SW2 не нажата → mA → <200 µA</li>
+<li>SW2 нажата → ESP boot за <1 сек</li>
+<li>DS3231 alarm через 5 мин → ESP сам boot (после прошивки v5.0.30)</li>
+</ul>
+
+<div class="ok">
+<b>Когда все галочки ✅ — железо готово, прошить v5.0.30.</b>
+</div>
+
+</body>
+</html>

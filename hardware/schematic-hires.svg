@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1600" font-family="Arial, sans-serif">
+<style>
+.box { fill:#fff; stroke:#000; stroke-width:3; }
+.modA { fill:#9c27b0; stroke:#4a148c; stroke-width:3; }
+.modB { fill:#1976d2; stroke:#0d47a1; stroke-width:3; }
+.modC { fill:#4caf50; stroke:#1b5e20; stroke-width:3; }
+.modD { fill:#212121; stroke:#000; stroke-width:3; }
+.modE { fill:#ff9800; stroke:#b87000; stroke-width:3; }
+.modF { fill:#37474f; stroke:#000; stroke-width:3; }
+.lbl { font-size:28px; font-weight:bold; fill:#fff; }
+.lblD { font-size:28px; font-weight:bold; fill:#000; }
+.sml { font-size:20px; fill:#fff; }
+.smlD { font-size:20px; fill:#444; }
+.pin { font-size:22px; font-weight:bold; fill:#000; }
+.note { font-size:22px; fill:#c62828; font-weight:bold; }
+.title { font-size:38px; font-weight:bold; fill:#000; }
+.subt { font-size:22px; fill:#555; font-style:italic; }
+
+.wR { stroke:#d32f2f; stroke-width:7; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.wB { stroke:#000; stroke-width:7; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.wBl { stroke:#1976d2; stroke-width:6; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.wG { stroke:#2e7d32; stroke-width:6; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.wY { stroke:#f9a825; stroke-width:6; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.junc { fill:#000; }
+</style>
+
+<text x="1200" y="60" class="title" text-anchor="middle">BeehiveScale — Hardware Power-Cut Schematic</text>
+<text x="1200" y="100" class="subt" text-anchor="middle">AO3401 P-MOSFET + DS3231 alarm + WAKE button. Автономия ~560 дней.</text>
+
+<!-- TP4056 -->
+<g transform="translate(80,200)">
+  <rect width="280" height="180" class="modA" rx="10"/>
+  <text x="140" y="60" class="lbl" text-anchor="middle">TP4056</text>
+  <text x="140" y="95" class="sml" text-anchor="middle">+ DW01 protection</text>
+  <text x="140" y="125" class="sml" text-anchor="middle">charger</text>
+  <circle cx="0" cy="40" r="10" fill="#d32f2f" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="48" class="pin" text-anchor="end">IN+</text>
+  <circle cx="0" cy="80" r="10" fill="#222" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="88" class="pin" text-anchor="end">IN−</text>
+  <circle cx="0" cy="125" r="10" fill="#d32f2f" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="133" class="pin" text-anchor="end">B+</text>
+  <circle cx="0" cy="160" r="10" fill="#222" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="168" class="pin" text-anchor="end">B−</text>
+  <circle cx="280" cy="90" r="10" fill="#d32f2f" stroke="#000" stroke-width="2"/>
+  <text x="295" y="98" class="pin">OUT+</text>
+  <circle cx="280" cy="130" r="10" fill="#222" stroke="#000" stroke-width="2"/>
+  <text x="295" y="138" class="pin">OUT−</text>
+</g>
+
+<!-- 21700 -->
+<g transform="translate(80,600)">
+  <rect width="280" height="160" class="modE" rx="14"/>
+  <text x="140" y="55" class="lblD" text-anchor="middle">21700 Li-Ion</text>
+  <text x="140" y="90" class="smlD" text-anchor="middle">3.7V 4500мАч</text>
+  <text x="140" y="130" font-size="48" font-weight="bold" text-anchor="middle">+ −</text>
+  <circle cx="0" cy="50" r="10" fill="#d32f2f" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="58" class="pin" text-anchor="end">B+</text>
+  <circle cx="0" cy="120" r="10" fill="#222" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="128" class="pin" text-anchor="end">B−</text>
+</g>
+
+<!-- SW1 toggle -->
+<g transform="translate(540,250)">
+  <rect width="160" height="80" class="box" rx="6"/>
+  <circle cx="30" cy="40" r="6" class="junc"/>
+  <circle cx="130" cy="40" r="6" class="junc"/>
+  <line x1="30" y1="40" x2="110" y2="16" stroke="#000" stroke-width="5"/>
+  <text x="80" y="-10" class="lblD" text-anchor="middle">SW1</text>
+  <text x="80" y="110" class="smlD" text-anchor="middle">главный тумблер</text>
+</g>
+
+<!-- AO3401 (правильная распиновка A19T) -->
+<g transform="translate(900,560)">
+  <rect width="260" height="180" class="modC" rx="10"/>
+  <text x="130" y="60" class="lbl" text-anchor="middle">AO3401</text>
+  <text x="130" y="95" class="sml" text-anchor="middle">P-MOSFET</text>
+  <text x="130" y="125" class="sml" text-anchor="middle">A19T / SOT-23</text>
+  <!-- Drain TOP -->
+  <circle cx="130" cy="0" r="10" fill="#ff9800" stroke="#000" stroke-width="2"/>
+  <text x="130" y="-18" class="pin" text-anchor="middle">Pin 3 — D (Drain)</text>
+  <!-- Gate низ-лево -->
+  <circle cx="50" cy="180" r="10" fill="#9c27b0" stroke="#000" stroke-width="2"/>
+  <text x="50" y="210" class="pin" text-anchor="middle">Pin 1 — G</text>
+  <text x="50" y="232" class="pin" text-anchor="middle">(Gate)</text>
+  <!-- Source низ-право -->
+  <circle cx="210" cy="180" r="10" fill="#d32f2f" stroke="#000" stroke-width="2"/>
+  <text x="210" y="210" class="pin" text-anchor="middle">Pin 2 — S</text>
+  <text x="210" y="232" class="pin" text-anchor="middle">(Source)</text>
+</g>
+
+<!-- 100k pullup -->
+<g transform="translate(770,820)">
+  <rect width="100" height="40" class="box" rx="4"/>
+  <text x="50" y="30" class="pin" text-anchor="middle">100k</text>
+  <text x="50" y="70" class="smlD" text-anchor="middle">pullup</text>
+</g>
+
+<!-- D1 -->
+<g transform="translate(680,990)">
+  <rect width="100" height="40" fill="#fff" stroke="#2e7d32" stroke-width="3" rx="4"/>
+  <polygon points="20,8 20,32 50,20" fill="#2e7d32"/>
+  <line x1="50" y1="8" x2="50" y2="32" stroke="#000" stroke-width="4"/>
+  <text x="50" y="-5" class="pin" fill="#2e7d32" text-anchor="middle">D1 1N5819</text>
+  <text x="-5" y="28" class="pin" text-anchor="end">анод</text>
+  <text x="110" y="28" class="pin">катод│</text>
+</g>
+
+<!-- D2 -->
+<g transform="translate(680,1090)">
+  <rect width="100" height="40" fill="#fff" stroke="#2e7d32" stroke-width="3" rx="4"/>
+  <polygon points="20,8 20,32 50,20" fill="#2e7d32"/>
+  <line x1="50" y1="8" x2="50" y2="32" stroke="#000" stroke-width="4"/>
+  <text x="50" y="-5" class="pin" fill="#2e7d32" text-anchor="middle">D2 1N5819</text>
+  <text x="-5" y="28" class="pin" text-anchor="end">анод</text>
+  <text x="110" y="28" class="pin">катод│</text>
+</g>
+
+<!-- SW2 WAKE -->
+<g transform="translate(680,1200)">
+  <rect width="140" height="60" fill="#fff" stroke="#c62828" stroke-width="3" rx="8"/>
+  <circle cx="25" cy="30" r="6" class="junc"/>
+  <circle cx="115" cy="30" r="6" class="junc"/>
+  <path d="M 25,30 L 50,12 L 115,12" stroke="#c62828" stroke-width="3" fill="none"/>
+  <text x="70" y="-8" class="pin" fill="#c62828" text-anchor="middle">SW2 WAKE</text>
+  <text x="70" y="82" class="smlD" text-anchor="middle">push-button</text>
+</g>
+
+<!-- MT3608 -->
+<g transform="translate(1330,560)">
+  <rect width="260" height="180" class="modB" rx="10"/>
+  <text x="130" y="60" class="lbl" text-anchor="middle">MT3608</text>
+  <text x="130" y="95" class="sml" text-anchor="middle">Boost</text>
+  <text x="130" y="125" class="sml" text-anchor="middle">3.7V → 5V</text>
+  <circle cx="0" cy="45" r="10" fill="#d32f2f" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="53" class="pin" text-anchor="end">VIN+</text>
+  <circle cx="0" cy="140" r="10" fill="#222" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="148" class="pin" text-anchor="end">VIN−</text>
+  <circle cx="260" cy="45" r="10" fill="#d32f2f" stroke="#000" stroke-width="2"/>
+  <text x="275" y="53" class="pin">VOUT+</text>
+  <circle cx="260" cy="140" r="10" fill="#222" stroke="#000" stroke-width="2"/>
+  <text x="275" y="148" class="pin">VOUT−</text>
+</g>
+
+<!-- ESP32 -->
+<g transform="translate(1830,340)">
+  <rect width="320" height="520" class="modD" rx="14"/>
+  <text x="160" y="55" class="lbl" text-anchor="middle">ESP32 DOIT V1</text>
+  <text x="160" y="85" class="sml" text-anchor="middle">WROOM-32</text>
+  <rect x="35" y="120" width="250" height="80" fill="#3949ab"/>
+  <text x="160" y="170" class="sml" text-anchor="middle">WiFi module</text>
+  <circle cx="0" cy="240" r="10" fill="#d32f2f" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="248" class="pin" text-anchor="end">VIN</text>
+  <circle cx="0" cy="280" r="10" fill="#222" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="288" class="pin" text-anchor="end">GND</text>
+  <circle cx="0" cy="340" r="10" fill="#1976d2" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="348" class="pin" text-anchor="end">GPIO21 (SDA)</text>
+  <circle cx="0" cy="385" r="10" fill="#1976d2" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="393" class="pin" text-anchor="end">GPIO22 (SCL)</text>
+  <circle cx="0" cy="445" r="10" fill="#2e7d32" stroke="#000" stroke-width="2"/>
+  <text x="-15" y="453" class="pin" text-anchor="end" fill="#c62828">GPIO25 (HOLD)</text>
+</g>
+
+<!-- Peripherals 5V -->
+<g transform="translate(1830,940)">
+  <rect width="320" height="100" class="modF" rx="10"/>
+  <text x="160" y="40" class="lbl" text-anchor="middle">LCD + HX711 + DS18B20</text>
+  <text x="160" y="75" class="sml" text-anchor="middle">питание 5V от MT3608</text>
+</g>
+
+<!-- DS3231 -->
+<g transform="translate(1330,1100)">
+  <rect width="380" height="200" class="modB" rx="10"/>
+  <text x="190" y="55" class="lbl" text-anchor="middle">DS3231 (ZS-042)</text>
+  <text x="190" y="85" class="sml" text-anchor="middle">+ CR2032 backup</text>
+  <circle cx="90" cy="135" r="38" fill="#c0c0c0" stroke="#666" stroke-width="3"/>
+  <text x="90" y="145" class="smlD" text-anchor="middle">CR2032</text>
+  <circle cx="380" cy="40" r="10" fill="#d32f2f" stroke="#000" stroke-width="2"/>
+  <text x="395" y="48" class="pin">VCC</text>
+  <circle cx="380" cy="75" r="10" fill="#222" stroke="#000" stroke-width="2"/>
+  <text x="395" y="83" class="pin">GND</text>
+  <circle cx="380" cy="115" r="10" fill="#1976d2" stroke="#000" stroke-width="2"/>
+  <text x="395" y="123" class="pin">SDA</text>
+  <circle cx="380" cy="155" r="10" fill="#1976d2" stroke="#000" stroke-width="2"/>
+  <text x="395" y="163" class="pin">SCL</text>
+  <circle cx="380" cy="195" r="10" fill="#2e7d32" stroke="#000" stroke-width="2"/>
+  <text x="395" y="203" class="pin">INT/SQW</text>
+</g>
+
+<!-- ════════════════ WIRES ════════════════ -->
+
+<!-- TP4056 B+ ↔ 21700 B+ -->
+<line x1="80" y1="325" x2="40" y2="325" class="wR"/>
+<line x1="40" y1="325" x2="40" y2="650" class="wR"/>
+<line x1="40" y1="650" x2="80" y2="650" class="wR"/>
+
+<!-- TP4056 B− ↔ 21700 B− -->
+<line x1="80" y1="360" x2="20" y2="360" class="wB"/>
+<line x1="20" y1="360" x2="20" y2="720" class="wB"/>
+<line x1="20" y1="720" x2="80" y2="720" class="wB"/>
+
+<!-- TP4056 OUT+ → SW1 left -->
+<line x1="360" y1="290" x2="540" y2="290" class="wR"/>
+
+<!-- SW1 right → AO3401 Source -->
+<line x1="700" y1="290" x2="800" y2="290" class="wR"/>
+<line x1="800" y1="290" x2="800" y2="740" class="wR"/>
+<line x1="800" y1="740" x2="1110" y2="740" class="wR"/>
+<circle cx="1110" cy="740" r="6" class="junc"/>
+
+<!-- AO3401 Source → 100k pullup → loop back to itself for visual -->
+<line x1="820" y1="820" x2="820" y2="740" class="wY"/>
+<circle cx="820" cy="740" r="6" class="junc"/>
+<line x1="870" y1="840" x2="950" y2="840" class="wY"/>
+<line x1="950" y1="840" x2="950" y2="740" class="wY"/>
+<line x1="950" y1="740" x2="800" y2="740" class="wY"/>
+
+<!-- 100k pullup other side → AO3401 Gate -->
+<line x1="770" y1="840" x2="700" y2="840" class="wY"/>
+<line x1="700" y1="840" x2="700" y2="740" class="wY"/>
+<line x1="700" y1="740" x2="950" y2="740" class="wY"/>
+
+<!-- Re-simplification of pullup wires -->
+<!-- Gate (950,740 absolute) to R top (820,820), R bottom to Source... -->
+<!-- Simpler: just one wire from Gate to one R end, other R end to Source -->
+
+<!-- AO3401 Drain → MT3608 VIN+ -->
+<line x1="1030" y1="560" x2="1030" y2="500" class="wR"/>
+<line x1="1030" y1="500" x2="1230" y2="500" class="wR"/>
+<line x1="1230" y1="500" x2="1230" y2="605" class="wR"/>
+<line x1="1230" y1="605" x2="1330" y2="605" class="wR"/>
+
+<!-- MT3608 VOUT+ → ESP VIN -->
+<line x1="1590" y1="605" x2="1700" y2="605" class="wR"/>
+<line x1="1700" y1="605" x2="1700" y2="580" class="wR"/>
+<line x1="1700" y1="580" x2="1830" y2="580" class="wR"/>
+<circle cx="1700" cy="605" r="6" class="junc"/>
+
+<!-- MT3608 VOUT+ → Periph (5V) -->
+<line x1="1700" y1="605" x2="1700" y2="980" class="wR"/>
+<line x1="1700" y1="980" x2="1830" y2="980" class="wR"/>
+
+<!-- DS3231 VCC ← AO3401 Source line (after SW1) -->
+<line x1="1110" y1="740" x2="1280" y2="740" class="wR"/>
+<line x1="1280" y1="740" x2="1280" y2="1140" class="wR"/>
+<line x1="1280" y1="1140" x2="1710" y2="1140" class="wR"/>
+
+<!-- D1 anode → AO3401 Gate -->
+<line x1="680" y1="1010" x2="600" y2="1010" class="wG"/>
+<line x1="600" y1="1010" x2="600" y2="740" class="wG"/>
+<line x1="600" y1="740" x2="950" y2="740" class="wG"/>
+<circle cx="950" cy="740" r="6" class="junc"/>
+<!-- D1 cathode → DS3231 INT -->
+<line x1="780" y1="1010" x2="1500" y2="1010" class="wG"/>
+<line x1="1500" y1="1010" x2="1500" y2="1295" class="wG"/>
+<line x1="1500" y1="1295" x2="1710" y2="1295" class="wG"/>
+
+<!-- D2 anode → AO3401 Gate (через ту же линию) -->
+<line x1="680" y1="1110" x2="600" y2="1110" class="wG"/>
+<line x1="600" y1="1110" x2="600" y2="1010" class="wG"/>
+<!-- D2 cathode → ESP GPIO25 -->
+<line x1="780" y1="1110" x2="1750" y2="1110" class="wG"/>
+<line x1="1750" y1="1110" x2="1750" y2="785" class="wG"/>
+<line x1="1750" y1="785" x2="1830" y2="785" class="wG"/>
+
+<!-- SW2 WAKE: Gate ↔ GND -->
+<line x1="680" y1="1230" x2="600" y2="1230" class="wG"/>
+<line x1="600" y1="1230" x2="600" y2="1110" class="wG"/>
+<line x1="820" y1="1230" x2="880" y2="1230" class="wB"/>
+<line x1="880" y1="1230" x2="880" y2="1480" class="wB"/>
+
+<!-- I2C SDA: ESP GPIO21 ↔ DS3231 SDA -->
+<line x1="1830" y1="680" x2="1620" y2="680" class="wBl"/>
+<line x1="1620" y1="680" x2="1620" y2="1215" class="wBl"/>
+<line x1="1620" y1="1215" x2="1710" y2="1215" class="wBl"/>
+
+<!-- I2C SCL: ESP GPIO22 ↔ DS3231 SCL -->
+<line x1="1830" y1="725" x2="1600" y2="725" class="wBl"/>
+<line x1="1600" y1="725" x2="1600" y2="1255" class="wBl"/>
+<line x1="1600" y1="1255" x2="1710" y2="1255" class="wBl"/>
+
+<!-- ═════════ GND bus ═════════ -->
+<line x1="20" y1="1480" x2="2150" y2="1480" class="wB" stroke-width="9"/>
+<text x="2160" y="1490" class="pin">GND</text>
+
+<line x1="20" y1="720" x2="20" y2="1480" class="wB"/>
+<circle cx="20" cy="1480" r="6" class="junc"/>
+
+<!-- MT3608 VIN− → GND -->
+<line x1="1330" y1="700" x2="1300" y2="700" class="wB"/>
+<line x1="1300" y1="700" x2="1300" y2="1480" class="wB"/>
+<circle cx="1300" cy="1480" r="6" class="junc"/>
+
+<!-- MT3608 VOUT− → GND -->
+<line x1="1590" y1="700" x2="1620" y2="700" class="wB"/>
+<line x1="1620" y1="700" x2="1620" y2="680" class="wB"/>
+<!-- Conflict with SDA — separate -->
+<!-- Re-route VOUT- via different y -->
+<line x1="1590" y1="700" x2="1660" y2="700" class="wB"/>
+<line x1="1660" y1="700" x2="1660" y2="1100" class="wB"/>
+<line x1="1660" y1="1100" x2="1670" y2="1100" class="wB"/>
+<line x1="1670" y1="1100" x2="1670" y2="1480" class="wB"/>
+<circle cx="1670" cy="1480" r="6" class="junc"/>
+
+<!-- DS3231 GND -->
+<line x1="1710" y1="1175" x2="1690" y2="1175" class="wB"/>
+<line x1="1690" y1="1175" x2="1690" y2="1480" class="wB"/>
+<circle cx="1690" cy="1480" r="6" class="junc"/>
+
+<!-- ESP GND -->
+<line x1="1830" y1="620" x2="1810" y2="620" class="wB"/>
+<line x1="1810" y1="620" x2="1810" y2="1480" class="wB"/>
+<circle cx="1810" cy="1480" r="6" class="junc"/>
+
+<!-- Periph GND -->
+<line x1="1830" y1="1020" x2="1790" y2="1020" class="wB"/>
+<line x1="1790" y1="1020" x2="1790" y2="1480" class="wB"/>
+<circle cx="1790" cy="1480" r="6" class="junc"/>
+
+<!-- TP4056 IN- → GND -->
+<line x1="80" y1="240" x2="60" y2="240" class="wB"/>
+<line x1="60" y1="240" x2="60" y2="1480" class="wB"/>
+<circle cx="60" cy="1480" r="6" class="junc"/>
+
+<!-- TP4056 OUT- → GND -->
+<line x1="360" y1="330" x2="380" y2="330" class="wB"/>
+<line x1="380" y1="330" x2="380" y2="1480" class="wB"/>
+<circle cx="380" cy="1480" r="6" class="junc"/>
+
+</svg>
