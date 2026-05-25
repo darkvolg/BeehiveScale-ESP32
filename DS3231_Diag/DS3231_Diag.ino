@@ -73,7 +73,7 @@ void setup() {
   delay(1000);
   Serial.println("\n=== DS3231 DIAGNOSTIC v1 ===\n");
 
-  pinMode(SQW_PIN, INPUT);  // SQW pin как input для чтения
+  pinMode(SQW_PIN, INPUT_PULLUP);  // SQW open-drain → нужен внутренний pullup ESP32 (~45kΩ)
 
   Wire.begin();
   Wire.setClock(100000);
