@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 49
-#define FW_VERSION_SUFFIX ""  // 5.0.49 — UX: countdown подсказка LCD при удержании MAIN. Раньше на 3й сек показывалось "Otpust = TARA!" → пользователь думал что таре уже сработало и отпускал → случайная тара вместо калибровки. Теперь 3-6 сек: "TARA / KAL Xs" с обратным счётом до калибровки. После 6 сек: "Otpust = KALIBR". Помогает понять что можно ещё подержать для калибровки.
+#define FW_VERSION_PATCH 50
+#define FW_VERSION_SUFFIX ""  // 5.0.50 — revert: откат подсказки калибровки на v5.0.47 поведение. Countdown "KALIBR cherez Xs" не понравилось пользователю. Возврат к двухуровневой подсказке: 3-6 сек "Otpust = TARA!", 6+ сек "Otpust = KALIBR". Галочка TG-on-interval из v5.0.48 сохранена.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
