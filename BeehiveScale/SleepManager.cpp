@@ -87,50 +87,34 @@ void sleep_enter(uint64_t seconds) {
   Serial.flush();
 
 #if defined(ESP32)
-  // ═══ v5.0.47 — ПОЛНЫЙ POWER-CUT через DS3231 Alarm2 ═══
+  // ═══ v5.0.39 — TIMER DEEP SLEEP (без DS3231 alarm) ═══
   //
-  // Архитектура:
-  //   - HOLD: Alarm1 в PerSecond mode (set в setup() через rtc_enable_persecond_hold)
-  //           → A1F=1 каждую секунду → SQW LOW → MOSFET ON
-  //   - WAKE: Alarm2 на N сек вперёд (programm здесь через rtc_set_alarm_in_seconds)
-  //           → A2F=1 при match → SQW LOW → MOSFET ON → ESP boot
+  // КОМПРОМИСС: hardware power-cut через DS3231 SQW не работает — chip одной партии
+  // (3 модуля HW-084) теряет state каждый power-off несмотря на VCC=4V always-on,
+  // CR2032=3.2V, явный clear EOSC. Альтернативы (cap фильтр, замена ZS-042) — потом.
   //
-  // sleep_enter sequence:
-  //   1. WiFi shutdown
-  //   2. rtc_set_alarm_in_seconds(N) — programm Alarm2 + disable Alarm1 PerSecond
-  //      (v5.0.46 fix: переключить Alarm1 на A1_Hour mode перед disable чтобы
-  //       PerSecond не re-set A1F каждую секунду)
-  //   3. После disable A1: SQW HIGH (A2F=0, A1F не set) → MOSFET OFF → power off ~100мс
-  //   4. Fallback: esp_deep_sleep_start если hardware не сработало
+  // Текущий режим: НЕ отключаем MOSFET. ESP в esp_deep_sleep с internal timer.
+  // - MOSFET остаётся ON (HOLD через Alarm1 PerSecond не отключаем)
+  // - DS3231 alarm не используется — wake через esp_sleep_enable_timer_wakeup
+  // - Sleep current ~5-10 мА (ESP deep sleep + MT3608 Iq + AMS1117 Iq)
+  // - Автономия 30-60 дней без солнца, бесконечно с solar
+  // - Работает гарантированно — internal timer ESP не зависит от внешних компонентов
   //
-  // Sleep current: ~2 мА (MOSFET закрыт, потребляет только DS3231 module + утечка)
-  // Wake: через DS3231 Alarm2 (POWERON_RESET) либо через timer fallback
+  // Когда DS3231 module заменим на рабочий — вернуть hardware power-cut логику.
 
-  // Шаг 1: WiFi shutdown
+  // WiFi shutdown
   WiFi.disconnect(true, false);
   delay(100);
   esp_wifi_stop();
   delay(50);
 
-  // Шаг 2: programm DS3231 Alarm2 wake (HOLD активен через Alarm1 PerSecond)
-  if (!rtc_set_alarm_in_seconds((uint32_t)seconds)) {
-    Serial.println(F("[PowerCut] WARN: DS3231 wake-alarm set failed"));
-  }
-  rtc_enable_alarm_interrupt();  // INTCN=1 (на всякий случай)
-
-  Serial.println(F("[PowerCut] Alarm2 armed. Power off imminent..."));
+  Serial.print(F("[Sleep] esp_deep_sleep_start for "));
+  Serial.print((uint32_t)seconds);
+  Serial.println(F(" sec (timer wake, MOSFET stays ON)"));
   Serial.flush();
   uart_wait_tx_idle_polling(UART_NUM_0);
 
-  // Шаг 3: ждать пока MOSFET физически отключит питание.
-  // disableAlarm(1) уже выполнен внутри rtc_set_alarm_in_seconds → SQW HIGH → MOSFET OFF.
-  // ESP теряет питание через ~100мс (cap discharge MT3608).
-  delay(1000);
-
-  // FALLBACK: если hardware power-cut не сработал (SQW обрыв, DS3231 module бракован) —
-  // уходим в esp_deep_sleep с timer wake. Sleep current будет ~14 мА вместо 2 мА.
-  Serial.println(F("[PowerCut] WARN: hardware power-cut DID NOT WORK — fallback to deep sleep"));
-  Serial.flush();
+  // Timer wakeup через internal ESP RTC oscillator (не зависит от DS3231)
   if (seconds > 0) {
     esp_sleep_enable_timer_wakeup((uint64_t)seconds * 1000000ULL);
   }
