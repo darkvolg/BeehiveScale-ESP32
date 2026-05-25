@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 48
-#define FW_VERSION_SUFFIX ""  // 5.0.48 — feature: галочка "Слать TG при wake без расписания" в Настройках веб-UI. EEPROM addr 361-362, default ON (backward compat). Если расписание задано — галочка игнорируется (расписание всегда шлёт TG). Если расписания нет + галочка снята → TG не шлётся в interval-mode (полезно при тестах с коротким Deep Sleep). Если галочка стоит → TG на каждом cold-boot wake.
+#define FW_VERSION_PATCH 49
+#define FW_VERSION_SUFFIX ""  // 5.0.49 — UX: countdown подсказка LCD при удержании MAIN. Раньше на 3й сек показывалось "Otpust = TARA!" → пользователь думал что таре уже сработало и отпускал → случайная тара вместо калибровки. Теперь 3-6 сек: "TARA / KAL Xs" с обратным счётом до калибровки. После 6 сек: "Otpust = KALIBR". Помогает понять что можно ещё подержать для калибровки.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

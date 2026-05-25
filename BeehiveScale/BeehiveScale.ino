@@ -736,22 +736,29 @@ void handle_buttons() {
     lcd_backlight_activity(lcd);
   }
 
-  // Визуальная подсказка во время удержания MAIN — пользователь сразу видит, когда отпускать.
-  // Показываем только на главных экранах (не 6/7, там SHORT работает иначе).
-  static int mainHintLevel = 0;
+  // Визуальная подсказка во время удержания MAIN.
+  // v5.0.49: убрана промежуточная подсказка про TARA на 3й секунде — пользователь
+  // путался при калибровке (думал что таре уже сработало, отпускал случайно).
+  // Теперь до 6 сек: countdown "KALIBR cherez Xs" — понятно что нужно ещё подержать.
+  // После 6 сек: "Otpust = KALIBR" — готов к release.
+  // Тара по-прежнему срабатывает на release между 3-6 сек (через диалог "Tara? MENU=OK").
+  static unsigned long mainHintLast = 0;
   if (sys.menuScreen != 6 && sys.menuScreen != 7) {
     unsigned long mainHeld = button_hold_ms(btnMain);
-    int level = 0;
-    if (mainHeld >= 6000UL) level = 2;
-    else if (mainHeld >= 3000UL) level = 1;
-    if (level != mainHintLevel) {
-      if (level == 1) {
-        lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Otpust = TARA!  ");
-      } else if (level == 2) {
-        lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Otpust = KALIBR ");
+    if (mainHeld >= 3000UL) {
+      if (millis() - mainHintLast >= 250UL) {
+        mainHintLast = millis();
+        char buf[17];
+        if (mainHeld < 6000UL) {
+          unsigned int remainSec = (unsigned int)((6000UL - mainHeld + 999UL) / 1000UL);
+          snprintf(buf, sizeof(buf), "KALIBR cherez %us", remainSec);
+        } else {
+          snprintf(buf, sizeof(buf), "Otpust = KALIBR ");
+        }
+        lcd_set_cursor(lcd, 0, 1); lcd_print_padded(lcd, buf);
       }
-      // level == 0 (release) — обработчики MEDIUM/LONG ниже сами перерисуют LCD.
-      mainHintLevel = level;
+    } else {
+      mainHintLast = 0;
     }
   }
 
