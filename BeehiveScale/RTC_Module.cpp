@@ -204,10 +204,17 @@ bool rtc_set_alarm_in_seconds(uint32_t seconds_from_now) {
   Serial.print(F(" "));
   Serial.println(alarmTime.timestamp(DateTime::TIMESTAMP_TIME));
 
-  // Шаг 2: ТЕПЕРЬ disable Alarm1 (отключить HOLD).
-  // SQW идёт HIGH → MOSFET OFF → power off ~100мс через cap discharge.
-  _rtc.clearAlarm(1);      // A1F=0
-  _rtc.disableAlarm(1);    // A1IE=0 → SQW HIGH (нет активных flagged alarms)
+  // Шаг 2: ОТКЛЮЧИТЬ HOLD механизм через Alarm1.
+  // v5.0.46: КРИТИЧНО — заменить Alarm1 PerSecond mode на non-PerSecond.
+  // Если оставить PerSecond — A1F set каждую секунду даже после disableAlarm(1).
+  // А1IE=0 не влияет на матч (только на effect SQW), но **некоторые clones DS3231**
+  // продолжают tянуть SQW LOW при A1F=1 даже если A1IE=0.
+  // Решение: setAlarm1 на далёкое будущее (+1 день) с mode A1_Hour → match через сутки,
+  // не каждую секунду. Затем clear+disable.
+  DateTime farFuture = now + TimeSpan(1, 0, 0, 0);  // +1 день
+  _rtc.setAlarm1(farFuture, DS3231_A1_Hour);  // НЕ PerSecond → A1F не set до match через сутки
+  _rtc.clearAlarm(1);      // A1F=0 (если был от PerSecond)
+  _rtc.disableAlarm(1);    // A1IE=0 → SQW зависит только от A2F (=0) → SQW HIGH → MOSFET OFF
 
   return true;
 }
