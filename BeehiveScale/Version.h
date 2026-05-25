@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 46
-#define FW_VERSION_SUFFIX ""  // 5.0.46 — fix: 14мА → 2мА в sleep. Проблема: в sleep_enter после disableAlarm(1) PerSecond mode оставался активен → A1F set каждую секунду → SQW LOW (на некоторых DS3231 clones даже при A1IE=0) → MOSFET ON. Решение: перед disableAlarm(1) перепрограммировать Alarm1 в non-PerSecond mode (DS3231_A1_Hour на +1 день вперёд) → A1F больше не set автоматически каждую секунду → после disable SQW стабильно HIGH → MOSFET закрывается → sleep current 2 мА.
+#define FW_VERSION_PATCH 47
+#define FW_VERSION_SUFFIX ""  // 5.0.47 — fix: восстановлен полный sleep_enter с DS3231 Alarm2 wake. v5.0.46 имел fix в RTC_Module.cpp (Alarm1 mode переключение) но НЕ вызывал rtc_set_alarm_in_seconds из sleep_enter (был оставлен v5.0.39 timer-only compromise). Теперь: sleep_enter правильно программирует Alarm2 wake + disable Alarm1 HOLD → MOSFET закрывается → sleep current 2 мА. Fallback esp_deep_sleep остаётся если hardware не сработал.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
