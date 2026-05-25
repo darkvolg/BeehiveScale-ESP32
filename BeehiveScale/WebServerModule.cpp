@@ -657,6 +657,13 @@ input[type=checkbox]{width:auto}
       <div class="form-row"><label>Расписание замеров (HH:MM через пробел, до 8 времён)</label><input type="text" id="cfg-sched" placeholder="08:00 14:00 20:00" maxlength="60"></div>
       <div class="form-row"><label>Уйти в сон после бездействия (сек, 0=не засыпать)</label><input type="number" id="cfg-autosleep" step="1" min="0" max="86400" placeholder="180"></div>
       <div class="form-row"><label>Таймаут подсветки LCD (сек, 0=всегда)</label><input type="number" id="cfg-bl" step="10" min="0" max="3600" placeholder="30"></div>
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="cfg-tg-on-intv" checked style="width:18px;height:18px;cursor:pointer">
+          <span>📩 Слать TG при wake без расписания</span>
+        </label>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Если расписание задано — игнорируется (расписание всегда шлёт TG). Сними галку при тестах с коротким Deep Sleep — чтобы не спамить.</div>
+      </div>
       <div class="btn-row">
         <button class="btn btn-green" onclick="saveSettings()">💾 Сохранить</button>
         <button class="btn btn-blue"  onclick="loadConfig()">↺ Загрузить</button>
@@ -1480,6 +1487,7 @@ function loadConfig(silent){
     if(d.tgTokenSet){document.getElementById('tg-token').placeholder='Токен задан (оставьте пустым чтобы не менять)';}
     setV('tg-chatid',d.tgChatId);
     if(d.tgReportInt!==undefined) setV('tg-report-int',d.tgReportInt);
+    if(d.tgOnInterval!==undefined){const el=document.getElementById('cfg-tg-on-intv');if(el)el.checked=!!d.tgOnInterval;}
     if(d.alertDelta) setText('tg-thresh',d.alertDelta+' кг');
     selWm(parseInt(d.wifiMode||0),true);
     if(d.wifiSsid) setV('wifi-ssid',d.wifiSsid);
@@ -1500,6 +1508,8 @@ function saveSettings(){
   if(!isNaN(s)) body.sleepSec=s;
   if(!isNaN(b)) body.lcdBlSec=b;
   if(!isNaN(aut)) body.autoSleepSec=aut;
+  const tgIntvEl=g('cfg-tg-on-intv');
+  if(tgIntvEl) body.tgOnInterval = tgIntvEl.checked ? 1 : 0;
   const sched=(g('cfg-sched').value||'').trim();
   body.schedTimes=sched.length>0?sched.split(/\s+/).filter(t=>/^\d{1,2}:\d{2}$/.test(t)):[];
   apiFetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
@@ -1989,6 +1999,7 @@ static void _handleConfig() {
     doc["tgChatId"] = String(tgCid);
     doc["tgTokenSet"] = (tgTok[0] != '\0');
     doc["tgReportInt"] = get_tg_report_interval_min();
+    doc["tgOnInterval"] = load_tg_on_interval() ? 1 : 0;
   }
   {
     uint16_t times[8]; uint8_t cnt;
@@ -2156,6 +2167,10 @@ static void _handleSettings() {
     uint32_t val = doc["autoSleepSec"].as<uint32_t>();
     if (val <= 86400UL) { set_autosleep_sec((uint16_t)val); }
     else { _sendJson(false, "autoSleepSec: 0–86400"); return; }
+  }
+  if (doc.containsKey("tgOnInterval")) {
+    bool val = doc["tgOnInterval"].as<int>() ? true : false;
+    save_tg_on_interval(val);
   }
   char apPassBuf[24];  // локальная — безопасно при параллельных запросах (пункт 20)
   apPassBuf[0] = '\0';

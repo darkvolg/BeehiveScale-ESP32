@@ -85,12 +85,23 @@
 #define EEPROM_MAGIC_TG_LAST_REP_VAL  0xAE
 #define EEPROM_ADDR_TG_LAST_REP_UNIX  357  // uint32_t, 4 байта — unix timestamp последнего успешного TG report
 
-// 361..383 reserved for future fields
+// v5.0.48: флаг "TG при interval-wake" (без расписания) — позволяет отключить TG
+// на каждом cold-boot wake при тестовом sleep_interval (например 5 мин).
+// При scheduled wake — игнорируется (расписание всегда шлёт TG).
+#define EEPROM_ADDR_TG_ONINTV_MAGIC 361  // 1 байт magic
+#define EEPROM_MAGIC_TG_ONINTV_VAL  0xAF
+#define EEPROM_ADDR_TG_ONINTV       362  // bool, 1 байт (0=выкл, 1=вкл; default 1 для backward compat)
+
+// 363..383 reserved for future fields
 #define EEPROM_SIZE              384  // расширено под credentials-блок
 
 // v5.0.44: TG report timestamp persistence
 void     save_last_tg_report_unix(uint32_t unixtime);
 uint32_t load_last_tg_report_unix();
+
+// v5.0.48: TG при interval-wake (galочка вкл/выкл)
+void     save_tg_on_interval(bool enabled);
+bool     load_tg_on_interval();  // default true
 
 // Веб-настройки (alertDelta, calibWeight, emaAlpha)
 void  web_settings_init();

@@ -615,8 +615,10 @@ void loop() {
     bool doTgReport = false;
     if (tgReportPending) {
       doTgReport = true;
-    } else if (!tgSentSinceBoot && schedCnt == 0 && tgRptMs > 0) {
-      // Каждый cold-boot wake без расписания = один TG отчёт
+    } else if (!tgSentSinceBoot && schedCnt == 0 && tgRptMs > 0 && load_tg_on_interval()) {
+      // v5.0.48: TG в interval-mode только если galочка "Слать TG при wake без расписания" вкл.
+      // Без расписания + tg_on_interval=true → каждый cold-boot wake = TG.
+      // Без расписания + tg_on_interval=false → TG не шлётся вообще (тестовый режим).
       doTgReport = true;
     }
     if (doTgReport) {

@@ -689,6 +689,25 @@ uint32_t load_last_tg_report_unix() {
   return ts;
 }
 
+// v5.0.48: galочка "TG на каждом interval-wake" (без расписания).
+// Default true (для backward compat). Если false — TG в interval mode не шлётся,
+// шлёт только при расписании (scheduled wake). Полезно при тестах с коротким sleep.
+void save_tg_on_interval(bool enabled) {
+  byte magic = EEPROM_MAGIC_TG_ONINTV_VAL;
+  EEPROM.put(EEPROM_ADDR_TG_ONINTV_MAGIC, magic);
+  EEPROM.put(EEPROM_ADDR_TG_ONINTV, (byte)(enabled ? 1 : 0));
+  EEPROM.commit();
+}
+
+bool load_tg_on_interval() {
+  byte magic = 0;
+  EEPROM.get(EEPROM_ADDR_TG_ONINTV_MAGIC, magic);
+  if (magic != EEPROM_MAGIC_TG_ONINTV_VAL) return true;  // default ON
+  byte val = 0;
+  EEPROM.get(EEPROM_ADDR_TG_ONINTV, val);
+  return (val == 1);
+}
+
 // ─── Battery divider calibration ratio (v5.0.19) ─────────────────────────
 // Сохраняет поправку коэффициента делителя в EEPROM. Дефолт 2.0 (R1=R2=100k),
 // но реальные резисторы и ADC ESP32 имеют погрешность ±5-10%, поэтому

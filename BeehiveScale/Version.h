@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 47
-#define FW_VERSION_SUFFIX ""  // 5.0.47 — fix: восстановлен полный sleep_enter с DS3231 Alarm2 wake. v5.0.46 имел fix в RTC_Module.cpp (Alarm1 mode переключение) но НЕ вызывал rtc_set_alarm_in_seconds из sleep_enter (был оставлен v5.0.39 timer-only compromise). Теперь: sleep_enter правильно программирует Alarm2 wake + disable Alarm1 HOLD → MOSFET закрывается → sleep current 2 мА. Fallback esp_deep_sleep остаётся если hardware не сработал.
+#define FW_VERSION_PATCH 48
+#define FW_VERSION_SUFFIX ""  // 5.0.48 — feature: галочка "Слать TG при wake без расписания" в Настройках веб-UI. EEPROM addr 361-362, default ON (backward compat). Если расписание задано — галочка игнорируется (расписание всегда шлёт TG). Если расписания нет + галочка снята → TG не шлётся в interval-mode (полезно при тестах с коротким Deep Sleep). Если галочка стоит → TG на каждом cold-boot wake.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
