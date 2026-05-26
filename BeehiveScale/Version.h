@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 53
-#define FW_VERSION_SUFFIX ""  // 5.0.53 — feature: MQTT клиент для Home Assistant Discovery. Новый файл MQTTClient.cpp с PubSubClient. EEPROM addr 363-502 (MQTT host/port/user/pass/topic/enabled). UI секция в Telegram странице. После активации улей автоматически появляется в HA как устройство с 5 sensors (weight, temperature, battery V, battery %, RSSI). Topics: beehive/weight, beehive/temperature, beehive/battery_v, beehive/battery_pct, beehive/rssi. Discovery JSON публикуется один раз за коннект. Требует библиотеку PubSubClient.
+#define FW_VERSION_PATCH 54
+#define FW_VERSION_SUFFIX ""  // 5.0.54 — fix: MQTT publish с retain=true. v5.0.53 публиковал values без retain → broker не сохранял → HA видел 'Неизвестно' до следующего publish (через 30 мин). Теперь retain=true → broker хранит last value → HA сразу получает при подписке. При перезагрузке HA тоже видит актуальные данные.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

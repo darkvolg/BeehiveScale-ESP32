@@ -107,25 +107,25 @@ bool mqtt_publish_data(float weight, float tempC, float batV, int batPct, long r
   char topic[64], val[16];
   snprintf(topic, sizeof(topic), "%s/weight", cfg.topic);
   snprintf(val, sizeof(val), "%.2f", weight);
-  _mqtt.publish(topic, val);
+  _mqtt.publish(topic, val, true);  // retain=true → HA видит value сразу при подписке
 
   if (tempC > -90) {
     snprintf(topic, sizeof(topic), "%s/temperature", cfg.topic);
     snprintf(val, sizeof(val), "%.1f", tempC);
-    _mqtt.publish(topic, val);
+    _mqtt.publish(topic, val, true);  // retain=true → HA видит value сразу при подписке
   }
 
   snprintf(topic, sizeof(topic), "%s/battery_v", cfg.topic);
   snprintf(val, sizeof(val), "%.2f", batV);
-  _mqtt.publish(topic, val);
+  _mqtt.publish(topic, val, true);  // retain=true → HA видит value сразу при подписке
 
   snprintf(topic, sizeof(topic), "%s/battery_pct", cfg.topic);
   snprintf(val, sizeof(val), "%d", batPct);
-  _mqtt.publish(topic, val);
+  _mqtt.publish(topic, val, true);  // retain=true → HA видит value сразу при подписке
 
   snprintf(topic, sizeof(topic), "%s/rssi", cfg.topic);
   snprintf(val, sizeof(val), "%ld", rssi);
-  _mqtt.publish(topic, val);
+  _mqtt.publish(topic, val, true);  // retain=true → HA видит value сразу при подписке
 
   _mqtt.loop();
   Serial.println(F("[MQTT] Data published"));
