@@ -793,6 +793,32 @@ input[type=checkbox]{width:auto}
       </div>
     </div>
     <div class="card full">
+      <div class="card-title">🏠 MQTT для Home Assistant (v5.0.53)</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.6">
+        Публикует weight/temp/battery в MQTT topics с HA <b>Auto-Discovery</b>. После первого
+        wake улей автоматически появится в HA как устройство <b>BeehiveScale</b> с 5 sensors.
+        Требуется MQTT broker (например <code>Mosquitto</code> addon в Home Assistant).
+      </div>
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="mqtt-enabled" style="width:18px;height:18px">
+          <span>Включить MQTT</span>
+        </label>
+      </div>
+      <div class="form-row"><label>Broker host (IP или hostname)</label><input type="text" id="mqtt-host" placeholder="192.168.0.10 или homeassistant.local" maxlength="47"></div>
+      <div class="form-row"><label>Порт (default 1883)</label><input type="number" id="mqtt-port" min="1" max="65535" placeholder="1883"></div>
+      <div class="form-row"><label>Пользователь (опционально)</label><input type="text" id="mqtt-user" placeholder="mqtt_user" maxlength="23" autocomplete="off"></div>
+      <div class="form-row"><label>Пароль (опционально)</label><input type="password" id="mqtt-pass" placeholder="••••" maxlength="31" autocomplete="off"></div>
+      <div class="form-row"><label>Base topic</label><input type="text" id="mqtt-topic" placeholder="beehive" maxlength="31" value="beehive"></div>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="saveMqtt()">💾 Сохранить MQTT</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px">
+        Topics: <code>beehive/weight</code>, <code>beehive/temperature</code>,
+        <code>beehive/battery_v</code>, <code>beehive/battery_pct</code>, <code>beehive/rssi</code>
+      </div>
+    </div>
+    <div class="card full">
       <div class="card-title">⚠ Пороги алертов (v5.0.20)</div>
       <div style="font-size:13px;color:var(--text3);margin-bottom:12px;line-height:1.7">
         Пороговые алерты — Telegram-уведомление при превышении границ. Анти-спам: каждый алерт шлётся <b>один раз</b>, повторно — только после возврата в норму (гистерезис 0.1В для батареи, 2°C для температуры).
@@ -1524,6 +1550,29 @@ function saveTelegram(){
     .then(r=>r.json()).then(d=>toast(d.msg||'OK',!d.ok)).catch(()=>toast('Нет связи',true));
 }
 
+// v5.0.53: MQTT save/load
+function loadMqtt(){
+  fetch('/api/mqtt/settings').then(r=>r.json()).then(d=>{
+    if(d.host!==undefined) document.getElementById('mqtt-host').value=d.host;
+    if(d.port!==undefined) document.getElementById('mqtt-port').value=d.port;
+    if(d.user!==undefined) document.getElementById('mqtt-user').value=d.user;
+    if(d.topic!==undefined) document.getElementById('mqtt-topic').value=d.topic;
+    if(d.enabled!==undefined) document.getElementById('mqtt-enabled').checked=!!d.enabled;
+  }).catch(()=>{});
+}
+function saveMqtt(){
+  const body={
+    host: document.getElementById('mqtt-host').value.trim(),
+    port: parseInt(document.getElementById('mqtt-port').value||'1883'),
+    user: document.getElementById('mqtt-user').value,
+    pass: document.getElementById('mqtt-pass').value,
+    topic: document.getElementById('mqtt-topic').value.trim()||'beehive',
+    enabled: document.getElementById('mqtt-enabled').checked ? 1 : 0
+  };
+  apiFetch('/api/mqtt/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(r=>r.json()).then(d=>toast(d.msg||'OK',!d.ok)).catch(()=>toast('Нет связи',true));
+}
+
 // ── WiFi ──────────────────────────────────────────────────────────────
 function selWm(mode, noUpdate){
   _wifiMode=mode;
@@ -1896,6 +1945,7 @@ if('serviceWorker' in navigator){
 // ── Init ──────────────────────────────────────────────────────────────
 updateWiz();
 fetchData();
+loadMqtt();
 setTimeout(autoRefresh,REFRESH);
 </script>
 </body></html>
@@ -2282,6 +2332,60 @@ static void _handleTgSettings() {
   }
   log_save_backup(_buildBackupJson());
   _sendJson(true, "Telegram настройки сохранены");
+}
+
+// ─── v5.0.53: /api/mqtt/settings  GET/POST ──────────────────────────────
+static void _handleMqttSettings() {
+  if (!_auth()) return;
+  _activity();
+  if (_srv.method() == HTTP_GET) {
+    MqttSettings cfg;
+    load_mqtt(cfg);
+    StaticJsonDocument<256> doc;
+    doc["host"] = String(cfg.host);
+    doc["port"] = cfg.port;
+    doc["user"] = String(cfg.user);
+    // pass НЕ возвращаем по security (как для tg token)
+    doc["passSet"] = (cfg.pass[0] != '\0');
+    doc["topic"] = String(cfg.topic);
+    doc["enabled"] = cfg.enabled ? 1 : 0;
+    String out; serializeJson(doc, out);
+    _srv.send(200, "application/json", out);
+    return;
+  }
+  if (!_csrf_check()) return;
+  if (_srv.method() != HTTP_POST) { _sendJson(false, "Только GET или POST"); return; }
+  StaticJsonDocument<384> doc;
+  DeserializationError err = deserializeJson(doc, _srv.arg("plain"));
+  if (err) { _sendJson(false, "Ошибка JSON"); return; }
+  MqttSettings cfg;
+  load_mqtt(cfg);
+  if (doc.containsKey("host")) {
+    const char* h = doc["host"].as<const char*>();
+    if (h) { strncpy(cfg.host, h, sizeof(cfg.host) - 1); cfg.host[sizeof(cfg.host) - 1] = '\0'; }
+  }
+  if (doc.containsKey("port")) {
+    int p = doc["port"].as<int>();
+    if (p > 0 && p < 65536) cfg.port = (uint16_t)p;
+  }
+  if (doc.containsKey("user")) {
+    const char* u = doc["user"].as<const char*>();
+    if (u) { strncpy(cfg.user, u, sizeof(cfg.user) - 1); cfg.user[sizeof(cfg.user) - 1] = '\0'; }
+  }
+  if (doc.containsKey("pass")) {
+    const char* p = doc["pass"].as<const char*>();
+    // Пустая строка = не менять (как для tg)
+    if (p && strlen(p) > 0) { strncpy(cfg.pass, p, sizeof(cfg.pass) - 1); cfg.pass[sizeof(cfg.pass) - 1] = '\0'; }
+  }
+  if (doc.containsKey("topic")) {
+    const char* t = doc["topic"].as<const char*>();
+    if (t && strlen(t) > 0) { strncpy(cfg.topic, t, sizeof(cfg.topic) - 1); cfg.topic[sizeof(cfg.topic) - 1] = '\0'; }
+  }
+  if (doc.containsKey("enabled")) {
+    cfg.enabled = doc["enabled"].as<int>() ? true : false;
+  }
+  save_mqtt(cfg);
+  _sendJson(true, "MQTT настройки сохранены");
 }
 
 // ─── /api/tg/test  POST — отправить тестовое/приветственное сообщение ────
@@ -3180,6 +3284,8 @@ void webserver_init(WebData &data, WebActions &actions) {
     _srv.on("/icon.svg",         HTTP_GET,  _handleIcon);
     _srv.on("/sw.js",            HTTP_GET,  _handleServiceWorker);
     _srv.on("/api/tg/settings",  HTTP_POST, _handleTgSettings);
+    _srv.on("/api/mqtt/settings", HTTP_GET,  _handleMqttSettings);
+    _srv.on("/api/mqtt/settings", HTTP_POST, _handleMqttSettings);
     _srv.on("/api/tg/test",      HTTP_POST, _handleTgTest);
     _srv.on("/api/calib/set",    HTTP_POST, _handleCalibSet);
     _srv.on("/api/rtc/set",      HTTP_POST, _handleRtcSet);   // v5.0.31: ручная установка времени

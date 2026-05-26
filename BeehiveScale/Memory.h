@@ -92,8 +92,18 @@
 #define EEPROM_MAGIC_TG_ONINTV_VAL  0xAF
 #define EEPROM_ADDR_TG_ONINTV       362  // bool, 1 байт (0=выкл, 1=вкл; default 1 для backward compat)
 
-// 363..383 reserved for future fields
-#define EEPROM_SIZE              384  // расширено под credentials-блок
+// v5.0.53: MQTT настройки для Home Assistant Discovery
+// Total block: 363..512 (149 bytes), требует расширения EEPROM_SIZE.
+#define EEPROM_ADDR_MQTT_MAGIC      363  // 1 байт
+#define EEPROM_MAGIC_MQTT_VAL       0xB0
+#define EEPROM_ADDR_MQTT_HOST       364  // char[48] — broker hostname/IP (363+1)
+#define EEPROM_ADDR_MQTT_PORT       412  // uint16_t — broker port (default 1883)
+#define EEPROM_ADDR_MQTT_USER       414  // char[24] — broker user (опционально)
+#define EEPROM_ADDR_MQTT_PASS       438  // char[32] — broker password (опционально)
+#define EEPROM_ADDR_MQTT_TOPIC      470  // char[32] — base topic (default "beehive")
+#define EEPROM_ADDR_MQTT_ENABLED    502  // bool — MQTT включён/выключен
+
+#define EEPROM_SIZE              512  // увеличено под MQTT-блок (было 384)
 
 // v5.0.44: TG report timestamp persistence
 void     save_last_tg_report_unix(uint32_t unixtime);
@@ -102,6 +112,18 @@ uint32_t load_last_tg_report_unix();
 // v5.0.48: TG при interval-wake (galочка вкл/выкл)
 void     save_tg_on_interval(bool enabled);
 bool     load_tg_on_interval();  // default true
+
+// v5.0.53: MQTT settings для Home Assistant Discovery
+struct MqttSettings {
+  char     host[48];
+  uint16_t port;
+  char     user[24];
+  char     pass[32];
+  char     topic[32];   // base topic (например "beehive")
+  bool     enabled;
+};
+void     save_mqtt(const MqttSettings &s);
+bool     load_mqtt(MqttSettings &s);     // true если magic OK
 
 // Веб-настройки (alertDelta, calibWeight, emaAlpha)
 void  web_settings_init();

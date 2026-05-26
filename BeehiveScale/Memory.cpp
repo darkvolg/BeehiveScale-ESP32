@@ -708,6 +708,47 @@ bool load_tg_on_interval() {
   return (val == 1);
 }
 
+// ─── v5.0.53: MQTT settings для Home Assistant ────────────────────────────
+void save_mqtt(const MqttSettings &s) {
+  byte magic = EEPROM_MAGIC_MQTT_VAL;
+  EEPROM.put(EEPROM_ADDR_MQTT_MAGIC, magic);
+  // host
+  for (int i = 0; i < 48; i++) EEPROM.write(EEPROM_ADDR_MQTT_HOST + i, s.host[i]);
+  EEPROM.put(EEPROM_ADDR_MQTT_PORT, s.port);
+  for (int i = 0; i < 24; i++) EEPROM.write(EEPROM_ADDR_MQTT_USER + i, s.user[i]);
+  for (int i = 0; i < 32; i++) EEPROM.write(EEPROM_ADDR_MQTT_PASS + i, s.pass[i]);
+  for (int i = 0; i < 32; i++) EEPROM.write(EEPROM_ADDR_MQTT_TOPIC + i, s.topic[i]);
+  EEPROM.write(EEPROM_ADDR_MQTT_ENABLED, s.enabled ? 1 : 0);
+  EEPROM.commit();
+}
+
+bool load_mqtt(MqttSettings &s) {
+  byte magic = 0;
+  EEPROM.get(EEPROM_ADDR_MQTT_MAGIC, magic);
+  // Defaults
+  s.host[0]   = '\0';
+  s.port      = 1883;
+  s.user[0]   = '\0';
+  s.pass[0]   = '\0';
+  strncpy(s.topic, "beehive", sizeof(s.topic));
+  s.enabled   = false;
+  if (magic != EEPROM_MAGIC_MQTT_VAL) return false;
+  for (int i = 0; i < 48; i++) s.host[i]  = EEPROM.read(EEPROM_ADDR_MQTT_HOST + i);
+  s.host[47]  = '\0';
+  EEPROM.get(EEPROM_ADDR_MQTT_PORT, s.port);
+  if (s.port == 0 || s.port == 0xFFFF) s.port = 1883;
+  for (int i = 0; i < 24; i++) s.user[i]  = EEPROM.read(EEPROM_ADDR_MQTT_USER + i);
+  s.user[23]  = '\0';
+  for (int i = 0; i < 32; i++) s.pass[i]  = EEPROM.read(EEPROM_ADDR_MQTT_PASS + i);
+  s.pass[31]  = '\0';
+  for (int i = 0; i < 32; i++) s.topic[i] = EEPROM.read(EEPROM_ADDR_MQTT_TOPIC + i);
+  s.topic[31] = '\0';
+  if (s.topic[0] == '\0' || (uint8_t)s.topic[0] == 0xFF) strncpy(s.topic, "beehive", sizeof(s.topic));
+  byte en = EEPROM.read(EEPROM_ADDR_MQTT_ENABLED);
+  s.enabled = (en == 1);
+  return true;
+}
+
 // ─── Battery divider calibration ratio (v5.0.19) ─────────────────────────
 // Сохраняет поправку коэффициента делителя в EEPROM. Дефолт 2.0 (R1=R2=100k),
 // но реальные резисторы и ADC ESP32 имеют погрешность ±5-10%, поэтому

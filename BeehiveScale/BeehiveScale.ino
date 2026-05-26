@@ -32,6 +32,7 @@
 #include "WebServerModule.h"
 #include "Battery.h"
 #include "Alerts.h"      // v5.0.20: Telegram-алерты по батарее/температуре/RTC
+#include "MQTTClient.h"  // v5.0.53: MQTT для Home Assistant Discovery
 #include "Logger.h"
 
 // Pin mapping — ESP8266 vs ESP32. ESP32 — основная плата с 2026-05-05.
@@ -562,6 +563,15 @@ void loop() {
         uint32_t deltaSec = get_sleep_sec();
         alerts_check_swarm(sys.smoothedWeight, persist.lastWeight, deltaSec, swarmThreshold);
       }
+
+      // v5.0.53: MQTT publish для Home Assistant Discovery.
+      // Опубликуется только если MQTT включён в настройках + WiFi connected.
+      long rssi = (WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0;
+      mqtt_publish_data(sys.smoothedWeight,
+                        sys.tempData.temperature,
+                        sys.batVoltage,
+                        sys.batPercent,
+                        rssi);
     }
   }
 #endif
