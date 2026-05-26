@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 55
-#define FW_VERSION_SUFFIX ""  // 5.0.55 — fix: MQTT temperature force-read + fallback. v5.0.54 не публиковал температуру в MQTT при первом wake — DS18B20 async-read не успевал до log_append → tempC=-127 → skip. Теперь: при mqttTempC<=-90 делаем temp_force_read() (~750мс), если всё ещё invalid → fallback на persist.lastTempC. Аналогично логике TG отчёта.
+#define FW_VERSION_PATCH 56
+#define FW_VERSION_SUFFIX ""  // 5.0.56 — feature: периодический MQTT publish каждые 60 сек когда ESP active. Раньше MQTT обновлялся только в log_append (раз в 30 мин) → юзер видел старые значения в HA при калибровке/тарировании. Теперь real-time обновления когда ESP не в sleep. В deep sleep — без изменений (ESP off, не publish).
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

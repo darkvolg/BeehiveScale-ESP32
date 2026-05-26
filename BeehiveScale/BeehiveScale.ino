@@ -587,6 +587,22 @@ void loop() {
                         rssi);
     }
   }
+
+  // v5.0.56: периодический MQTT publish когда ESP active (вне log_append cycle).
+  // Каждые 60 сек публикуем текущий вес/темп/батарею — даёт real-time обновления
+  // в HA когда юзер тарирует/калибрует/смотрит. В sleep mode не вызывается (ESP off).
+  static unsigned long lastMqttTick = 0;
+  if (now - lastMqttTick >= 60000UL) {
+    lastMqttTick = now;
+    float liveT = sys.tempData.temperature;
+    if (liveT <= -90.0f && persist.lastTempC > -90.0f) liveT = persist.lastTempC;
+    long liveRssi = (WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0;
+    mqtt_publish_data(sys.smoothedWeight,
+                      liveT,
+                      sys.batVoltage,
+                      sys.batPercent,
+                      liveRssi);
+  }
 #endif
 
   lcd_backlight_tick(lcd, get_lcd_bl_sec());
