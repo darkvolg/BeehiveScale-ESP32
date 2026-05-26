@@ -719,6 +719,7 @@ void save_mqtt(const MqttSettings &s) {
   for (int i = 0; i < 32; i++) EEPROM.write(EEPROM_ADDR_MQTT_PASS + i, s.pass[i]);
   for (int i = 0; i < 32; i++) EEPROM.write(EEPROM_ADDR_MQTT_TOPIC + i, s.topic[i]);
   EEPROM.write(EEPROM_ADDR_MQTT_ENABLED, s.enabled ? 1 : 0);
+  EEPROM.put(EEPROM_ADDR_MQTT_INTERVAL, s.interval);
   EEPROM.commit();
 }
 
@@ -732,6 +733,7 @@ bool load_mqtt(MqttSettings &s) {
   s.pass[0]   = '\0';
   strncpy(s.topic, "beehive", sizeof(s.topic));
   s.enabled   = false;
+  s.interval  = 60;  // default 60 сек
   if (magic != EEPROM_MAGIC_MQTT_VAL) return false;
   for (int i = 0; i < 48; i++) s.host[i]  = EEPROM.read(EEPROM_ADDR_MQTT_HOST + i);
   s.host[47]  = '\0';
@@ -746,6 +748,8 @@ bool load_mqtt(MqttSettings &s) {
   if (s.topic[0] == '\0' || (uint8_t)s.topic[0] == 0xFF) strncpy(s.topic, "beehive", sizeof(s.topic));
   byte en = EEPROM.read(EEPROM_ADDR_MQTT_ENABLED);
   s.enabled = (en == 1);
+  EEPROM.get(EEPROM_ADDR_MQTT_INTERVAL, s.interval);
+  if (s.interval < 10 || s.interval > 3600) s.interval = 60;  // defaults
   return true;
 }
 

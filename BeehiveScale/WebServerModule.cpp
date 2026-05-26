@@ -810,6 +810,7 @@ input[type=checkbox]{width:auto}
       <div class="form-row"><label>Пользователь (опционально)</label><input type="text" id="mqtt-user" placeholder="mqtt_user" maxlength="23" autocomplete="off"></div>
       <div class="form-row"><label>Пароль (опционально)</label><input type="password" id="mqtt-pass" placeholder="••••" maxlength="31" autocomplete="off"></div>
       <div class="form-row"><label>Base topic</label><input type="text" id="mqtt-topic" placeholder="beehive" maxlength="31" value="beehive"></div>
+      <div class="form-row"><label>Интервал live publish (сек, 10-3600) — как часто слать данные в HA когда ESP активна</label><input type="number" id="mqtt-interval" min="10" max="3600" step="10" placeholder="60" value="60"></div>
       <div class="btn-row">
         <button class="btn btn-green" onclick="saveMqtt()">💾 Сохранить MQTT</button>
       </div>
@@ -1557,6 +1558,7 @@ function loadMqtt(){
     if(d.port!==undefined) document.getElementById('mqtt-port').value=d.port;
     if(d.user!==undefined) document.getElementById('mqtt-user').value=d.user;
     if(d.topic!==undefined) document.getElementById('mqtt-topic').value=d.topic;
+    if(d.interval!==undefined) document.getElementById('mqtt-interval').value=d.interval;
     if(d.enabled!==undefined) document.getElementById('mqtt-enabled').checked=!!d.enabled;
   }).catch(()=>{});
 }
@@ -1567,6 +1569,7 @@ function saveMqtt(){
     user: document.getElementById('mqtt-user').value,
     pass: document.getElementById('mqtt-pass').value,
     topic: document.getElementById('mqtt-topic').value.trim()||'beehive',
+    interval: parseInt(document.getElementById('mqtt-interval').value||'60'),
     enabled: document.getElementById('mqtt-enabled').checked ? 1 : 0
   };
   apiFetch('/api/mqtt/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
@@ -2348,6 +2351,7 @@ static void _handleMqttSettings() {
     // pass НЕ возвращаем по security (как для tg token)
     doc["passSet"] = (cfg.pass[0] != '\0');
     doc["topic"] = String(cfg.topic);
+    doc["interval"] = cfg.interval;
     doc["enabled"] = cfg.enabled ? 1 : 0;
     String out; serializeJson(doc, out);
     _srv.send(200, "application/json", out);
@@ -2383,6 +2387,10 @@ static void _handleMqttSettings() {
   }
   if (doc.containsKey("enabled")) {
     cfg.enabled = doc["enabled"].as<int>() ? true : false;
+  }
+  if (doc.containsKey("interval")) {
+    int iv = doc["interval"].as<int>();
+    if (iv >= 10 && iv <= 3600) cfg.interval = (uint16_t)iv;
   }
   save_mqtt(cfg);
   _sendJson(true, "MQTT настройки сохранены");

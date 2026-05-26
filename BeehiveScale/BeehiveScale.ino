@@ -588,11 +588,15 @@ void loop() {
     }
   }
 
-  // v5.0.56: периодический MQTT publish когда ESP active (вне log_append cycle).
-  // Каждые 60 сек публикуем текущий вес/темп/батарею — даёт real-time обновления
-  // в HA когда юзер тарирует/калибрует/смотрит. В sleep mode не вызывается (ESP off).
+  // v5.0.56/57: периодический MQTT publish когда ESP active (вне log_append cycle).
+  // Интервал настраивается через UI (default 60 сек, range 10-3600).
+  // В sleep mode не вызывается (ESP off).
   static unsigned long lastMqttTick = 0;
-  if (now - lastMqttTick >= 60000UL) {
+  MqttSettings mqttCfg;
+  load_mqtt(mqttCfg);
+  unsigned long mqttIntervalMs = (unsigned long)mqttCfg.interval * 1000UL;
+  if (mqttIntervalMs < 10000UL) mqttIntervalMs = 60000UL;
+  if (now - lastMqttTick >= mqttIntervalMs) {
     lastMqttTick = now;
     float liveT = sys.tempData.temperature;
     if (liveT <= -90.0f && persist.lastTempC > -90.0f) liveT = persist.lastTempC;

@@ -102,6 +102,7 @@
 #define EEPROM_ADDR_MQTT_PASS       438  // char[32] — broker password (опционально)
 #define EEPROM_ADDR_MQTT_TOPIC      470  // char[32] — base topic (default "beehive")
 #define EEPROM_ADDR_MQTT_ENABLED    502  // bool — MQTT включён/выключен
+#define EEPROM_ADDR_MQTT_INTERVAL   503  // uint16_t — интервал live publish сек (default 60)
 
 #define EEPROM_SIZE              512  // увеличено под MQTT-блок (было 384)
 
@@ -121,6 +122,7 @@ struct MqttSettings {
   char     pass[32];
   char     topic[32];   // base topic (например "beehive")
   bool     enabled;
+  uint16_t interval;    // v5.0.57: live publish интервал сек (10-3600, default 60)
 };
 void     save_mqtt(const MqttSettings &s);
 bool     load_mqtt(MqttSettings &s);     // true если magic OK
