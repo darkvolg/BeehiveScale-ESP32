@@ -108,3 +108,40 @@ void alerts_check(float batV, int batPct, float tempC, bool rtcValid) {
     }
   }
 }
+
+// ─── v5.0.52: Детекция роения по резкому падению веса ─────────────────────
+// Anti-spam: один алерт за событие, сбрасывается когда вес стабилизируется
+// (delta < threshold/3 за следующий замер — рой осел, вес снова не падает).
+static bool _swarmSent = false;
+
+void alerts_check_swarm(float currentW, float prevW, uint32_t deltaSec, float thresholdKg) {
+  // Защита от мусорных данных
+  if (currentW < 0.5f || prevW < 0.5f) return;       // нет груза
+  if (thresholdKg < 0.3f) thresholdKg = 0.3f;        // минимум 300г защита от ложных
+  if (deltaSec == 0 || deltaSec > 1800) return;      // только если < 30 мин с прошлого замера
+
+  float weightLoss = prevW - currentW;  // положительное = потеря
+
+  if (weightLoss >= thresholdKg) {
+    if (!_swarmSent) {
+      char msg[320];
+      snprintf(msg, sizeof(msg),
+               "🚨 <b>ВНИМАНИЕ — РОЕНИЕ!</b>\n"
+               "Резкая потеря веса: <b>-%.2f кг</b>\n"
+               "Было: %.2f кг → стало: %.2f кг\n"
+               "За время: %u мин\n\n"
+               "Возможные причины:\n"
+               "• Рой улетел\n"
+               "• Кража улья\n"
+               "• Падение/опрокидывание\n\n"
+               "Срочно проверьте пасеку!",
+               weightLoss, prevW, currentW, (unsigned)(deltaSec / 60));
+      if (tg_send_message(String(msg))) {
+        _swarmSent = true;
+      }
+    }
+  } else if (weightLoss < thresholdKg / 3.0f) {
+    // Вес стабилизировался — рой осел или мерили шум → reset flag
+    _swarmSent = false;
+  }
+}

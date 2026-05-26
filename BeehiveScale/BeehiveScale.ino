@@ -550,6 +550,18 @@ void loop() {
       // (точно когда есть свежие значения батареи/температуры)
       alerts_check(sys.batVoltage, sys.batPercent,
                    sys.tempData.temperature, sys.currentTime.valid);
+
+      // v5.0.52: детекция роения по резкому падению веса между wake-ми.
+      // persist.lastWeight = вес прошлого замера (сохраняется при sleep_save_persistent).
+      // Сравниваем только если есть валидный prev и прошло разумное время.
+      if (persist.lastWeight > 0.5f && persist.wakeupCount > 0 && sys.currentTime.valid) {
+        // Threshold = 3 × alert_delta (общий порог тревоги), мин 1.5 кг.
+        float swarmThreshold = web_get_alert_delta() * 3.0f;
+        if (swarmThreshold < 1.5f) swarmThreshold = 1.5f;
+        // Время с прошлого замера — оценочно через sleep interval.
+        uint32_t deltaSec = get_sleep_sec();
+        alerts_check_swarm(sys.smoothedWeight, persist.lastWeight, deltaSec, swarmThreshold);
+      }
     }
   }
 #endif

@@ -14,4 +14,13 @@ void alerts_check(float batV,          // текущее напряжение
                   float tempC,         // температура DS18B20
                   bool  rtcValid);     // false если RTC ошибка
 
+// v5.0.52: детекция роения через резкое падение веса.
+// Сравнивает текущий вес с весом прошлого замера (persist.lastWeight).
+// Если падение > thresholdKg за интервал < maxSec → SWARM alert в TG.
+// Anti-spam: один алерт за событие, сбрасывается при стабилизации.
+void alerts_check_swarm(float currentW,        // текущий вес кг
+                        float prevW,           // вес прошлого замера
+                        uint32_t deltaSec,     // секунд с прошлого замера
+                        float thresholdKg);    // порог потери (например 1.5 кг)
+
 #endif
