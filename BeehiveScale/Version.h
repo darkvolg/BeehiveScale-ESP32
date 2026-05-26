@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 50
-#define FW_VERSION_SUFFIX ""  // 5.0.50 — revert: откат подсказки калибровки на v5.0.47 поведение. Countdown "KALIBR cherez Xs" не понравилось пользователю. Возврат к двухуровневой подсказке: 3-6 сек "Otpust = TARA!", 6+ сек "Otpust = KALIBR". Галочка TG-on-interval из v5.0.48 сохранена.
+#define FW_VERSION_PATCH 51
+#define FW_VERSION_SUFFIX ""  // 5.0.51 — feature: в TG отчёт добавлены батарея (В + %) и WiFi RSSI (dBm). Помогает мониторить состояние весов на удалённой пасеке — видишь когда батарея садится и качество сигнала. Иконки 🔋/🪫 и 📶/📵 для визуального быстрого восприятия.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

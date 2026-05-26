@@ -1,6 +1,7 @@
 #include "Connectivity.h"
 #include "Memory.h"
 #include "RTC_Module.h"
+#include "Battery.h"
 #include <ArduinoJson.h>
 #include <time.h>
 #include <RTClib.h>
@@ -545,6 +546,22 @@ bool tg_send_report(float weight, float tempC, float humidity, const String &dat
   if (tempC > -90) {
     pos += snprintf(msg + pos, sizeof(msg) - pos, "Температура: %.1f °C\n", tempC);
   }
+
+  // v5.0.51: батарея + WiFi сигнал в отчёт
+  float batV = bat_voltage();
+  int batPct = bat_percent();
+  if (batV > 0.5f && batV < 5.5f) {
+    const char* batIcon = (batPct < 15) ? "🪫" : "🔋";
+    pos += snprintf(msg + pos, sizeof(msg) - pos,
+      "%s Батарея: %.2f В (%d%%)\n", batIcon, batV, batPct);
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    long rssi = WiFi.RSSI();
+    const char* sigIcon = (rssi > -60) ? "📶" : (rssi > -75) ? "📶" : "📵";
+    pos += snprintf(msg + pos, sizeof(msg) - pos,
+      "%s WiFi: %ld dBm\n", sigIcon, rssi);
+  }
+
   return _tg_post(msg);
 }
 
