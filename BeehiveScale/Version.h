@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 54
-#define FW_VERSION_SUFFIX ""  // 5.0.54 — fix: MQTT publish с retain=true. v5.0.53 публиковал values без retain → broker не сохранял → HA видел 'Неизвестно' до следующего publish (через 30 мин). Теперь retain=true → broker хранит last value → HA сразу получает при подписке. При перезагрузке HA тоже видит актуальные данные.
+#define FW_VERSION_PATCH 55
+#define FW_VERSION_SUFFIX ""  // 5.0.55 — fix: MQTT temperature force-read + fallback. v5.0.54 не публиковал температуру в MQTT при первом wake — DS18B20 async-read не успевал до log_append → tempC=-127 → skip. Теперь: при mqttTempC<=-90 делаем temp_force_read() (~750мс), если всё ещё invalid → fallback на persist.lastTempC. Аналогично логике TG отчёта.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

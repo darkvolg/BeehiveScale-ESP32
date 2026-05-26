@@ -566,9 +566,22 @@ void loop() {
 
       // v5.0.53: MQTT publish для Home Assistant Discovery.
       // Опубликуется только если MQTT включён в настройках + WiFi connected.
+      // v5.0.55: force read temperature если ещё нет валидного значения (после wake
+      // async-read может не успеть до log_append). Fallback на persist.lastTempC.
+      float mqttTempC = sys.tempData.temperature;
+      if (mqttTempC <= -90.0f && temp_available()) {
+        TempData fresh = temp_force_read();
+        if (fresh.valid) {
+          sys.tempData = fresh;
+          mqttTempC = fresh.temperature;
+        }
+      }
+      if (mqttTempC <= -90.0f && persist.lastTempC > -90.0f) {
+        mqttTempC = persist.lastTempC;  // fallback на старое валидное
+      }
       long rssi = (WiFi.status() == WL_CONNECTED) ? WiFi.RSSI() : 0;
       mqtt_publish_data(sys.smoothedWeight,
-                        sys.tempData.temperature,
+                        mqttTempC,
                         sys.batVoltage,
                         sys.batPercent,
                         rssi);
