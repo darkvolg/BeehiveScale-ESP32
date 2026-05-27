@@ -85,4 +85,8 @@ bool tg_send_report(float weight, float tempC, float humidity, const String &dat
                     float lastReportWeight, bool hasLastReport);
 bool ts_send(float weight, float tempC, float humidity, float rtcTempC);
 
+// v5.0.58: отправить задержанный TG отчёт с пометкой "Поздний"
+bool tg_send_pending(uint32_t origUnix, float weight, float tempC,
+                     float batV, uint8_t batPct, int8_t rssi);
+
 #endif

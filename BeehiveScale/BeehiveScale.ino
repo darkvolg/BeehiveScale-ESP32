@@ -33,6 +33,7 @@
 #include "Battery.h"
 #include "Alerts.h"      // v5.0.20: Telegram-алерты по батарее/температуре/RTC
 #include "MQTTClient.h"  // v5.0.53: MQTT для Home Assistant Discovery
+#include "TgPending.h"   // v5.0.58: retry TG при fail
 #include "Logger.h"
 
 // Pin mapping — ESP8266 vs ESP32. ESP32 — основная плата с 2026-05-05.
@@ -697,10 +698,20 @@ void loop() {
         reportTempC = persist.lastTempC;  // fallback на старое валидное значение
       }
 
-      if (tg_send_report(sys.smoothedWeight, reportTempC,
+      bool tgOk = tg_send_report(sys.smoothedWeight, reportTempC,
                          sys.tempData.humidity, dt,
                          sys.prevWeight, load_prev_weight_date(),
-                         persist.lastReportWeight, persist.hasLastReport)) {
+                         persist.lastReportWeight, persist.hasLastReport);
+      if (!tgOk && sys.currentTime.valid) {
+        // v5.0.58: TG fail → сохранить для retry при next wake
+        DateTime ntp(sys.currentTime.year, sys.currentTime.month, sys.currentTime.day,
+                     sys.currentTime.hour, sys.currentTime.minute, sys.currentTime.second);
+        int8_t rssi = (WiFi.status() == WL_CONNECTED) ? (int8_t)WiFi.RSSI() : 0;
+        tg_pending_save(ntp.unixtime(), sys.smoothedWeight, reportTempC,
+                        sys.batVoltage, (uint8_t)sys.batPercent, rssi);
+        Serial.println(F("[TG] Send failed — saved for retry at next wake"));
+      }
+      if (tgOk) {
         tgReportPending = false;
         lastTgReport = now;
         tgSentSinceBoot = true;  // v5.0.45: блокировать повторную отправку в этом wake
@@ -715,6 +726,27 @@ void loop() {
         if (reportTempC > -90.0f) save_last_temp(reportTempC);
       }
       // если не отправилось (нет WiFi, нет токена) — флаг остаётся, попробуем позже
+    }
+
+    // v5.0.58: попытка отправить задержанный TG если он есть (от прошлого fail).
+    // Делаем только раз за boot (после успешного WiFi connect).
+    static bool tgPendingTried = false;
+    if (!tgPendingTried && WiFi.status() == WL_CONNECTED) {
+      tgPendingTried = true;
+      TgPendingData pd;
+      if (tg_pending_load(pd)) {
+        Serial.print(F("[TgPending] Found pending TG from unix="));
+        Serial.println(pd.unixtime);
+        bool ok = tg_send_pending(pd.unixtime, pd.weight, pd.tempC,
+                                  pd.batV, pd.batPct, pd.rssi);
+        if (ok) {
+          tg_pending_clear();
+          Serial.println(F("[TgPending] Late report sent OK"));
+        } else {
+          tg_pending_inc_retry();
+          Serial.println(F("[TgPending] Late retry failed"));
+        }
+      }
     }
   }
 

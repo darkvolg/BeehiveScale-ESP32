@@ -565,6 +565,36 @@ bool tg_send_report(float weight, float tempC, float humidity, const String &dat
   return _tg_post(msg);
 }
 
+// v5.0.58: отправить задержанный TG отчёт с пометкой "Поздний"
+bool tg_send_pending(uint32_t origUnix, float weight, float tempC,
+                     float batV, uint8_t batPct, int8_t rssi) {
+  DateTime dt(origUnix);
+  char msg[400];
+  int pos = 0;
+  pos += snprintf(msg + pos, sizeof(msg) - pos,
+    "🕐 <b>Поздний отчёт (retry)</b>\n"
+    "Время замера: %02u.%02u.%04u %02u:%02u:%02u\n"
+    "Вес: <b>%.2f кг</b>\n",
+    dt.day(), dt.month(), dt.year(), dt.hour(), dt.minute(), dt.second(),
+    weight);
+  if (tempC > -90) {
+    pos += snprintf(msg + pos, sizeof(msg) - pos,
+      "Температура: %.1f °C\n", tempC);
+  }
+  if (batV > 0.5f && batV < 5.5f) {
+    const char* batIcon = (batPct < 15) ? "🪫" : "🔋";
+    pos += snprintf(msg + pos, sizeof(msg) - pos,
+      "%s Батарея: %.2f В (%u%%)\n", batIcon, batV, batPct);
+  }
+  if (rssi != 0) {
+    pos += snprintf(msg + pos, sizeof(msg) - pos,
+      "📶 WiFi: %d dBm\n", (int)rssi);
+  }
+  pos += snprintf(msg + pos, sizeof(msg) - pos,
+    "\n<i>Сообщение задержано — TG был недоступен при попытке отправки.</i>");
+  return _tg_post(msg);
+}
+
 bool ts_send(float weight, float tempC, float humidity, float rtcTempC) {
   if (!_wifi_active()) return false;
   if (strncmp(TS_API_KEY, "YOUR_", 5) == 0) return false;
