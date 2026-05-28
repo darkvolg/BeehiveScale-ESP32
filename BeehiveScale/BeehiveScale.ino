@@ -547,6 +547,11 @@ void loop() {
       // Это решает проблему "ESP спит между расписаниями": каждое запланированное
       // пробуждение в 09:00, 14:00, 21:00 → одна отправка в Telegram с весом и дельтой.
       if (schedLog) tgReportPending = true;
+      // v5.0.59: при power-cut архитектуре каждый wake = cold boot (bootLog=true),
+      // и ESP проснулась ИЗ-ЗА DS3231 alarm (scheduled). Если расписание задано —
+      // bootLog тоже должен слать TG (иначе при timing-проскоке минуты schedLog=false
+      // → TG не отправляется при scheduled wake). Решает баг "TG не приходит по расписанию".
+      if (bootLog && scnt > 0) tgReportPending = true;
       lastLogWrite = now;
       // v5.0.20: проверяем алерты при каждой записи в лог
       // (точно когда есть свежие значения батареи/температуры)

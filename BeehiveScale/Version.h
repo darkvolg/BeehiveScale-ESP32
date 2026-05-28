@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 58
-#define FW_VERSION_SUFFIX ""  // 5.0.58 — feature: TG retry с задержанным сообщением. При fail tg_send_report() — сохраняется в LittleFS /tg_pending.bin (вес, темп, батарея, время, retry counter). При next wake (после WiFi connect) — пробует отправить с пометкой 'Поздний отчёт от HH:MM'. Max 3 retry → дроп. Решает проблему когда Cloudflare/Telegram временно недоступен. Новый файл TgPending.cpp/.h.
+#define FW_VERSION_PATCH 59
+#define FW_VERSION_SUFFIX ""  // 5.0.59 — fix: TG не приходил по расписанию при power-cut. Баг: tgReportPending ставился только при schedLog (точное совпадение минуты), но при power-cut каждый wake = cold boot (bootLog=true), а schedLog мог быть false из-за timing-проскока минуты (boot+WiFi+NTP ~5сек). Теперь: при bootLog + расписание задано → tgReportPending=true (ESP проснулась из-за DS3231 alarm = scheduled wake). Решает 'TG не приходит в 8:00/14:00'.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
