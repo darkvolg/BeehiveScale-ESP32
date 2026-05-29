@@ -554,7 +554,8 @@ bool tg_send_report(float weight, float tempC, float humidity, const String &dat
       (deltaRef >= 0 ? "+" : ""), deltaRef, prevWeight, dateStr);
   }
   if (tempC > -90) {
-    pos += snprintf(msg + pos, sizeof(msg) - pos, "Температура: %.1f °C\n", tempC);
+    const char* tIcon = (tempC < 8.0f) ? "❄️" : (tempC > 35.0f) ? "🔥" : "🌡️";
+    pos += snprintf(msg + pos, sizeof(msg) - pos, "%s Температура: %.1f °C\n", tIcon, tempC);
   }
 
   // v5.0.51: батарея + WiFi сигнал в отчёт
@@ -588,8 +589,9 @@ bool tg_send_pending(uint32_t origUnix, float weight, float tempC,
     dt.day(), dt.month(), dt.year(), dt.hour(), dt.minute(), dt.second(),
     weight);
   if (tempC > -90) {
+    const char* tIcon = (tempC < 8.0f) ? "❄️" : (tempC > 35.0f) ? "🔥" : "🌡️";
     pos += snprintf(msg + pos, sizeof(msg) - pos,
-      "Температура: %.1f °C\n", tempC);
+      "%s Температура: %.1f °C\n", tIcon, tempC);
   }
   if (batV > 0.5f && batV < 5.5f) {
     const char* batIcon = (batPct < 15) ? "🪫" : "🔋";

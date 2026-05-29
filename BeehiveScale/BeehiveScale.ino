@@ -144,6 +144,7 @@ unsigned long extendSleepUntilMs = 0; // Продление работы по з
 bool diagRunRequested = false;       // Флаг запуска диагностики
 bool diagDone = false;               // Диагностика завершена (сводка на экране)
 bool tgReportPending = false;        // Запрос на отправку TG-отчёта при следующей возможности
+bool g_isSoftReset = false;          // v5.0.64: true при software restart (web "Перезагрузить"/OTA), а не power-on. Подавляет boot-TG, чтобы перезапуск для проверки не слал отчёт.
 
 void handle_buttons();
 void process_weight();
@@ -179,6 +180,10 @@ void setup() {
 
   // v5.0.27 фиксы остаются: CPU 240MHz + освобождение GPIO27 RTC mux
   esp_sleep_wakeup_cause_t wakeCause = esp_sleep_get_wakeup_cause();
+  // v5.0.64: причина reset. ESP_RST_SW = software restart (web "Перезагрузить"/OTA) —
+  // НЕ слать boot-TG (юзер перезапускает для проверки прошивки, не плановое пробуждение).
+  // Плановое пробуждение DS3231 = power-cut → ESP_RST_POWERON.
+  g_isSoftReset = (esp_reset_reason() == ESP_RST_SW);
   setCpuFrequencyMhz(240);
   if (wakeCause != ESP_SLEEP_WAKEUP_UNDEFINED) {
     rtc_gpio_deinit(GPIO_NUM_27);
@@ -564,7 +569,10 @@ void loop() {
       // запланированному слоту. Иначе ручное включение весов (произвольное время,
       // напр. 15:37) тоже слало TG-отчёт — юзер жаловался "при каждом включении приходит".
       // DS3231 scheduled wake: cur≈sched → TG. Ручное включение: далеко → без TG.
-      if (bootLog && scnt > 0 && sys.currentTime.valid) {
+      // v5.0.64 FIX: + не слать при software restart (web "Перезагрузить"/OTA). Иначе
+      // перезапуск для проверки прошивки рядом со слотом (напр. 21:01 при слоте 21:00)
+      // проскакивал ±10-мин фильтр и слал дубль отчёта.
+      if (bootLog && scnt > 0 && sys.currentTime.valid && !g_isSoftReset) {
         uint16_t cur_min = (uint16_t)sys.currentTime.hour * 60 + sys.currentTime.minute;
         for (uint8_t i = 0; i < scnt; i++) {
           int diff = (int)cur_min - (int)stimes[i];

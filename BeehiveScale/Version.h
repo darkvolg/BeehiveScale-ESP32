@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 63
-#define FW_VERSION_SUFFIX ""  // 5.0.63 — формат строки привеса под макет: '🍯 Привес за сутки: +X.XX кг (вчера HH:MM → Y.YY)'. Добавлено время вечернего слота и стрелка (было без времени).
+#define FW_VERSION_PATCH 64
+#define FW_VERSION_SUFFIX ""  // 5.0.64 — icon температуры в TG (❄️/🌡️/🔥 по порогам <8/норма/>35°C). FIX: software restart (web 'Перезагрузить'/OTA) больше НЕ шлёт boot-TG. Раньше перезапуск для проверки рядом со слотом (21:01 при слоте 21:00) проскакивал ±10-мин фильтр и слал дубль. Теперь esp_reset_reason()==ESP_RST_SW → TG подавляется.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
