@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 62
-#define FW_VERSION_SUFFIX ""  // 5.0.62 — feature: 'Привес за сутки' в TG (вечерний замер сравнивается с весом вчерашнего вечера, строка '🍯 Привес за сутки: +X.XX кг (вчера Y.YY)'). Вечерний слот = последнее время расписания, окно ±15 мин. Вес хранится в EEPROM 505-511. FIX: при ручном включении весов больше НЕ шлётся TG-отчёт — bootLog шлёт TG только если время boot в пределах ±10 мин от слота расписания (раньше любое включение = TG).
+#define FW_VERSION_PATCH 63
+#define FW_VERSION_SUFFIX ""  // 5.0.63 — формат строки привеса под макет: '🍯 Привес за сутки: +X.XX кг (вчера HH:MM → Y.YY)'. Добавлено время вечернего слота и стрелка (было без времени).
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

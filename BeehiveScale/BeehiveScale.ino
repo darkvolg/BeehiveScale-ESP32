@@ -729,8 +729,8 @@ void loop() {
       bool     hasDailyGain  = false;
       float    prevEveningW  = 0.0f;
       uint16_t curDayNum     = 0;
+      uint16_t maxSlot       = 0;
       if (schedCnt > 0 && ts.valid) {
-        uint16_t maxSlot = 0;
         for (uint8_t i = 0; i < schedCnt; i++) if (schedT[i] > maxSlot) maxSlot = schedT[i];
         uint16_t cur_min = (uint16_t)ts.hour * 60 + ts.minute;
         int diff = (int)cur_min - (int)maxSlot;
@@ -752,7 +752,7 @@ void loop() {
                          sys.tempData.humidity, dt,
                          sys.prevWeight, load_prev_weight_date(),
                          persist.lastReportWeight, persist.hasLastReport,
-                         hasDailyGain, prevEveningW);
+                         hasDailyGain, prevEveningW, maxSlot);
       if (!tgOk && sys.currentTime.valid) {
         // v5.0.58: TG fail → сохранить для retry при next wake
         DateTime ntp(sys.currentTime.year, sys.currentTime.month, sys.currentTime.day,
