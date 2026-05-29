@@ -1924,7 +1924,7 @@ function archLoad(){
         let entriesHtml='';
         for(const e of d.entries){
           const time=e.dt.substring(11,16);
-          entriesHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span style="color:var(--text2)">'+time+'</span><span><b>'+e.w.toFixed(2)+'</b> кг'+(e.t>-90?' · '+e.t.toFixed(1)+'°C':'')+'</span></div>';
+          entriesHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span style="color:var(--text2)">'+time+'</span><span><b>'+e.w.toFixed(2)+'</b> кг'+(e.t>-90?' · '+e.t.toFixed(1)+'°C':'')+(e.b>0.5?' · 🔋'+e.b.toFixed(2)+'В':'')+'</span></div>';
         }
         const deltaText=d.deltaPrev===null?'':' <span style="color:'+(d.deltaPrev>=0?'var(--green)':'var(--red)')+';font-size:12px">('+(d.deltaPrev>=0?'+':'')+d.deltaPrev.toFixed(2)+' кг)</span>';
         html+='<div style="border-left:3px solid '+markerColor+';padding:8px 10px;margin-bottom:6px;background:var(--bg);border-radius:4px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b>'+dt+' '+dow+' '+marker+'</b><span style="font-size:13px;color:var(--text2)">'+d.wLast.toFixed(2)+' кг'+deltaText+'</span></div>'+entriesHtml+'<div style="font-size:11px;color:var(--text3);margin-top:4px">Мин/Макс: '+d.wMin.toFixed(2)+'–'+d.wMax.toFixed(2)+' кг'+(d.tMin<Infinity?' · T: '+d.tMin.toFixed(1)+'–'+d.tMax.toFixed(1)+'°C':'')+'</div></div>';
