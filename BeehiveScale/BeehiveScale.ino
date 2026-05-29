@@ -528,6 +528,11 @@ void loop() {
         }
       }
     }
+    // v5.0.60: если schedLog сработал — пометить _bootLogDone, чтобы bootLog
+    // не создал дубликат записи в ту же минуту boot (была баг: 08:00 schedLog +
+    // 08:02 bootLog = две записи, первая с temp=0).
+    if (schedLog) _bootLogDone = true;
+
     // Запись при каждом включении (однократно, как только датчик готов)
     bool bootLog = false;
     if (!_bootLogDone && sys.sensorReady && sys.currentTime.valid) {
@@ -541,6 +546,13 @@ void loop() {
     }
     bool useInterval = (scnt == 0);  // интервал только если расписание не задано
     if (schedLog || bootLog || (useInterval && now - lastLogWrite >= LOG_INTERVAL_MS)) {
+      // v5.0.60: force temperature read перед log если значение невалидно.
+      // schedLog/bootLog могут сработать до того как async process_temperature()
+      // успел прочитать DS18B20 → записывалось temp=0.0. Force read даёт корректное.
+      if (!sys.tempData.valid && temp_available()) {
+        TempData fresh = temp_force_read();
+        if (fresh.valid) sys.tempData = fresh;
+      }
       log_append(sys.datetimeStr, sys.smoothedWeight,
                  sys.tempData.temperature, sys.tempData.humidity, sys.batVoltage, sys.batPercent);
       // При срабатывании расписания — ставим флаг отправки TG-отчёта.

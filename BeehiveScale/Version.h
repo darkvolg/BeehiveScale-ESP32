@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 59
-#define FW_VERSION_SUFFIX ""  // 5.0.59 — fix: TG не приходил по расписанию при power-cut. Баг: tgReportPending ставился только при schedLog (точное совпадение минуты), но при power-cut каждый wake = cold boot (bootLog=true), а schedLog мог быть false из-за timing-проскока минуты (boot+WiFi+NTP ~5сек). Теперь: при bootLog + расписание задано → tgReportPending=true (ESP проснулась из-за DS3231 alarm = scheduled wake). Решает 'TG не приходит в 8:00/14:00'.
+#define FW_VERSION_PATCH 60
+#define FW_VERSION_SUFFIX ""  // 5.0.60 — fix: двойная запись в архив (schedLog HH:00 temp=0 + bootLog HH:02). Баг: schedLog срабатывал по минуте но не ставил _bootLogDone → bootLog создавал вторую запись позже. Плюс первая запись с temp=0 (DS18B20 async не успел). Фикс: (1) schedLog → _bootLogDone=true (нет дубликата), (2) force temp read перед log_append если tempData.valid=false. Теперь ОДНА запись с корректной температурой.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
