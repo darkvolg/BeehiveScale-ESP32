@@ -500,11 +500,12 @@ bool tg_send_alert(float weight, float tempC, const String &datetime, float refW
 
 bool tg_send_report(float weight, float tempC, float humidity, const String &datetime,
                     float prevWeight, uint32_t prevWeightDate,
-                    float lastReportWeight, bool hasLastReport) {
+                    float lastReportWeight, bool hasLastReport,
+                    bool hasDailyGain, float prevEveningWeight) {
   (void)humidity;  // нет датчика влажности — не выводим в отчёт
   float deltaRef    = weight - prevWeight;          // от опорного эталона (ручной)
   float deltaPeriod = weight - lastReportWeight;    // от прошлого отчёта (за сутки)
-  char msg[640];
+  char msg[700];
   int pos = 0;
   pos += snprintf(msg + pos, sizeof(msg) - pos,
     "🐝 <b>Отчёт: улей</b>\n"
@@ -516,6 +517,13 @@ bool tg_send_report(float weight, float tempC, float humidity, const String &dat
     pos += snprintf(msg + pos, sizeof(msg) - pos,
       "📈 <b>С прошлого замера:</b> %s%.2f кг (было %.2f)\n",
       (deltaPeriod >= 0 ? "+" : ""), deltaPeriod, lastReportWeight);
+  }
+  // v5.0.62: привес за сутки (только вечерний замер) — сравнение с вчерашним вечером.
+  if (hasDailyGain) {
+    float dailyGain = weight - prevEveningWeight;
+    pos += snprintf(msg + pos, sizeof(msg) - pos,
+      "🍯 <b>Привес за сутки:</b> %s%.2f кг (вчера %.2f)\n",
+      (dailyGain >= 0 ? "+" : ""), dailyGain, prevEveningWeight);
   }
   if (prevWeight > 0.05f) {
     // Форматируем дату фиксации

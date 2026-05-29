@@ -80,9 +80,12 @@ bool tg_send_alert(float weight, float tempC, const String &datetime, float refW
 // prevWeightDate — Unix timestamp когда зафиксирован prevWeight (0 = не задано)
 // lastReportWeight — вес на момент прошлого TG-отчёта (для дельты "за сутки")
 // hasLastReport — false при самом первом отчёте, тогда "за сутки" не показываем
+// v5.0.62: hasDailyGain — показать строку "Привес за сутки" (только вечерний замер).
+// prevEveningWeight — вес вчерашнего вечернего замера (база для дельты сутки→сутки).
 bool tg_send_report(float weight, float tempC, float humidity, const String &datetime,
                     float prevWeight, uint32_t prevWeightDate,
-                    float lastReportWeight, bool hasLastReport);
+                    float lastReportWeight, bool hasLastReport,
+                    bool hasDailyGain = false, float prevEveningWeight = 0.0f);
 bool ts_send(float weight, float tempC, float humidity, float rtcTempC);
 
 // v5.0.58: отправить задержанный TG отчёт с пометкой "Поздний"

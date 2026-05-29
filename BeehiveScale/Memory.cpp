@@ -632,6 +632,26 @@ bool load_last_report(float &weight) {
   return true;
 }
 
+// ─── Привес за сутки (v5.0.62) ─────────────────────────────────────────
+void save_evening_weight(float w, uint16_t day) {
+  if (isnan(w) || w < 0.0f || w > 200.0f) return;
+  byte magic = EEPROM_MAGIC_EVENING_VAL;
+  EEPROM.put(EEPROM_ADDR_EVENING_MAGIC, magic);
+  EEPROM.put(EEPROM_ADDR_EVENING_W,     w);
+  EEPROM.put(EEPROM_ADDR_EVENING_DAY,   day);
+  EEPROM.commit();
+}
+
+bool load_evening_weight(float &w, uint16_t &day) {
+  byte magic = 0;
+  EEPROM.get(EEPROM_ADDR_EVENING_MAGIC, magic);
+  if (magic != EEPROM_MAGIC_EVENING_VAL) return false;
+  EEPROM.get(EEPROM_ADDR_EVENING_W,   w);
+  EEPROM.get(EEPROM_ADDR_EVENING_DAY, day);
+  if (isnan(w) || w < 0.0f || w > 200.0f) return false;
+  return true;
+}
+
 // ─── Last temperature (v5.0.5) ─────────────────────────────────────────
 void save_last_temp(float tempC) {
   if (isnan(tempC) || tempC < -55.0f || tempC > 125.0f) return;  // не пишем мусор

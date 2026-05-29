@@ -104,6 +104,12 @@
 #define EEPROM_ADDR_MQTT_ENABLED    502  // bool — MQTT включён/выключен
 #define EEPROM_ADDR_MQTT_INTERVAL   503  // uint16_t — интервал live publish сек (default 60)
 
+// v5.0.62: привес за сутки — вес последнего вечернего замера + день (для дельты сутки→сутки)
+#define EEPROM_ADDR_EVENING_MAGIC   505  // 1 байт magic
+#define EEPROM_MAGIC_EVENING_VAL    0xB2
+#define EEPROM_ADDR_EVENING_W       506  // float, 4 байта — вес последнего вечернего замера
+#define EEPROM_ADDR_EVENING_DAY     510  // uint16_t, 2 байта — номер дня (unix/86400) того замера
+
 #define EEPROM_SIZE              512  // увеличено под MQTT-блок (было 384)
 
 // v5.0.44: TG report timestamp persistence
@@ -219,6 +225,12 @@ void     set_autosleep_sec(uint16_t sec);
 // load_last_report() возвращает true и заполняет weight, если в EEPROM есть валидная запись.
 void save_last_report(float weight, bool hasReport);
 bool load_last_report(float &weight);
+
+// Привес за сутки (v5.0.62) — вес последнего вечернего замера + номер дня (unix/86400).
+// Используется для дельты "сутки→сутки" (вчера вечером → сегодня вечером).
+// load_evening_weight() возвращает true и заполняет w/day, если запись валидна.
+void save_evening_weight(float w, uint16_t day);
+bool load_evening_weight(float &w, uint16_t &day);
 
 // Last valid temperature — fallback если DS18B20 не успел прочитаться к моменту
 // отправки TG-отчёта. Сохраняется после каждого валидного чтения, читается в setup().

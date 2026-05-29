@@ -559,11 +559,19 @@ void loop() {
       // Это решает проблему "ESP спит между расписаниями": каждое запланированное
       // пробуждение в 09:00, 14:00, 21:00 → одна отправка в Telegram с весом и дельтой.
       if (schedLog) tgReportPending = true;
-      // v5.0.59: при power-cut архитектуре каждый wake = cold boot (bootLog=true),
-      // и ESP проснулась ИЗ-ЗА DS3231 alarm (scheduled). Если расписание задано —
-      // bootLog тоже должен слать TG (иначе при timing-проскоке минуты schedLog=false
-      // → TG не отправляется при scheduled wake). Решает баг "TG не приходит по расписанию".
-      if (bootLog && scnt > 0) tgReportPending = true;
+      // v5.0.59: при power-cut архитектуре каждый wake = cold boot (bootLog=true).
+      // v5.0.62 FIX: bootLog слать TG ТОЛЬКО если время boot близко (±10 мин) к
+      // запланированному слоту. Иначе ручное включение весов (произвольное время,
+      // напр. 15:37) тоже слало TG-отчёт — юзер жаловался "при каждом включении приходит".
+      // DS3231 scheduled wake: cur≈sched → TG. Ручное включение: далеко → без TG.
+      if (bootLog && scnt > 0 && sys.currentTime.valid) {
+        uint16_t cur_min = (uint16_t)sys.currentTime.hour * 60 + sys.currentTime.minute;
+        for (uint8_t i = 0; i < scnt; i++) {
+          int diff = (int)cur_min - (int)stimes[i];
+          if (diff < 0) diff = -diff;
+          if (diff <= 10) { tgReportPending = true; break; }
+        }
+      }
       lastLogWrite = now;
       // v5.0.20: проверяем алерты при каждой записи в лог
       // (точно когда есть свежие значения батареи/температуры)
@@ -683,7 +691,7 @@ void loop() {
     // Старый interval-check (tgRptMs vs millis/unix) удалён — был непонятен.
     // tgRptMs=0 (TG отключён) — single switch для полного выключения TG.
     uint32_t tgRptMs = get_tg_report_interval_min() * 60000UL;
-    uint8_t schedCnt = 0; { uint16_t st[8]; get_sched_times(st, schedCnt); }
+    uint8_t schedCnt = 0; uint16_t schedT[8]; get_sched_times(schedT, schedCnt);
     static bool tgSentSinceBoot = false;
     bool doTgReport = false;
     if (tgReportPending) {
@@ -715,10 +723,36 @@ void loop() {
         reportTempC = persist.lastTempC;  // fallback на старое валидное значение
       }
 
+      // v5.0.62: привес за сутки — только в вечернем (последнем по времени) слоте
+      // расписания. Сравниваем с весом вчерашнего вечера (load_evening_weight).
+      bool     isEveningSlot = false;
+      bool     hasDailyGain  = false;
+      float    prevEveningW  = 0.0f;
+      uint16_t curDayNum     = 0;
+      if (schedCnt > 0 && ts.valid) {
+        uint16_t maxSlot = 0;
+        for (uint8_t i = 0; i < schedCnt; i++) if (schedT[i] > maxSlot) maxSlot = schedT[i];
+        uint16_t cur_min = (uint16_t)ts.hour * 60 + ts.minute;
+        int diff = (int)cur_min - (int)maxSlot;
+        if (diff < 0) diff = -diff;
+        isEveningSlot = (diff <= 15);  // ±15 мин от вечернего слота
+        DateTime dtCur(ts.year, ts.month, ts.day, ts.hour, ts.minute, ts.second);
+        curDayNum = (uint16_t)(dtCur.unixtime() / 86400UL);
+        if (isEveningSlot) {
+          float storedW; uint16_t storedDay;
+          // показываем привес только если есть запись с ДРУГОГО дня (сутки→сутки)
+          if (load_evening_weight(storedW, storedDay) && storedDay != curDayNum) {
+            hasDailyGain = true;
+            prevEveningW = storedW;
+          }
+        }
+      }
+
       bool tgOk = tg_send_report(sys.smoothedWeight, reportTempC,
                          sys.tempData.humidity, dt,
                          sys.prevWeight, load_prev_weight_date(),
-                         persist.lastReportWeight, persist.hasLastReport);
+                         persist.lastReportWeight, persist.hasLastReport,
+                         hasDailyGain, prevEveningW);
       if (!tgOk && sys.currentTime.valid) {
         // v5.0.58: TG fail → сохранить для retry при next wake
         DateTime ntp(sys.currentTime.year, sys.currentTime.month, sys.currentTime.day,
@@ -741,6 +775,10 @@ void loop() {
         save_last_report(sys.smoothedWeight, true);
         // v5.0.5: то же для температуры — fallback после reset.
         if (reportTempC > -90.0f) save_last_temp(reportTempC);
+        // v5.0.62: вечерний слот → сохранить вес как базу для привеса завтра.
+        if (isEveningSlot && curDayNum > 0) {
+          save_evening_weight(sys.smoothedWeight, curDayNum);
+        }
       }
       // если не отправилось (нет WiFi, нет токена) — флаг остаётся, попробуем позже
     }
