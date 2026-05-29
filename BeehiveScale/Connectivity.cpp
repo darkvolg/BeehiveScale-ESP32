@@ -488,9 +488,9 @@ bool tg_send_alert(float weight, float tempC, const String &datetime, float refW
   snprintf(msg, sizeof(msg),
     "🚨 <b>ТРЕВОГА: улей</b>\n"
     "Причина: %s %s\n"
-    "Изменение: <b>%s%.2f кг</b>\n"
+    "Изменение: <b>%s%.1f кг</b>\n"
     "Время: %s\n"
-    "Вес: <b>%.2f кг</b> (было %.2f)\n"
+    "Вес: <b>%.1f кг</b> (было %.1f)\n"
     "Температура: %s",
     emoji, reason,
     (delta >= 0 ? "+" : ""), delta,
@@ -511,19 +511,19 @@ bool tg_send_report(float weight, float tempC, float humidity, const String &dat
   pos += snprintf(msg + pos, sizeof(msg) - pos,
     "🐝 <b>Отчёт: улей</b>\n"
     "Время: %s\n"
-    "Вес: <b>%.2f кг</b>\n",
+    "Вес: <b>%.1f кг</b>\n",
     datetime.c_str(), weight);
 
   if (hasLastReport) {
     pos += snprintf(msg + pos, sizeof(msg) - pos,
-      "📈 <b>С прошлого замера:</b> %s%.2f кг (было %.2f)\n",
+      "📈 <b>С прошлого замера:</b> %s%.1f кг (было %.1f)\n",
       (deltaPeriod >= 0 ? "+" : ""), deltaPeriod, lastReportWeight);
   }
   // v5.0.62: привес за сутки (только вечерний замер) — сравнение с вчерашним вечером.
   if (hasDailyGain) {
     float dailyGain = weight - prevEveningWeight;
     pos += snprintf(msg + pos, sizeof(msg) - pos,
-      "🍯 <b>Привес за сутки:</b> %s%.2f кг (вчера %02u:%02u → %.2f)\n",
+      "🍯 <b>Привес за сутки:</b> %s%.1f кг (вчера %02u:%02u → %.1f)\n",
       (dailyGain >= 0 ? "+" : ""), dailyGain,
       eveningSlotMin / 60, eveningSlotMin % 60, prevEveningWeight);
   }
@@ -550,7 +550,7 @@ bool tg_send_report(float weight, float tempC, float humidity, const String &dat
       }
     }
     pos += snprintf(msg + pos, sizeof(msg) - pos,
-      "🎯 <b>От зафикс. точки:</b> %s%.2f кг (зафикс. %.2f%s)\n",
+      "🎯 <b>От зафикс. точки:</b> %s%.1f кг (зафикс. %.1f%s)\n",
       (deltaRef >= 0 ? "+" : ""), deltaRef, prevWeight, dateStr);
   }
   if (tempC > -90) {
@@ -585,7 +585,7 @@ bool tg_send_pending(uint32_t origUnix, float weight, float tempC,
   pos += snprintf(msg + pos, sizeof(msg) - pos,
     "🕐 <b>Поздний отчёт (retry)</b>\n"
     "Время замера: %02u.%02u.%04u %02u:%02u:%02u\n"
-    "Вес: <b>%.2f кг</b>\n",
+    "Вес: <b>%.1f кг</b>\n",
     dt.day(), dt.month(), dt.year(), dt.hour(), dt.minute(), dt.second(),
     weight);
   if (tempC > -90) {

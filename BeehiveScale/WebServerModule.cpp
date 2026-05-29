@@ -1045,11 +1045,11 @@ function updDash(d) {
   }
   const w = parseFloat(d.weight)||0;
   _curWeight = w;
-  setText('w-val', w.toFixed(2)+'<span class="val-unit">кг</span>', true);
-  setText('w-ref', parseFloat(d.prev||0).toFixed(2));
+  setText('w-val', w.toFixed(1)+'<span class="val-unit">кг</span>', true);
+  setText('w-ref', parseFloat(d.prev||0).toFixed(1));
   const dw = w-parseFloat(d.prev||0);
   const dwEl=document.getElementById('w-delta');
-  dwEl.textContent=(dw>=0?'+':'')+dw.toFixed(2);
+  dwEl.textContent=(dw>=0?'+':'')+dw.toFixed(1);
   dwEl.style.color=dw>0?'var(--green)':dw<0?'var(--red)':'var(--amber2)';
   // Дата фиксации (Unix timestamp → ДД.ММ.ГГГГ ЧЧ:ММ)
   const refDate = parseInt(d.prevDate||0);
@@ -1078,9 +1078,9 @@ function updDash(d) {
   if (wpdEl && wppEl) {
     if (hasRep) {
       const dp = w - lastRep;
-      wpdEl.textContent = (dp>=0?'+':'')+dp.toFixed(2);
+      wpdEl.textContent = (dp>=0?'+':'')+dp.toFixed(1);
       wpdEl.style.color = dp>0?'var(--green)':dp<0?'var(--red)':'var(--amber2)';
-      wppEl.textContent = lastRep.toFixed(2);
+      wppEl.textContent = lastRep.toFixed(1);
     } else {
       wpdEl.textContent = '—';
       wppEl.textContent = 'нет данных';
@@ -1137,7 +1137,7 @@ function updDash(d) {
   // Calib live
   if (document.getElementById('cf-live')) setText('cf-live',parseFloat(d.cf||0).toFixed(0));
   if (document.getElementById('ofs-live')) setText('ofs-live',d.offset||0);
-  if (document.getElementById('wiz-w')) setText('wiz-w',parseFloat(d.weight||0).toFixed(2));
+  if (document.getElementById('wiz-w')) setText('wiz-w',parseFloat(d.weight||0).toFixed(1));
   // Автозаполнение поля CF текущим значением, если пользователь ещё не вводил своё
   var cfInput=document.getElementById('calib-cf');
   if(cfInput&&cfInput.value===''&&d.cf) cfInput.value=Math.round(parseFloat(d.cf||0));
@@ -1148,11 +1148,11 @@ function updHive(d) {
   const s={Vesna:'🌸 Весна',Leto:'☀ Лето',Osen:'🍂 Осень',Zima:'❄ Зима'};
   setText('hi-season',s[d.season]||d.season||'--');
   if (d.valid) {
-    setText('hi-wrange',d.wMin.toFixed(2)+' / '+d.wMax.toFixed(2)+' кг');
+    setText('hi-wrange',d.wMin.toFixed(1)+' / '+d.wMax.toFixed(1)+' кг');
     if (!isNaN(d.tMin)) setText('hi-trange',d.tMin.toFixed(1)+' / '+d.tMax.toFixed(1)+' °C');
     const dk=parseFloat(d.deltaKg||0);
     const de=document.getElementById('hi-delta');
-    de.textContent=(dk>=0?'+':'')+dk.toFixed(2)+' кг';
+    de.textContent=(dk>=0?'+':'')+dk.toFixed(1)+' кг';
     de.style.color=dk>0?'var(--green)':dk<0?'var(--red)':'var(--text2)';
     setText('hi-count',d.count||0);
     setText('hi-days',d.daysSinceStart||0);
@@ -1190,7 +1190,7 @@ function loadLog() {
 function drawMini() {
   const svg=document.getElementById('mini-svg');
   if (!_all||_all.length<2) {
-    const wt=_curWeight>0?_curWeight.toFixed(2)+' кг':'--';
+    const wt=_curWeight>0?_curWeight.toFixed(1)+' кг':'--';
     svg.innerHTML='<text x="450" y="270" text-anchor="middle" fill="#f5a623" font-size="42" font-weight="bold">'+wt+'</text>'+
       '<text x="450" y="320" text-anchor="middle" fill="#506040" font-size="26">Лог пуст — нет данных для графика</text>';
     return;
@@ -1248,8 +1248,8 @@ function renderCharts() {
     _tipPts.w=pts;
     const ws=pts.map(d=>parseFloat(d.w)).filter(v=>!isNaN(v));
     const mn=ws.reduce((a,b)=>a<b?a:b),mx=ws.reduce((a,b)=>a>b?a:b),av=ws.reduce((a,b)=>a+b,0)/ws.length;
-    setText('c-wmin',mn.toFixed(2)); setText('c-wmax',mx.toFixed(2));
-    setText('c-wavg',av.toFixed(2)); setText('c-pts',pts.length);
+    setText('c-wmin',mn.toFixed(1)); setText('c-wmax',mx.toFixed(1));
+    setText('c-wavg',av.toFixed(1)); setText('c-pts',pts.length);
     drawLineSvg(document.getElementById('chart-w'),pts,'w','#f5a623',900,500,90,15,12,85,true);
   }
   if (_serVisible.t) {
@@ -1286,7 +1286,7 @@ function drawLineSvg(svg,pts,key,color,W,H,L,R,T,B,showAxes) {
     const v=mn+(mx-mn)*k/yLines,y=yS(v);
     html+=`<line x1="${L}" y1="${y.toFixed(1)}" x2="${W-R}" y2="${y.toFixed(1)}" stroke="#1a201a" stroke-width="1"/>`;
     if(showAxes) {
-      const dec=key==='b'?2:key==='t'?1:3;
+      const dec=key==='b'?2:key==='t'?1:1;
       html+=`<text x="${L-5}" y="${(y+9).toFixed(1)}" text-anchor="end" fill="#506040" font-size="26">${v.toFixed(dec)}</text>`;
     }
   }
@@ -1389,7 +1389,7 @@ function onTip(e,s){
   if(dot){dot.style.left=(ox+screenX)+'px';dot.style.top=(oy+screenY)+'px';dot.style.background=color;dot.style.borderColor='#fff';dot.style.boxShadow='0 0 6px '+color;dot.style.display='block';}
   // Tooltip
   const tip=document.getElementById('tip-'+s);
-  tip.innerHTML=`<b style="color:${color}">${isNaN(v)||v<=-90?'--':v.toFixed(key==='b'?3:2)+unit}</b><br>${esc(p.dt||'')}`;
+  tip.innerHTML=`<b style="color:${color}">${isNaN(v)||v<=-90?'--':v.toFixed(key==='b'?3:key==='t'?1:1)+unit}</b><br>${esc(p.dt||'')}`;
   tip.style.display='block';
   let tx=relX+12, ty=relY-58;
   if(tx+150>rect.width) tx=relX-160;
@@ -1883,7 +1883,7 @@ function archLoad(){
       document.getElementById('arch-range').textContent=sortedAsc[0].dt.substring(0,10)+' → '+sortedAsc[sortedAsc.length-1].dt.substring(0,10);
       document.getElementById('arch-count').textContent=rows.length+' (дней: '+days.length+')';
       const dEl=document.getElementById('arch-delta');
-      dEl.textContent=(delta>=0?'+':'')+delta.toFixed(2)+' кг';
+      dEl.textContent=(delta>=0?'+':'')+delta.toFixed(1)+' кг';
       dEl.style.color=delta>0?'var(--green)':(delta<-0.5?'var(--red)':'var(--text)');
       document.getElementById('arch-summary').style.display='block';
       // Получаем порог alert_delta из текущих настроек (для подсветки аномалий)
@@ -1924,10 +1924,10 @@ function archLoad(){
         let entriesHtml='';
         for(const e of d.entries){
           const time=e.dt.substring(11,16);
-          entriesHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span style="color:var(--text2)">'+time+'</span><span><b>'+e.w.toFixed(2)+'</b> кг'+(e.t>-90?' · '+e.t.toFixed(1)+'°C':'')+(e.b>0.5?' · 🔋'+e.b.toFixed(2)+'В':'')+'</span></div>';
+          entriesHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span style="color:var(--text2)">'+time+'</span><span><b>'+e.w.toFixed(1)+'</b> кг'+(e.t>-90?' · '+e.t.toFixed(1)+'°C':'')+(e.b>0.5?' · 🔋'+e.b.toFixed(2)+'В':'')+'</span></div>';
         }
-        const deltaText=d.deltaPrev===null?'':' <span style="color:'+(d.deltaPrev>=0?'var(--green)':'var(--red)')+';font-size:12px">('+(d.deltaPrev>=0?'+':'')+d.deltaPrev.toFixed(2)+' кг)</span>';
-        html+='<div style="border-left:3px solid '+markerColor+';padding:8px 10px;margin-bottom:6px;background:var(--bg);border-radius:4px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b>'+dt+' '+dow+' '+marker+'</b><span style="font-size:13px;color:var(--text2)">'+d.wLast.toFixed(2)+' кг'+deltaText+'</span></div>'+entriesHtml+'<div style="font-size:11px;color:var(--text3);margin-top:4px">Мин/Макс: '+d.wMin.toFixed(2)+'–'+d.wMax.toFixed(2)+' кг'+(d.tMin<Infinity?' · T: '+d.tMin.toFixed(1)+'–'+d.tMax.toFixed(1)+'°C':'')+'</div></div>';
+        const deltaText=d.deltaPrev===null?'':' <span style="color:'+(d.deltaPrev>=0?'var(--green)':'var(--red)')+';font-size:12px">('+(d.deltaPrev>=0?'+':'')+d.deltaPrev.toFixed(1)+' кг)</span>';
+        html+='<div style="border-left:3px solid '+markerColor+';padding:8px 10px;margin-bottom:6px;background:var(--bg);border-radius:4px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b>'+dt+' '+dow+' '+marker+'</b><span style="font-size:13px;color:var(--text2)">'+d.wLast.toFixed(1)+' кг'+deltaText+'</span></div>'+entriesHtml+'<div style="font-size:11px;color:var(--text3);margin-top:4px">Мин/Макс: '+d.wMin.toFixed(1)+'–'+d.wMax.toFixed(1)+' кг'+(d.tMin<Infinity?' · T: '+d.tMin.toFixed(1)+'–'+d.tMax.toFixed(1)+'°C':'')+'</div></div>';
       }
       list.innerHTML=html;
     })

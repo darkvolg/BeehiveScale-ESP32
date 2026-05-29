@@ -1223,7 +1223,7 @@ void show_screen_num(int n) {
 void display_screen_weight() {
   char buf[24];
   lcd_set_cursor(lcd,0, 0);
-  snprintf(buf, sizeof(buf), "Ves:%6.2f%ckg", sys.smoothedWeight, sys.weightStable ? '*' : ' ');
+  snprintf(buf, sizeof(buf), "Ves:%6.1f%ckg", sys.smoothedWeight, sys.weightStable ? '*' : ' ');
   lcd_print_padded(lcd, buf);
   lcd_set_cursor(lcd,0, 1);
   if (sys.currentTime.valid) {
@@ -1261,10 +1261,10 @@ void display_screen_diff() {
   char buf[24];
   float diff = sys.smoothedWeight - sys.prevWeight;
   lcd_set_cursor(lcd,0, 0);
-  snprintf(buf, sizeof(buf), "D:%+6.2fkg", diff);
+  snprintf(buf, sizeof(buf), "D:%+6.1fkg", diff);
   lcd_print_padded(lcd, buf);
   lcd_set_cursor(lcd,0, 1);
-  snprintf(buf, sizeof(buf), "Pred:%5.2fkg", sys.prevWeight);
+  snprintf(buf, sizeof(buf), "Pred:%5.1fkg", sys.prevWeight);
   lcd_print_padded(lcd, buf);
 }
 

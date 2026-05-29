@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 64
-#define FW_VERSION_SUFFIX ""  // 5.0.64 — icon температуры в TG (❄️/🌡️/🔥 по порогам <8/норма/>35°C). FIX: software restart (web 'Перезагрузить'/OTA) больше НЕ шлёт boot-TG. Раньше перезапуск для проверки рядом со слотом (21:01 при слоте 21:00) проскакивал ±10-мин фильтр и слал дубль. Теперь esp_reset_reason()==ESP_RST_SW → TG подавляется.
+#define FW_VERSION_PATCH 65
+#define FW_VERSION_SUFFIX ""  // 5.0.65 — вес округляется до десятых (0.1 кг) везде в отображении: TG-отчёты/тревоги, LCD-экран, главная страница, график (ось Y + тултип), архив, статистика. Причина: сотые (10г) ниже реального шума весов улья — ложная точность + дрожание графика. CSV-экспорт и Excel оставлены до сотых (для анализа). Батарея/температура не тронуты.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)
