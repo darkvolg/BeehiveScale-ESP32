@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 65
-#define FW_VERSION_SUFFIX ""  // 5.0.65 — вес округляется до десятых (0.1 кг) везде в отображении: TG-отчёты/тревоги, LCD-экран, главная страница, график (ось Y + тултип), архив, статистика. Причина: сотые (10г) ниже реального шума весов улья — ложная точность + дрожание графика. CSV-экспорт и Excel оставлены до сотых (для анализа). Батарея/температура не тронуты.
+#define FW_VERSION_PATCH 66
+#define FW_VERSION_SUFFIX ""  // 5.0.66 — FIX дубль записей в архиве. Раньше каждый wake давал 2 записи (08:00 schedLog + 08:02 pre-sleep log в check_auto_sleep). Теперь флаг g_logWrittenThisBoot гейтит pre-sleep лог: если schedLog/bootLog/interval уже писали — pre-sleep пропускается.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

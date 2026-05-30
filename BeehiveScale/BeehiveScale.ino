@@ -145,6 +145,7 @@ bool diagRunRequested = false;       // Флаг запуска диагност
 bool diagDone = false;               // Диагностика завершена (сводка на экране)
 bool tgReportPending = false;        // Запрос на отправку TG-отчёта при следующей возможности
 bool g_isSoftReset = false;          // v5.0.64: true при software restart (web "Перезагрузить"/OTA), а не power-on. Подавляет boot-TG, чтобы перезапуск для проверки не слал отчёт.
+bool g_logWrittenThisBoot = false;   // v5.0.66: true после первой записи лога в этом boot — подавляет pre-sleep лог в check_auto_sleep() (раньше каждый wake = 2 записи: schedLog 08:00 + pre-sleep 08:02, дубль в архиве).
 
 void handle_buttons();
 void process_weight();
@@ -560,6 +561,7 @@ void loop() {
       }
       log_append(sys.datetimeStr, sys.smoothedWeight,
                  sys.tempData.temperature, sys.tempData.humidity, sys.batVoltage, sys.batPercent);
+      g_logWrittenThisBoot = true;  // v5.0.66: подавить pre-sleep лог в check_auto_sleep
       // При срабатывании расписания — ставим флаг отправки TG-отчёта.
       // Это решает проблему "ESP спит между расписаниями": каждое запланированное
       // пробуждение в 09:00, 14:00, 21:00 → одна отправка в Telegram с весом и дельтой.
@@ -1814,8 +1816,10 @@ void check_auto_sleep() {
   WiFi.mode(WIFI_OFF);
 #endif
 
-  // Записываем лог перед сном
-  {
+  // Записываем лог перед сном — ТОЛЬКО если в этом boot ещё не писали.
+  // v5.0.66 FIX: раньше каждый wake = 2 записи (schedLog в 08:00 + pre-sleep тут в 08:02),
+  // дубль в архиве. Теперь если schedLog/bootLog/interval уже писали — пропускаем.
+  if (!g_logWrittenThisBoot) {
     log_append(sys.datetimeStr, sys.smoothedWeight,
                sys.tempData.temperature, sys.tempData.humidity, sys.batVoltage, sys.batPercent);
   }
