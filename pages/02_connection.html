@@ -584,11 +584,40 @@
                     <td>GND</td>
                     <td>короткое = следующий экран<br>2.5 сек = OK / на главную</td>
                 </tr>
+                <tr style="background:rgba(111,207,151,0.07)">
+                    <td><strong>SW2 «WAKE»</strong> (включение)</td>
+                    <td><strong>не к ESP32!</strong><br>затвор AO3401 (Gate)</td>
+                    <td>GND</td>
+                    <td><strong>Кнопка включения питания.</strong> Прошивка её не видит — это чистое железо на плате power-cut. Нажатие замыкает затвор транзистора на землю → питание подаётся → плата грузится. Соединения N5 и N6 в netlist модуля power-cut</td>
+                </tr>
             </tbody>
         </table>
         <div class="tip">
             <strong>💡 MAIN на RTC GPIO:</strong> D27 — это RTC GPIO, поэтому кнопка MAIN способна разбудить ESP32 из deep sleep через <code>esp_sleep_enable_ext0_wakeup()</code>.
         </div>
+        <div class="warning">
+            <strong>⚠️ Не путать три кнопки:</strong> <strong>MAIN</strong> и <strong>MENU</strong> — тактовые 6×6 на корпусе, идут на GPIO. <strong>SW2 WAKE</strong> — на плате power-cut, к процессору не подключена, только включает питание. Отдельно есть <strong>EN</strong> и <strong>BOOT</strong> на самой плате ESP32 DevKit — это сброс МК и режим прошивки, к нашей схеме отношения не имеют. Полная таблица органов управления — на странице <a href="04_operation.html">⚙️ Эксплуатация</a>.
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>⚡ Модуль power-cut (AO3401 + SW2) <span style="color:#6fcf97">🆕 v5.0.34</span></h2>
+        <p>Отдельная DIY-плата ~2.5×3 см, встаёт в разрыв питания между TP4056 и MT3608. Именно она даёт настоящее обесточивание между замерами — deep sleep ESP32 жрёт на порядок больше.</p>
+        <table class="connection-table">
+            <thead><tr><th>Деталь</th><th>Кол-во</th><th>Роль</th></tr></thead>
+            <tbody>
+                <tr><td><strong>AO3401</strong> P-MOSFET (SOT-23, маркировка A19T)</td><td>1</td><td>Ключ питания. Открыт = плата запитана</td></tr>
+                <tr><td><strong>1N5819</strong> Шоттки</td><td>2</td><td>Развязка двух источников управления затвором: D1 от DS3231 SQW, D2 от ESP</td></tr>
+                <tr><td><strong>100 кОм</strong></td><td>1</td><td>Подтяжка затвора к истоку — закрывает транзистор когда никто не тянет вниз</td></tr>
+                <tr><td><strong>SW2</strong> тактовая</td><td>1</td><td>Ручное включение (затвор → GND)</td></tr>
+                <tr><td><strong>SW1</strong> тумблер</td><td>1</td><td>Главный выключатель на корпусе, полное обесточивание</td></tr>
+            </tbody>
+        </table>
+        <p><strong>Как работает цикл:</strong> сработал будильник DS3231 → SQW уходит в LOW → через D1 тянет затвор вниз → транзистор открылся → плата загрузилась. Отработала (замер, Telegram, лог) → прошивка программирует следующий будильник и сбрасывает флаг → SQW отпускается → резистор 100 кОм закрывает транзистор → питание снято. Между замерами потребление определяется только «паразитками» схемы.</p>
+        <div class="danger">
+            <strong>⚠️ Без CR2032 в DS3231 весы не проснутся.</strong> Часы — единственный источник пробуждения по расписанию. Села батарейка часов — плата не включится сама, только вручную через SW2.
+        </div>
+        <p style="color:var(--text-muted);font-size:0.92em">Пошаговая сборка, распиновка AO3401 и полный netlist N1–N8 — в <code>hardware/POWER-CUT-INSTRUCTIONS.md</code> (есть и HTML-версия в той же папке).</p>
     </section>
 
     <section class="card">

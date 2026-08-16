@@ -224,7 +224,7 @@
     </div>
 
     <div class="card">
-        <h2>📟 Экраны LCD (8 штук, переключение кнопкой MENU)</h2>
+        <h2>📟 Экраны LCD (9 штук, переключение кнопкой MENU)</h2>
         <div class="screen-list">
             <div class="screen-item">
                 <div class="screen-num">Экран 1 — Вес и время</div>
@@ -275,7 +275,15 @@
                 <p style="margin-top:6px">CF = калибровочный коэффициент, N = пробуждений из сна</p>
             </div>
             <div class="screen-item">
-                <div class="screen-num">Экран 7 — Меню CF (для опытных)</div>
+                <div class="screen-num">Экран 7 — IP-адрес 🆕 v5.0.67</div>
+                <div class="lcd-screen">
+                    <div class="lcd-row"><span class="hl">192.168.0.145</span>   </div>
+                    <div class="lcd-row">mDNS: <span class="hl">vesy.local</span></div>
+                </div>
+                <p style="margin-top:6px">Адрес для входа на сайт — не нужно искать весы в админке роутера. В AP-режиме первая строка <code>AP 192.168.4.1</code>, без связи — <code>WiFi: net svyazi</code>. Этот же экран показывается 3 секунды сразу после подключения к Wi-Fi при включении.</p>
+            </div>
+            <div class="screen-item">
+                <div class="screen-num">Экран 8 — Меню CF (для опытных)</div>
                 <div class="lcd-screen">
                     <div class="lcd-row">CF:<span class="hl">20534.0</span> </div>
                     <div class="lcd-row">MAIN=Vojti      </div>
@@ -283,7 +291,7 @@
                 <p style="margin-top:6px">Точка входа в ручную подстройку коэффициента CF (для тонкой правки если веса «чуть-чуть врут»). <b>Обычным пользователям не нужно</b> — пропусти кнопкой MENU.</p>
             </div>
             <div class="screen-item">
-                <div class="screen-num">Экран 8 — Диагностика</div>
+                <div class="screen-num">Экран 9 — Диагностика</div>
                 <div class="lcd-screen">
                     <div class="lcd-row"><span class="hl">Diagnostika...</span></div>
                     <div class="lcd-row">HX711...    <span class="hl">OK</span></div>
@@ -1169,16 +1177,20 @@ monitor_speed = 115200</pre>
     <div class="card">
         <h2>🖥️ Управление кнопками</h2>
         <div class="btn-grid">
-            <div class="btn-card"><div class="btn-icon">📋</div><h4>MENU — короткое</h4><p>Переключение между 8 экранами LCD по кругу.</p><span class="btn-tag">«чик»</span></div>
+            <div class="btn-card"><div class="btn-icon">📋</div><h4>MENU — короткое</h4><p>Переключение между 9 экранами LCD по кругу.</p><span class="btn-tag">«чик»</span></div>
             <div class="btn-card"><div class="btn-icon">↩️</div><h4>MENU — 2.5 сек</h4><p>OK / возврат на Экран 1. В диалогах — подтверждение.</p><span class="btn-tag">удержание</span></div>
             <div class="btn-card"><div class="btn-icon">🔘</div><h4>MAIN — 3 сек</h4><p>ТАРА (сброс веса в 0). После отпуска — диалог подтверждения через MENU=OK.</p><span class="btn-tag">MEDIUM</span></div>
             <div class="btn-card"><div class="btn-icon">⚖️</div><h4>MAIN — 6 сек</h4><p>КАЛИБРОВКА. Запуск мастера калибровки по эталонной гире.</p><span class="btn-tag danger">LONG</span></div>
-            <div class="btn-card"><div class="btn-icon">🔧</div><h4>Экран 7 + MAIN</h4><p>Войти в режим ручной подстройки CF (для опытных). Обычным пасечникам не нужно.</p><span class="btn-tag">из Меню CF</span></div>
-            <div class="btn-card"><div class="btn-icon">🩺</div><h4>Экран 8 + MAIN</h4><p>Запустить самопроверку (HX711, DS18B20, RTC, батарея).</p><span class="btn-tag">из Диагностики</span></div>
+            <div class="btn-card"><div class="btn-icon">🔧</div><h4>Экран 8 + MAIN</h4><p>Войти в режим ручной подстройки CF (для опытных). Обычным пасечникам не нужно.</p><span class="btn-tag">из Меню CF</span></div>
+            <div class="btn-card"><div class="btn-icon">🩺</div><h4>Экран 9 + MAIN</h4><p>Запустить самопроверку (HX711, DS18B20, RTC, батарея).</p><span class="btn-tag">из Диагностики</span></div>
+            <div class="btn-card" style="border-color:#6fcf97"><div class="btn-icon">⚡</div><h4>SW2 «WAKE» — третья кнопка</h4><p><b>Включает питание весов вручную.</b> К процессору не подключена — замыкает затвор транзистора AO3401 на GND. Нужна потому, что между замерами плата обесточена и MAIN/MENU в это время мертвы. Держать ~0.5 сек. При работающих весах не делает ничего — это нормально.</p><span class="btn-tag">железо, не GPIO</span></div>
+            <div class="btn-card"><div class="btn-icon">🎚️</div><h4>SW1 — тумблер</h4><p>Главный выключатель на корпусе. OFF = полное обесточивание, время в DS3231 живёт на CR2032. На зиму и для перевозки.</p><span class="btn-tag">железо</span></div>
+            <div class="btn-card"><div class="btn-icon">🚫</div><h4>EN / BOOT на плате ESP32</h4><p>Штатные кнопки DevKit, <b>к нашей схеме не относятся</b>. EN = сброс микроконтроллера, BOOT = режим прошивки. В работе не нужны.</p><span class="btn-tag">не трогать</span></div>
             <div class="btn-card"><div class="btn-icon">😴</div><h4>Wake-press guard</h4><p>После пробуждения LCD первое нажатие MAIN не открывает тару — только зажигает экран. Защита от случайного тарирования.</p><span class="btn-tag">авто</span></div>
         </div>
 
         <div class="tip" style="margin-top:15px"><strong>💡 Символ * на Экране 1</strong>Появляется когда разброс веса за несколько измерений мал — показания стабильны. Используется для авто-фиксации значения.</div>
+        <div class="tip"><strong>💡 Как отличить SW2 от EN, если забыл какая где</strong>Нажми, когда экран погашен и весы спят. Загрузились со сплеша — это SW2 WAKE. Ноль реакции — это EN (он работает только когда питание уже подано).</div>
     </div>
 
     <div class="card">
@@ -1201,7 +1213,7 @@ monitor_speed = 115200</pre>
         <div class="steps" style="margin-top:15px">
             <div class="step"><div class="step-content"><h4>Sleep guard 60 сек</h4><p>Если до следующего расписания меньше 60 сек, ESP32 не уходит в сон (избегаем цикла «проснулся-уснул»).</p></div></div>
             <div class="step"><div class="step-content"><h4>Запись лога и отключение</h4><p>Лог пишется в LittleFS. <code>lastReportWeight</code>, <code>lastTempC</code>, эталон сохраняются в EEPROM. Wi-Fi и LCD отключаются. HX711 → power_down (1.5 мА → 1 мкА).</p></div></div>
-            <div class="step"><div class="step-content"><h4>Пробуждение</h4><p>Способов сейчас два:<br>• <b>По таймеру</b> (расписание) → новый замер + Telegram-отчёт. ESP32 сама считает сколько спать.<br>• <b>По кнопке MAIN</b> (D27 — RTC GPIO).<br>• Кнопкой RST на плате (полная перезагрузка).<br><br><span style="color:var(--warning)">Опционально (P3): по alarm DS3231 (D33 — RTC GPIO)</span> — задел на будущее, сейчас не задействовано. Подведено физически чтобы потом не перепаивать.</p></div></div>
+            <div class="step"><div class="step-content"><h4>Пробуждение</h4><p>С v5.0.34 плата между замерами <b>обесточена полностью</b> (power-cut), а не спит. Способов включения два:<br>• <b>Будильник DS3231 (Alarm2)</b> — основной. Сработало время из расписания → SQW уходит в LOW → открывает транзистор AO3401 → плата грузится, делает замер и Telegram-отчёт, затем снимает с себя питание.<br>• <b>Кнопка SW2 «WAKE»</b> — вручную, когда подошёл к улью и не хочешь ждать слота. Кнопки MAIN и MENU в обесточенном состоянии не работают: они висят на GPIO, а процессор без питания.<br><br><span style="color:var(--warning)">⚠️ Без живой CR2032 в DS3231 весы не проснутся сами вообще</span> — часы единственный источник пробуждения.</p></div></div>
         </div>
 
         <h3>Кнопка ☕ Продлить +10 мин</h3>
