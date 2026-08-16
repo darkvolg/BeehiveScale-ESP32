@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 67
-#define FW_VERSION_SUFFIX ""  // 5.0.67 — FEATURE: IP-адрес на LCD. Новый экран 7/9 (IP + mDNS-имя) + показ адреса 3 сек сразу после подключения к WiFi. mDNS-имя укорочено beehivescale → vesy (http://vesy.local), тем же именем представляется ArduinoOTA. Раньше IP уходил только в Serial — приходилось искать адрес в админке роутера.
+#define FW_VERSION_PATCH 68
+#define FW_VERSION_SUFFIX ""  // 5.0.68 — FIX: дубли TG-отчётов при boot-loop (анти-дубль через EEPROM, механизм v5.0.44 наконец задействован) + диагностика: причина последнего сброса (POWERON/PANIC/BROWNOUT/WDT) в /api/data и в карточке «Статус системы».
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

@@ -1,4 +1,6 @@
 #include "WebServerModule.h"
+
+extern const char* g_resetReason;  // v5.0.68: причина последнего сброса (задаётся в setup())
 #include "Version.h"
 #include <stdint.h>   // INT32_MIN используется в _handleBackupRestore
 #if defined(ESP8266)
@@ -378,6 +380,7 @@ input[type=checkbox]{width:auto}
       <div class="status-row"><div class="dot ok" id="sd-dot"></div><div class="status-lbl">Хранилище лог</div><div class="status-val" id="sd-val">--</div></div>
       <div class="status-row"><div class="dot ok" id="heap-dot"></div><div class="status-lbl">Free Heap</div><div class="status-val" id="heap-val">--</div></div>
       <div class="status-row"><div class="dot ok"></div><div class="status-lbl">Пробуждений</div><div class="status-val" id="wkc-val">--</div></div>
+      <div class="status-row"><div class="dot ok"></div><div class="status-lbl">Причина старта</div><div class="status-val" id="rst-val">--</div></div>
       <div class="status-row"><div class="dot ok"></div><div class="status-lbl">Cal. Factor</div><div class="status-val" id="cf-val">--</div></div>
       <div class="status-row"><div class="dot ok"></div><div class="status-lbl">Offset</div><div class="status-val" id="ofs-val">--</div></div>
       <div class="status-row"><div class="dot ok"></div><div class="status-lbl">Дата/время</div><div class="status-val" id="dt-val">--</div></div>
@@ -521,7 +524,7 @@ input[type=checkbox]{width:auto}
       <div>
         <div style="font-size:12px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Прямое скачивание с SD</div>
         <div class="btn-row" style="margin:0;flex-direction:column;gap:6px">
-          <button class="btn btn-green" style="width:100%" onclick="window.open('/api/log','_blank')">📥 Весь CSV (SD-карта)</button>
+          <button class="btn btn-green" style="width:100%" onclick="dlOpen('/api/log')">📥 Весь CSV (SD-карта)</button>
           <div style="display:flex;gap:6px">
             <input type="date" id="exp-date-sd" style="flex:1;padding:5px 8px">
             <button class="btn btn-amber" onclick="dlSdDate()">📥 За дату</button>
@@ -918,7 +921,7 @@ input[type=checkbox]{width:auto}
   <div class="card">
     <div class="card-title">⬇ Скачать</div>
     <button class="btn btn-blue" style="width:100%;margin-bottom:6px" onclick="archDownloadRange()">📥 CSV за выбранный период</button>
-    <button class="btn btn-green" style="width:100%" onclick="window.open('/api/log','_blank')">📥 Весь лог CSV</button>
+    <button class="btn btn-green" style="width:100%" onclick="dlOpen('/api/log')">📥 Весь лог CSV</button>
     <div style="font-size:12px;color:var(--text3);margin-top:8px">Файлы откроются в Excel / LibreOffice. Разделитель «;», десятичная запятая.</div>
   </div>
 </div>
@@ -1015,7 +1018,15 @@ function _fmtMmSs(sec) {
 // Решение: chain'им запросы — /api/data → /api/daystat → /api/log/json.
 // Дашборд рендерится сразу, лог тянется в фоне. Лог обновляем не чаще раз в 30 сек.
 let _lastLogFetch = 0;
+// v5.0.68: ESP32 WebServer синхронный — один запрос за раз. Пока идёт долгая
+// операция (архив за период, скачивание CSV), 5-секундный поллинг влезал в тот же
+// сокет: стрим обрывался на середине, JSON.parse падал → «Ошибка загрузки», а
+// скачивание файла срывалось. Пока _ioBusy — поллинг молчит.
+let _ioBusy = 0;   // millis-момент, до которого поллинг приостановлен
+function ioBusy(ms){ _ioBusy = Date.now() + ms; }
+function ioFree(){ _ioBusy = 0; }
 function fetchData() {
+  if (_ioBusy && Date.now() < _ioBusy) return;
   fetch('/api/data').then(r=>r.json()).then(updDash).catch(()=>{})
     .then(()=>fetch('/api/daystat').then(r=>r.json()).then(updHive).catch(()=>{}))
     .then(()=>{
@@ -1109,6 +1120,10 @@ function updDash(d) {
   setDot('sr-dot',d.sensor,'ok','err'); setText('sr-val',d.sensor?'OK':'Ошибка');
   setDot('wf-dot',d.wifi,'ok','warn'); setText('wf-val',d.wifi?'Подключён':'AP режим');
   setText('wkc-val',d.wakeups||0);
+  // v5.0.68: POWERON — плановое включение по расписанию (норма). Остальное — авария.
+  const rr=d.resetReason||'?';
+  const rstEl=document.getElementById('rst-val');
+  if(rstEl){rstEl.textContent=rr;rstEl.style.color=(rr==='POWERON'||rr==='SW'||rr==='EXT')?'':'var(--red)';}
   setText('cf-val',parseFloat(d.cf||0).toFixed(0));
   setText('ofs-val',d.offset||0);
   setText('dt-val',d.datetime||'--');
@@ -1472,7 +1487,10 @@ function _doExcel(){
 }
 
 function dlBlob(blob,name){const a=document.createElement('a');const u=URL.createObjectURL(blob);a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),5000);}
-function dlSdDate(){const d=document.getElementById('exp-date-sd').value;if(!d){toast('Выберите дату',true);return;}window.open('/api/log?date='+d,'_blank');}
+function dlSdDate(){const d=document.getElementById('exp-date-sd').value;if(!d){toast('Выберите дату',true);return;}dlOpen('/api/log?date='+d);}
+// v5.0.68: любое скачивание — через dlOpen: глушит поллинг на 30 сек, иначе
+// параллельный /api/data обрывает передачу файла.
+function dlOpen(url){ ioBusy(30000); toast('Готовлю файл…'); window.open(url,'_blank'); }
 
 // ── Backup ─────────────────────────────────────────────────────────────
 function downloadBackup(){window.open('/api/backup','_blank');}
@@ -1837,7 +1855,7 @@ function archDownloadRange(){
   const t=document.getElementById('arch-to').value;
   if(!f&&!t){toast('Выберите период',true);return;}
   const qs=[];if(f)qs.push('from='+f);if(t)qs.push('to='+t);
-  window.open('/api/log?'+qs.join('&'),'_blank');
+  dlOpen('/api/log?'+qs.join('&'));
 }
 // Группировка записей по дате (DD.MM.YYYY) + расчёт min/max/средний вес и темп
 function archGroup(rows){
@@ -1867,7 +1885,15 @@ function archLoad(){
   list.innerHTML='⏳ Загрузка...';
   document.getElementById('arch-summary').style.display='none';
   const qs=[];if(f)qs.push('from='+f);if(t)qs.push('to='+t);
-  fetch('/api/period'+(qs.length?'?'+qs.join('&'):''))
+  // v5.0.68: порог alertDelta забираем ПЕРЕД стримом периода (раньше запрос уходил
+  // параллельно и рвал стрим), поллинг на время загрузки ставим на паузу.
+  ioBusy(60000);
+  const cfgReq = window._alertDeltaCache
+    ? Promise.resolve()
+    : fetch('/api/config').then(r=>r.json())
+        .then(c=>{window._alertDeltaCache=c.alertDelta||1.0;}).catch(()=>{});
+  cfgReq
+    .then(()=>fetch('/api/period'+(qs.length?'?'+qs.join('&'):'')))
     .then(r=>r.json())
     .then(rows=>{
       if(!rows||rows.length===0){list.innerHTML='<div style="color:var(--text3);padding:10px 0">Нет записей за выбранный период.</div>';return;}
@@ -1930,12 +1956,14 @@ function archLoad(){
         html+='<div style="border-left:3px solid '+markerColor+';padding:8px 10px;margin-bottom:6px;background:var(--bg);border-radius:4px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b>'+dt+' '+dow+' '+marker+'</b><span style="font-size:13px;color:var(--text2)">'+d.wLast.toFixed(1)+' кг'+deltaText+'</span></div>'+entriesHtml+'<div style="font-size:11px;color:var(--text3);margin-top:4px">Мин/Макс: '+d.wMin.toFixed(1)+'–'+d.wMax.toFixed(1)+' кг'+(d.tMin<Infinity?' · T: '+d.tMin.toFixed(1)+'–'+d.tMax.toFixed(1)+'°C':'')+'</div></div>';
       }
       list.innerHTML=html;
+      ioFree();
     })
-    .catch(()=>{list.innerHTML='<div style="color:var(--red);padding:10px 0">Ошибка загрузки</div>';});
-  // Параллельно подтягиваем alertDelta из /api/config (один раз)
-  if(!window._alertDeltaCache){
-    fetch('/api/config').then(r=>r.json()).then(c=>{window._alertDeltaCache=c.alertDelta||1.0;}).catch(()=>{});
-  }
+    .catch(e=>{
+      ioFree();
+      list.innerHTML='<div style="color:var(--red);padding:10px 0">Ошибка загрузки. '
+        +'Если период большой — попробуй «Сегодня» или «Неделя»: весы отдают лог одним потоком '
+        +'и на длинном диапазоне запрос может не дойти.</div>';
+    });
 }
 
 // ── PWA: service worker registration ──────────────────────────────────
@@ -2088,6 +2116,7 @@ static void _handleData() {
   doc["datetime"] = *_wd.datetime;
   doc["uptime"]   = _uptime();
   doc["wakeups"]  = *_wd.wakeupCount;
+  doc["resetReason"] = g_resetReason;   // v5.0.68: POWERON / PANIC / BROWNOUT / WDT ...
   doc["cf"]       = *_wd.calibFactor;
   doc["offset"]   = *_wd.offset;
   doc["batV"]     = *_wd.batVoltage;

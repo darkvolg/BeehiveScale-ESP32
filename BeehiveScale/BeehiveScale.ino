@@ -150,6 +150,7 @@ bool diagRunRequested = false;       // Флаг запуска диагност
 bool diagDone = false;               // Диагностика завершена (сводка на экране)
 bool tgReportPending = false;        // Запрос на отправку TG-отчёта при следующей возможности
 bool g_isSoftReset = false;          // v5.0.64: true при software restart (web "Перезагрузить"/OTA), а не power-on. Подавляет boot-TG, чтобы перезапуск для проверки не слал отчёт.
+const char* g_resetReason = "?";     // v5.0.68: причина последнего сброса текстом — видна на сайте в «Статус системы».
 bool g_logWrittenThisBoot = false;   // v5.0.66: true после первой записи лога в этом boot — подавляет pre-sleep лог в check_auto_sleep() (раньше каждый wake = 2 записи: schedLog 08:00 + pre-sleep 08:02, дубль в архиве).
 
 void handle_buttons();
@@ -190,6 +191,24 @@ void setup() {
   // НЕ слать boot-TG (юзер перезапускает для проверки прошивки, не плановое пробуждение).
   // Плановое пробуждение DS3231 = power-cut → ESP_RST_POWERON.
   g_isSoftReset = (esp_reset_reason() == ESP_RST_SW);
+  // v5.0.68: причина последнего сброса — в текстовом виде для сайта.
+  // Нужна чтобы отличить плановое пробуждение по расписанию (POWERON — питание
+  // подал DS3231) от аварии (PANIC / WDT / BROWNOUT). Если плата шлёт отчёты
+  // чаще расписания — здесь будет видно почему.
+  switch (esp_reset_reason()) {
+    case ESP_RST_POWERON:  g_resetReason = "POWERON";  break;  // норма для power-cut
+    case ESP_RST_SW:       g_resetReason = "SW";       break;  // web «Перезагрузить» / OTA
+    case ESP_RST_DEEPSLEEP:g_resetReason = "DEEPSLEEP";break;  // fallback-сон (power-cut не сработал)
+    case ESP_RST_PANIC:    g_resetReason = "PANIC";    break;  // краш прошивки
+    case ESP_RST_INT_WDT:  g_resetReason = "INT_WDT";  break;
+    case ESP_RST_TASK_WDT: g_resetReason = "TASK_WDT"; break;
+    case ESP_RST_WDT:      g_resetReason = "WDT";      break;
+    case ESP_RST_BROWNOUT: g_resetReason = "BROWNOUT"; break;  // просадка питания
+    case ESP_RST_EXT:      g_resetReason = "EXT";      break;  // кнопка EN
+    default:               g_resetReason = "OTHER";    break;
+  }
+  Serial.print(F("[Boot] reset reason: "));
+  Serial.println(g_resetReason);
   setCpuFrequencyMhz(240);
   if (wakeCause != ESP_SLEEP_WAKEUP_UNDEFINED) {
     rtc_gpio_deinit(GPIO_NUM_27);
@@ -728,6 +747,44 @@ void loop() {
       // Без расписания + tg_on_interval=false → TG не шлётся вообще (тестовый режим).
       doTgReport = true;
     }
+    // v5.0.68: анти-дубль. tgSentSinceBoot живёт в RAM и обнуляется на каждом
+    // cold boot, а persist.* — в RTC-памяти, которую power-cut стирает. Если плата
+    // по любой причине перезагружается чаще, чем идут слоты (панику в sleep_enter,
+    // brown-out, boot-loop), каждый boot попадал в окно ±10 мин от слота и слал
+    // НОВЫЙ отчёт: юзер получал их каждые ~2 минуты. Единственное, что переживает
+    // power-cut, — EEPROM. Механизм для этого написан ещё в v5.0.44
+    // (save/load_last_tg_report_unix), но нигде не вызывался.
+    if (doTgReport && sys.currentTime.valid) {
+      DateTime nowDt(sys.currentTime.year, sys.currentTime.month, sys.currentTime.day,
+                     sys.currentTime.hour, sys.currentTime.minute, sys.currentTime.second);
+      uint32_t lastSent = load_last_tg_report_unix();
+      if (lastSent > 0 && nowDt.unixtime() > lastSent) {
+        // Порог = половина минимального интервала между слотами, но не больше 15 мин.
+        // При расписании 08:00/11:00/… это 15 мин; при слотах через 10 мин — 5 мин.
+        uint32_t guard = 900UL;
+        if (schedCnt >= 2) {
+          uint16_t minGap = 1440;
+          for (uint8_t i = 0; i < schedCnt; i++) {
+            for (uint8_t j = 0; j < schedCnt; j++) {
+              if (i == j) continue;
+              int d = (int)schedT[j] - (int)schedT[i];
+              if (d < 0) d += 1440;
+              if (d > 0 && d < minGap) minGap = (uint16_t)d;
+            }
+          }
+          uint32_t half = (uint32_t)minGap * 60UL / 2UL;
+          if (half < guard) guard = half;
+        }
+        if (nowDt.unixtime() - lastSent < guard) {
+          Serial.print(F("[TG] Skip duplicate — last report was "));
+          Serial.print(nowDt.unixtime() - lastSent);
+          Serial.println(F(" sec ago"));
+          doTgReport = false;
+          tgReportPending = false;
+        }
+      }
+    }
+
     if (doTgReport) {
       TimeStamp ts = rtc_now();
       String dt = rtc_format_datetime(ts);
@@ -799,6 +856,12 @@ void loop() {
         sleep_save_persistent(persist);
         // v5.0.4: дублируем reportWeight в EEPROM, чтобы дельта не пропадала после reset/прошивки.
         save_last_report(sys.smoothedWeight, true);
+        // v5.0.68: метка времени отправки — переживает power-cut, гасит дубли при boot-loop.
+        if (sys.currentTime.valid) {
+          DateTime sentDt(sys.currentTime.year, sys.currentTime.month, sys.currentTime.day,
+                          sys.currentTime.hour, sys.currentTime.minute, sys.currentTime.second);
+          save_last_tg_report_unix(sentDt.unixtime());
+        }
         // v5.0.5: то же для температуры — fallback после reset.
         if (reportTempC > -90.0f) save_last_temp(reportTempC);
         // v5.0.62: вечерний слот → сохранить вес как базу для привеса завтра.
