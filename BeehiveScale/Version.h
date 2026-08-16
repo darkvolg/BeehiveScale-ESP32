@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 66
-#define FW_VERSION_SUFFIX ""  // 5.0.66 — FIX дубль записей в архиве. Раньше каждый wake давал 2 записи (08:00 schedLog + 08:02 pre-sleep log в check_auto_sleep). Теперь флаг g_logWrittenThisBoot гейтит pre-sleep лог: если schedLog/bootLog/interval уже писали — pre-sleep пропускается.
+#define FW_VERSION_PATCH 67
+#define FW_VERSION_SUFFIX ""  // 5.0.67 — FEATURE: IP-адрес на LCD. Новый экран 7/9 (IP + mDNS-имя) + показ адреса 3 сек сразу после подключения к WiFi. mDNS-имя укорочено beehivescale → vesy (http://vesy.local), тем же именем представляется ArduinoOTA. Раньше IP уходил только в Serial — приходилось искать адрес в админке роутера.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚙️ Эксплуатация — BeehiveScale ESP32 v5.0.21</title>
+    <title>⚙️ Эксплуатация — BeehiveScale ESP32 v5.0.67</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -177,16 +177,16 @@
 <body>
     <div class="container">
         <div class="breadcrumb">
-            <a href="../index.html">🏠 Главная</a>
+            <a href="../manual.html">🏠 Главная</a>
             <span>→</span>
-            <a href="../User_Guide.html">📖 Руководство</a>
+            <a href="../manual.html">📖 Руководство</a>
             <span>→</span>
             <span>⚙️ Эксплуатация</span>
         </div>
 
         <header>
             <h1>⚙️ Эксплуатация</h1>
-            <p>Управление кнопками, 8 экранов LCD, калибровка, авто-сон, расписание</p>
+            <p>Управление кнопками, 9 экранов LCD, калибровка, авто-сон, расписание</p>
         </header>
 
         <nav class="nav-tabs">
@@ -228,12 +228,12 @@
                     <td><strong>КАЛИБРОВКА</strong> — мастер калибровки по эталонной гире (см. ниже).</td>
                 </tr>
                 <tr>
-                    <td><span class="button-action">В режиме CF (Экран 7)</span></td>
+                    <td><span class="button-action">В режиме CF (Экран 8)</span></td>
                     <td>короткое</td>
                     <td>Сменить шаг подстройки: 10 → 1 → 0.1 → 10 ...</td>
                 </tr>
                 <tr>
-                    <td><span class="button-action">В режиме CF (Экран 7)</span></td>
+                    <td><span class="button-action">В режиме CF (Экран 8)</span></td>
                     <td>длинное</td>
                     <td>Сохранить CF в EEPROM и выйти</td>
                 </tr>
@@ -249,7 +249,7 @@
                 <tr>
                     <td><span class="button-action">Короткое нажатие</span></td>
                     <td>&lt; 1 сек</td>
-                    <td>Переключение между 8 экранами LCD по кругу.</td>
+                    <td>Переключение между 9 экранами LCD по кругу.</td>
                 </tr>
                 <tr>
                     <td><span class="button-action">Удержание</span></td>
@@ -257,12 +257,12 @@
                     <td><strong>OK</strong> — подтверждение в диалогах (после MAIN MEDIUM = тара). Из меню — возврат на Экран 1.</td>
                 </tr>
                 <tr>
-                    <td><span class="button-action">В режиме CF (Экран 7)</span></td>
+                    <td><span class="button-action">В режиме CF (Экран 8)</span></td>
                     <td>короткое</td>
                     <td>CF + шаг (увеличить)</td>
                 </tr>
                 <tr>
-                    <td><span class="button-action">В режиме CF (Экран 7)</span></td>
+                    <td><span class="button-action">В режиме CF (Экран 8)</span></td>
                     <td>длинное</td>
                     <td>CF − шаг (уменьшить)</td>
                 </tr>
@@ -279,8 +279,8 @@
         </section>
 
         <section class="card">
-            <h2>📟 Экраны LCD (8 штук, переключение кнопкой MENU)</h2>
-            <p>В v5 добавлен <strong>Экран 8 — Диагностика</strong> (самотест железа). Остальные 7 экранов аналогичны v4.1, но содержимое чуть изменено.</p>
+            <h2>📟 Экраны LCD (9 штук, переключение кнопкой MENU)</h2>
+            <p>В v5 добавлены <strong>Экран 7 — IP-адрес</strong> (с v5.0.67) и <strong>Экран 9 — Диагностика</strong> (самотест железа). Остальные 7 экранов аналогичны v4.1, но содержимое чуть изменено.</p>
 
             <div class="screen-grid">
                 <div class="screen-card">
@@ -337,8 +337,17 @@
                     <div class="note">CF = калибровочный коэффициент. N = пробуждений из сна (растёт при срабатывании расписания).</div>
                 </div>
 
+                <div class="screen-card" style="border-left-color:var(--success)">
+                    <div class="num" style="color:var(--success)">Экран 7 — IP-адрес 🆕 v5.0.67</div>
+                    <div class="display-example">
+                        <div class="line1"><span class="hl">192.168.0.145</span>   </div>
+                        <div class="line2">mDNS: <span class="hl">vesy.local</span></div>
+                    </div>
+                    <div class="note">Адрес для входа на сайт — больше не нужно искать весы в админке роутера. В AP-режиме первая строка показывает <code>AP 192.168.4.1</code>. Нет связи — <code>WiFi: net svyazi</code>. Этот же адрес показывается 3 секунды сразу после подключения к Wi-Fi при включении.</div>
+                </div>
+
                 <div class="screen-card">
-                    <div class="num">Экран 7 — Меню калибровки</div>
+                    <div class="num">Экран 8 — Меню калибровки</div>
                     <div class="display-example">
                         <div class="line1">CF:<span class="hl">432167.0</span>  </div>
                         <div class="line2">MAIN=Vojti      </div>
@@ -347,7 +356,7 @@
                 </div>
 
                 <div class="screen-card" style="border-left-color:var(--success)">
-                    <div class="num" style="color:var(--success)">Экран 8 — Диагностика 🆕 v5</div>
+                    <div class="num" style="color:var(--success)">Экран 9 — Диагностика 🆕 v5</div>
                     <div class="display-example">
                         <div class="line1"><span class="hl">Diagnostika...</span></div>
                         <div class="line2">HX711...    <span class="hl">OK</span></div>
@@ -449,7 +458,7 @@
 
         <section class="card">
             <h2>💤 Авто-сон (Deep Sleep)</h2>
-            <p>После 3 минут бездействия (никто не нажимает кнопки и не открывает сайт) — автоматический переход в глубокий сон. Это даёт автономию <strong>30–40 дней</strong> на одной зарядке 18650.</p>
+            <p>После 3 минут бездействия (никто не нажимает кнопки и не открывает сайт) — автоматический переход в глубокий сон. Это даёт автономию <strong>~12 дней</strong> на одной зарядке 18650 (с нынешним AMS1117; после замены на HT7333 — 30–40 дней).</p>
 
             <div class="steps">
                 <div class="step">
@@ -468,7 +477,7 @@
                     <div class="step-content">
                         <h4>Пробуждение — несколько способов</h4>
                         <ul>
-                            <li>По <b>таймеру ESP32</b> (расписание) → новый замер + Telegram-отчёт. Это основной способ в v5.0.21</li>
+                            <li>По <b>будильнику DS3231 (Alarm2)</b> — с v5.0.47 это основной способ: между замерами питание платы снимается полностью (power-cut), RTC подаёт его обратно в нужное время → новый замер + Telegram-отчёт</li>
                             <li>По кнопке MAIN (D27 — RTC GPIO) — ручное пробуждение</li>
                             <li>Кнопкой RST на плате (полная перезагрузка, теряется RTC RAM)</li>
                             <li><span style="opacity:0.7">По alarm DS3231 (D33 — RTC GPIO) — <b>опц., задел на P3</b>. Сейчас не задействовано в коде, провод для будущего</span></li>
@@ -555,9 +564,9 @@
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale ESP32 v5.0.21</strong> — Умные весы для пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.67</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
-            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a> ·
+            <a href="../manual.html" style="color: var(--primary);">← Вернуться на главную</a> ·
             <a href="05_web.html" style="color: var(--primary);">Дальше: Веб-интерфейс →</a>
         </p>
     </footer>

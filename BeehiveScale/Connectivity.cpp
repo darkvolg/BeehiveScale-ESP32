@@ -64,9 +64,9 @@ bool wifi_init() {
   _wifiStatus = WIFI_CONNECTED;
   Serial.println(F("[WiFi] AP mode ready, IP: 192.168.4.1"));
 
-  if (MDNS.begin("beehivescale")) {
+  if (MDNS.begin(MDNS_HOSTNAME)) {
     MDNS.addService("http", "tcp", 80);
-    Serial.println(F("[mDNS] beehivescale.local ready"));
+    Serial.println(F("[mDNS] " MDNS_HOSTNAME ".local ready"));
   }
   return true;
 }
@@ -148,10 +148,10 @@ bool wifi_connect() {
   Serial.print(F("[WiFi] Connected, IP: "));
   Serial.println(WiFi.localIP());
 
-  // mDNS — доступ по http://beehivescale.local
-  if (MDNS.begin("beehivescale")) {
+  // mDNS — доступ по http://vesy.local без знания IP (v5.0.67)
+  if (MDNS.begin(MDNS_HOSTNAME)) {
     MDNS.addService("http", "tcp", 80);
-    Serial.println(F("[mDNS] beehivescale.local ready"));
+    Serial.println(F("[mDNS] " MDNS_HOSTNAME ".local ready"));
   }
   return true;
 }

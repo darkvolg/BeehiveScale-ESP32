@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚙️ Настройка — BeehiveScale ESP32 v5.0.21</title>
+    <title>⚙️ Настройка — BeehiveScale ESP32 v5.0.67</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -149,16 +149,16 @@
 <body>
     <div class="container">
         <div class="breadcrumb">
-            <a href="../index.html">🏠 Главная</a>
+            <a href="../manual.html">🏠 Главная</a>
             <span>→</span>
-            <a href="../User_Guide.html">📖 Руководство</a>
+            <a href="../manual.html">📖 Руководство</a>
             <span>→</span>
             <span>⚙️ Настройка</span>
         </div>
 
         <header>
             <h1>⚙️ Настройка прошивки</h1>
-            <p>Параметры скетча, библиотеки, partition, EEPROM-карта для BeehiveScale ESP32 v5.0.21</p>
+            <p>Параметры скетча, библиотеки, partition, EEPROM-карта для BeehiveScale ESP32 v5.0.67</p>
         </header>
 
         <nav class="nav-tabs">
@@ -192,7 +192,7 @@
 
         <section class="card">
             <h2>📌 Pin defines (Pins.h)</h2>
-            <p>Распиновка ESP32-WROOM-32 для v5.0.21:</p>
+            <p>Распиновка ESP32-WROOM-32 для v5.0.67:</p>
             <div class="code-block">
                 <code><span class="code-comment">// HX711 (тензодатчик)</span>
 <span class="code-keyword">#define</span> DT_PIN          <span class="code-number">16</span>     <span class="code-comment">// GPIO16 (D16) — данные</span>
@@ -202,7 +202,7 @@
 <span class="code-keyword">#define</span> SDA_PIN         <span class="code-number">21</span>     <span class="code-comment">// GPIO21 (D21)</span>
 <span class="code-keyword">#define</span> SCL_PIN         <span class="code-number">22</span>     <span class="code-comment">// GPIO22 (D22)</span>
 
-<span class="code-comment">// DS3231 alarm wake (RTC GPIO) — задел на P3, в v5.0.21 не задействован</span>
+<span class="code-comment">// DS3231 alarm wake (RTC GPIO) — power-cut пробуждение с v5.0.47</span>
 <span class="code-keyword">#define</span> SQW_PIN         <span class="code-number">33</span>     <span class="code-comment">// GPIO33 (D33) — пин подведён, прошивка пока не использует</span>
 
 <span class="code-comment">// DS18B20 1-Wire</span>
@@ -426,7 +426,7 @@ lib_deps =
         </section>
 
         <section class="card">
-            <h2>💾 EEPROM-карта v5.0.21</h2>
+            <h2>💾 EEPROM-карта v5.0.67</h2>
             <p>В EEPROM ESP32 (эмулируется через NVS, 512 байт) хранятся постоянные настройки:</p>
             <table class="config-table">
                 <tr><th>Адрес</th><th>Байт</th><th>Что хранится</th></tr>
@@ -507,6 +507,57 @@ lib_deps =
         </section>
 
         <section class="card">
+            <h2>🚨 Алерты в Telegram (v5.0.20) <span style="color:var(--success)">📝 описано с v5.0.67</span></h2>
+            <p>Кроме отчётов по расписанию весы шлют <strong>аварийные уведомления</strong>. Настраиваются в разделе «Telegram» на сайте. Каждый алерт уходит <strong>один раз</strong>, пока условие сохраняется (анти-спам), и сбрасывается с гистерезисом.</p>
+
+            <table class="config-table">
+                <tr>
+                    <th>Алерт</th>
+                    <th>Порог</th>
+                    <th>По умолчанию</th>
+                    <th>Когда срабатывает</th>
+                </tr>
+                <tr>
+                    <td><strong>🔋 Низкая батарея</strong></td>
+                    <td>0 — 5.0 В<br>(0 = выключен)</td>
+                    <td><strong style="color:var(--success)">3.6 В</strong><br><span style="font-size:0.85em">(до v5.0.67 было 0 = выключен)</span></td>
+                    <td>Напряжение упало ниже порога. Сброс — когда поднимется на 0.1 В выше (гистерезис). 3.6 В ≈ 15% — есть 1-2 дня на зарядку.</td>
+                </tr>
+                <tr>
+                    <td><strong>❄️ Низкая температура</strong></td>
+                    <td>−55 … +85 °C<br>(0 = выключен)</td>
+                    <td>0 (выключен)</td>
+                    <td>Улей остыл ниже порога — риск подмерзания зимой. Сброс при +2 °C выше порога.</td>
+                </tr>
+                <tr>
+                    <td><strong>🔥 Высокая температура</strong></td>
+                    <td>−55 … +85 °C<br>(0 = выключен)</td>
+                    <td>0 (выключен)</td>
+                    <td>Перегрев улья. Сброс при 2 °C ниже порога.</td>
+                </tr>
+                <tr>
+                    <td><strong>🕐 Ошибка RTC</strong></td>
+                    <td>вкл / выкл</td>
+                    <td><strong>включён</strong></td>
+                    <td>Часы DS3231 не отвечают или потеряли время (села CR2032). Без RTC не работает расписание.</td>
+                </tr>
+                <tr>
+                    <td><strong>🐝 Роение (v5.0.52)</strong></td>
+                    <td>авто: 3 × порог Δ,<br>минимум 1.5 кг</td>
+                    <td>активен</td>
+                    <td>Резкое падение веса между двумя замерами — вылет роя или кража. Порог считается от «Порога алерта Δ».</td>
+                </tr>
+            </table>
+
+            <div class="danger">
+                <strong>⚠️ Важно — реальный случай:</strong> до v5.0.67 алерт батареи по умолчанию был <strong>выключен</strong>. Банка 18650 разрядилась в улье, весы молча умерли, и хозяин заметил это только через <strong>две недели</strong> — по тишине в Telegram. Данные за этот период потеряны безвозвратно. Если прошивка старая или ты когда-то сохранял настройки алертов с нулевым порогом — <strong>проверь и поставь 3.6 В вручную</strong>.
+            </div>
+            <div class="tip">
+                <strong>💡 Как это работает после обновления:</strong> если ты <em>никогда</em> не сохранял настройки алертов, весы возьмут новый дефолт 3.6 В автоматически. Если сохранял — останется твоё старое значение (в том числе 0 = выключено), и порог надо выставить руками.
+            </div>
+        </section>
+
+        <section class="card">
             <h2>🔧 Serial команды (115200 бод)</h2>
             <p>Для отладки можно слать команды через USB-C → Serial монитор:</p>
             <table class="config-table">
@@ -529,9 +580,9 @@ lib_deps =
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale ESP32 v5.0.21</strong> — Умные весы для пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.67</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
-            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a> ·
+            <a href="../manual.html" style="color: var(--primary);">← Вернуться на главную</a> ·
             <a href="04_operation.html" style="color: var(--primary);">Дальше: Эксплуатация →</a>
         </p>
     </footer>

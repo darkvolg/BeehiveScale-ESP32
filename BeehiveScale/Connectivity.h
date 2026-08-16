@@ -21,6 +21,11 @@
 // ─── Режим WiFi ───────────────────────────────────────────────────────────
 
 
+// v5.0.67: mDNS-имя. Доступ по http://vesy.local без знания IP.
+// Короткое (4 буквы) — влезает на LCD-экран IP вместе с подписью и легко набирается с телефона.
+// Тем же именем представляется ArduinoOTA (порт в Arduino IDE).
+#define MDNS_HOSTNAME    "vesy"
+
 // Настройки точки доступа (AP mode)
 #define AP_SSID          "BeehiveScale"
 // AP password берётся из EEPROM через get_ap_pass()

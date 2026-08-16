@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌐 Веб-интерфейс — BeehiveScale ESP32 v5.0.21</title>
+    <title>🌐 Веб-интерфейс — BeehiveScale ESP32 v5.0.67</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -169,9 +169,9 @@
 <body>
     <div class="container">
         <div class="breadcrumb">
-            <a href="../index.html">🏠 Главная</a>
+            <a href="../manual.html">🏠 Главная</a>
             <span>→</span>
-            <a href="../User_Guide.html">📖 Руководство</a>
+            <a href="../manual.html">📖 Руководство</a>
             <span>→</span>
             <span>🌐 Веб-интерфейс</span>
         </div>
@@ -208,7 +208,38 @@
                 <strong>⚠️ Сразу смени пароль!</strong> После первого входа открой раздел «Wi-Fi → Пароли и доступ» и поставь свой пароль для admin (и желательно сменить пароль AP на не-дефолтный).
             </div>
             <div class="tip">
-                <strong>💡 Режим STA (домашний роутер):</strong> в разделе «Wi-Fi» можно переключить ESP32 на подключение к домашнему роутеру. Тогда сайт открывается с любого устройства в твоей сети по IP-адресу из роутера. Удобно когда улей рядом с домом — не нужно каждый раз переключать Wi-Fi.
+                <strong>💡 Режим STA (домашний роутер):</strong> в разделе «Wi-Fi» можно переключить ESP32 на подключение к домашнему роутеру. Тогда сайт открывается с любого устройства в твоей сети. Удобно когда улей рядом с домом — не нужно каждый раз переключать Wi-Fi.
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🔎 Как узнать IP в режиме STA <span style="color:var(--success)">🆕 v5.0.67</span></h2>
+            <p>В режиме STA адрес выдаёт роутер по DHCP, и он <strong>может меняться</strong> — особенно если весы долго были выключены и аренда истекла. Три способа попасть на сайт, от удобного к запасному:</p>
+
+            <table class="table">
+                <tr><th>Способ</th><th>Что делать</th><th>Плюсы / минусы</th></tr>
+                <tr>
+                    <td><strong>1. По имени (mDNS)</strong></td>
+                    <td>Открыть в браузере <span class="creds">http://vesy.local</span></td>
+                    <td>Адрес знать не нужно вообще, не меняется никогда. Работает на Windows 10+, iPhone, Mac, Android 12+. Может не работать при «изоляции клиентов» на роутере.</td>
+                </tr>
+                <tr>
+                    <td><strong>2. Посмотреть на весах</strong></td>
+                    <td>Кнопкой MENU долистать до <strong>Экрана 7 — IP</strong>. Адрес и mDNS-имя прямо на LCD. Он же показывается 3 секунды сразу после включения.</td>
+                    <td>Работает всегда, роутер не нужен. Надо подойти к улью.</td>
+                </tr>
+                <tr>
+                    <td><strong>3. Резервация в роутере</strong></td>
+                    <td>В админке роутера: DHCP → привязать MAC весов к постоянному IP.</td>
+                    <td>Самый надёжный. Настраивается один раз, дальше адрес не меняется никогда.</td>
+                </tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 Рекомендуется:</strong> сделать резервацию IP в роутере (способ 3) и запомнить <code>vesy.local</code> (способ 1). Экран 7 — страховка на случай смены роутера или сети.
+            </div>
+            <div class="warning">
+                <strong>⚠️ Имя изменилось в v5.0.67:</strong> раньше mDNS-имя было <code>beehivescale.local</code> (нигде не документировалось), теперь — <code>vesy.local</code>. Тем же именем весы представляются в Arduino IDE при прошивке по воздуху (OTA-порт <code>vesy</code>).
             </div>
         </section>
 
@@ -574,9 +605,9 @@
     </div>
 
     <footer>
-        <p><strong>🐝 BeehiveScale ESP32 v5.0.21</strong> — Умные весы для пчелиных ульев</p>
+        <p><strong>🐝 BeehiveScale ESP32 v5.0.67</strong> — Умные весы для пчелиных ульев</p>
         <p style="margin-top: 10px; font-size: 0.9em;">
-            <a href="../index.html" style="color: var(--primary);">← Вернуться на главную</a> ·
+            <a href="../manual.html" style="color: var(--primary);">← Вернуться на главную</a> ·
             <a href="06_telegram.html" style="color: var(--primary);">Дальше: Telegram →</a>
         </p>
     </footer>

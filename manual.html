@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeehiveScale ESP32 v5.0.21 — Руководство пользователя</title>
+    <title>BeehiveScale ESP32 v5.0.67 — Руководство пользователя</title>
     <style>
         :root {
             --primary: #f5a623;
@@ -163,7 +163,7 @@
 
 <!-- HEADER -->
 <header>
-    <h1>🐝 BeehiveScale ESP32 v5.0.21</h1>
+    <h1>🐝 BeehiveScale ESP32 v5.0.67</h1>
     <p class="subtitle">Умные весы для пчеловода — Руководство пользователя</p>
     <div class="badges">
         <span class="badge">ESP32-WROOM-32</span>
@@ -175,7 +175,18 @@
         <span class="badge">Telegram через CF Worker</span>
         <span class="badge">Deep Sleep + расписание</span>
         <span class="badge">📅 Архив + PWA</span>
+        <span class="badge">🔎 IP на LCD + vesy.local</span>
     </div>
+    <p style="margin-top:18px;font-size:0.95em;opacity:0.85">
+        Подробные разделы отдельными страницами:
+        <a href="pages/01_components.html">📦 Компоненты</a> ·
+        <a href="pages/02_connection.html">🔌 Подключение</a> ·
+        <a href="pages/03_settings.html">⚙️ Настройка</a> ·
+        <a href="pages/04_operation.html">🖥️ Эксплуатация</a> ·
+        <a href="pages/05_web.html">🌐 Веб-интерфейс</a> ·
+        <a href="pages/06_telegram.html">📱 Telegram</a> ·
+        <a href="pages/07_troubleshooting.html">🔍 Неисправности</a>
+    </p>
 </header>
 
 <!-- NAVIGATION -->
@@ -197,7 +208,7 @@
 <div id="overview" class="section active">
     <div class="card">
         <h2>📋 Что такое BeehiveScale ESP32</h2>
-        <p>BeehiveScale ESP32 — электронные весы для пчелиных ульев на базе <strong>ESP32-WROOM-32 DevKit V1</strong>. Устройство непрерывно измеряет вес улья, температуру, заряд батареи. Передаёт данные через встроенный Wi-Fi-сайт и шлёт отчёты в <strong>Telegram</strong> по расписанию. В режиме экономии (deep sleep между замерами) живёт на 18650 от 30 до 40 дней. Подходит для контроля взятка, зимовки, отслеживания роения.</p>
+        <p>BeehiveScale ESP32 — электронные весы для пчелиных ульев на базе <strong>ESP32-WROOM-32 DevKit V1</strong>. Устройство непрерывно измеряет вес улья, температуру, заряд батареи. Передаёт данные через встроенный Wi-Fi-сайт и шлёт отчёты в <strong>Telegram</strong> по расписанию. В режиме экономии (power-cut между замерами) живёт на 18650 ~12 дней с нынешним LDO AMS1117 и 30–40 дней после замены его на HT7333. Подходит для контроля взятка, зимовки, отслеживания роения.</p>
         <div class="comp-grid" style="margin-top:20px">
             <div class="comp-card"><div class="comp-icon">⚖️</div><h4>Измерение веса</h4><p>Точность 0.01 кг. EMA-сглаживание α=0.3. Спайк-фильтр от помех</p></div>
             <div class="comp-card"><div class="comp-icon">🌡️</div><h4>Температура</h4><p>DS18B20 в улье + DS3231 RTC — температура воздуха</p></div>
@@ -285,7 +296,7 @@
     <div class="card">
         <h2>🆕 Что нового в v5.0.x по сравнению с v4.x (ESP8266)</h2>
         <table class="conn-table">
-            <thead><tr><th>Что</th><th>Раньше (v4.1, ESP8266)</th><th>Сейчас (v5.0.21, ESP32)</th></tr></thead>
+            <thead><tr><th>Что</th><th>Раньше (v4.1, ESP8266)</th><th>Сейчас (v5.0.67, ESP32)</th></tr></thead>
             <tbody>
                 <tr><td class="from">Микроконтроллер</td><td>NodeMCU ESP8266</td><td class="to">ESP32-WROOM-32 DevKit V1</td></tr>
                 <tr><td class="from">Deep Sleep wake</td><td>Только кнопкой RST (GPIO16 занят HX711)</td><td class="to">Просыпается по расписанию из DS3231 / по таймеру</td></tr>
@@ -452,7 +463,7 @@
         <!-- DS3231 -->
         <div class="comp-detail" id="detail-ds3231" style="display:none">
             <h2>🕐 DS3231 RTC — часы реального времени</h2>
-            <p style="color:var(--text-muted);margin-bottom:12px">Сверхточный модуль часов с термокомпенсированным кварцем. Хранит время даже когда ESP32 выключена — за счёт батарейки CR2032 (на годы). В прошивке v5.0.21 даёт точное время для логов и расписания. Пин SQW подведён к D33 как <b>задел на будущее</b> — для alarm-wake (фаза P3).</p>
+            <p style="color:var(--text-muted);margin-bottom:12px">Сверхточный модуль часов с термокомпенсированным кварцем. Хранит время даже когда ESP32 выключена — за счёт батарейки CR2032 (на годы). Даёт точное время для логов и расписания. Пин SQW подведён к D33 и <b>обязателен с v5.0.47</b>: через Alarm2 реализован power-cut — между замерами питание платы снимается полностью, а DS3231 включает его обратно строго по расписанию.</p>
             <table class="conn-table">
                 <thead><tr><th>DS3231</th><th></th><th>ESP32</th><th>Цвет</th></tr></thead>
                 <tbody>
@@ -788,7 +799,7 @@
             </svg>
         </div>
 
-        <h3>Таблица пинов проекта v5.0.21</h3>
+        <h3>Таблица пинов проекта v5.0.67</h3>
         <table class="conn-table">
             <thead><tr><th>Метка платы</th><th>GPIO</th><th>Направление</th><th>Назначение</th><th>Цвет провода</th></tr></thead>
             <tbody>
@@ -1009,7 +1020,7 @@
                 <tr><td class="from">GND</td><td class="arrow">→</td><td class="to">GND</td><td class="note">Земля</td></tr>
                 <tr><td class="from">SDA</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D21</span> <span class="col-d">GPIO21</span></td><td class="note">Та же шина I²C что и LCD</td></tr>
                 <tr><td class="from">SCL</td><td class="arrow">→</td><td class="to"><span class="col-gpio">D22</span> <span class="col-d">GPIO22</span></td><td class="note">Та же шина I²C что и LCD</td></tr>
-                <tr><td class="from">SQW (INT) <span style="color:var(--warning)">опц.</span></td><td class="arrow">→</td><td class="to"><span class="col-gpio">D33</span> <span class="col-d">GPIO33</span></td><td class="note">Alarm output → ESP32 RTC GPIO. <b>Задел на P3</b> — в v5.0.21 не используется (расписание идёт через timer wakeup ESP32). Паяем сейчас, чтобы потом не перепаивать</td></tr>
+                <tr><td class="from">SQW (INT) <span style="color:var(--warning)">опц.</span></td><td class="arrow">→</td><td class="to"><span class="col-gpio">D33</span> <span class="col-d">GPIO33</span></td><td class="note">Alarm output → ESP32 RTC GPIO. <b>ОБЯЗАТЕЛЕН с v5.0.47</b> — на нём работает power-cut: DS3231 Alarm2 будит плату по расписанию, между замерами питание снимается полностью</td></tr>
             </tbody>
         </table>
         <div class="tip"><strong>💡 CR2032</strong>Установите батарейку в держатель DS3231 — часы не сбросятся при выключении весов. Хватает на 5–10 лет.</div>
@@ -1083,7 +1094,7 @@
             <thead><tr><th>Способ</th><th>Триггер</th><th>Описание</th></tr></thead>
             <tbody>
                 <tr><td class="from">Timer wakeup</td><td><span class="col-gpio">esp_sleep_enable_timer_wakeup()</span></td><td class="note">Просыпается через N секунд. Для расписания (например, через 8 часов до 09:00)</td></tr>
-                <tr><td class="from">EXT0 wake (DS3231) <span style="color:var(--warning)">опц.</span></td><td><span class="col-gpio">D33 = LOW</span></td><td class="note">DS3231 alarm подтягивает SQW в LOW → ESP32 просыпается. <b>Не реализовано в v5.0.21</b> — задел на P3</td></tr>
+                <tr><td class="from">EXT0 wake (DS3231) <span style="color:var(--warning)">опц.</span></td><td><span class="col-gpio">D33 = LOW</span></td><td class="note">DS3231 alarm подтягивает SQW в LOW → ESP32 просыпается. <b>Реализовано с v5.0.47</b> — основной механизм пробуждения (power-cut через Alarm2)</td></tr>
                 <tr><td class="from">Кнопка MAIN</td><td><span class="col-gpio">D27 = LOW</span></td><td class="note">Можно настроить ext0/ext1 wake для ручного пробуждения</td></tr>
                 <tr><td class="from">Кнопка RST на плате</td><td><span class="col-gpio">RST = 0</span></td><td class="note">Полная перезагрузка (теряется RTC RAM, но не EEPROM)</td></tr>
             </tbody>
@@ -1239,7 +1250,7 @@ monitor_speed = 115200</pre>
 <div id="schedule" class="section">
     <div class="card">
         <h2>⏰ Расписание замеров и отчётов</h2>
-        <p>В v5.0.x ESP32 умеет <strong>просыпаться по расписанию</strong>, делать замер, слать отчёт в Telegram и снова уходить в сон. Это даёт автономию <strong>30–40 дней</strong> на одной зарядке 18650 (3000 мА·ч).</p>
+        <p>В v5.0.x ESP32 умеет <strong>просыпаться по расписанию</strong>, делать замер, слать отчёт в Telegram и снова уходить в сон. Это даёт автономию <strong>~12 дней</strong> на одной зарядке 18650 (3000 мА·ч) с нынешним LDO AMS1117 — и <strong>30–40 дней</strong> после его замены на HT7333.</p>
 
         <div class="comp-grid" style="margin-top:20px">
             <div class="comp-card"><div class="comp-icon">⏰</div><h4>Время замера</h4><p>Через сайт ставишь время, например 09:00 — каждый день в это время замер</p></div>

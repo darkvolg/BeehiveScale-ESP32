@@ -68,7 +68,12 @@
 #define WEIGHT_SAVE_THR     0.05f
 // v5.0.0: тарирование = удержание MAIN ~3 сек (MEDIUM_PRESS), калибровка = ~6 сек (LONG_PRESS).
 // Старая логика двойного нажатия с подтверждением убрана.
-#define MENU_SCREENS           8
+#define MENU_SCREENS           9
+// Индексы экранов меню. Экраны SCR_CALIB и SCR_DIAG — интерактивные:
+// на них MAIN SHORT работает иначе и не действует auto-return на главный.
+#define SCR_IP                 6   // v5.0.67: IP + mDNS-имя (чтобы не лазить в роутер)
+#define SCR_CALIB              7
+#define SCR_DIAG               8
 #define STABLE_BUF_SIZE        6
 #define STABLE_THR             0.02f
 #define STABLE_SAVE_MIN_MS 600000UL  // 10 мин — минимальный интервал между EEPROM-записями при стабилизации
@@ -336,6 +341,17 @@ void setup() {
     Serial.println(F("[WiFi] Connected"));
     Serial.print(F("[WiFi] IP: "));
     Serial.println(WiFi.status() == WL_CONNECTED ? WiFi.localIP() : WiFi.softAPIP());
+    // v5.0.67: показать адрес на LCD 3 сек сразу после коннекта. Постоянный доступ
+    // к нему — экран 7/9 в меню, это лишь чтобы не искать его после включения.
+    {
+      IPAddress bootIp = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
+      char ipBuf[24];
+      snprintf(ipBuf, sizeof(ipBuf), "%s", bootIp.toString().c_str());
+      lcd_clear_buf(lcd);
+      lcd_set_cursor(lcd, 0, 0); lcd_print_padded(lcd, ipBuf);
+      lcd_set_cursor(lcd, 0, 1); lcd_print_padded(lcd, "mDNS: " MDNS_HOSTNAME ".local");
+      for (int i = 0; i < 30; i++) { delay(100); yield(); app_wdt_reset(); }
+    }
     // v5.0.31: NTP sync ВОЗВРАЩЁН (Core 3.1.3 фиксит баг ESP32 Core 3.0.7).
     // При lost power RTC (после смены ESP32 / отключения CR2032) — без NTP
     // sync alarm power-cut не работает корректно (программирует на invalid time).
@@ -349,7 +365,7 @@ void setup() {
     start_webserver();
     // ArduinoOTA — обновление прошивки по воздуху. Пароль хранится в EEPROM,
     // дефолт "ota_beehive" при пустом блоке credentials (UI показывает warning).
-    ArduinoOTA.setHostname("beehivescale");
+    ArduinoOTA.setHostname(MDNS_HOSTNAME);
     {
       char otaPassBuf[32];
       get_ota_pass(otaPassBuf, sizeof(otaPassBuf));
@@ -480,10 +496,10 @@ void loop() {
   handle_buttons();
   process_weight();
 
-  // Auto-return на главный экран (1/8) если 20 сек никто не трогал кнопки.
-  // Не применяется на экранах 6 (calib menu) и 7 (diag) — там пользователь работает с интерфейсом.
+  // Auto-return на главный экран (1/9) если 20 сек никто не трогал кнопки.
+  // Не применяется на экранах calib menu и diag — там пользователь работает с интерфейсом.
   static const unsigned long AUTO_HOME_MS = 20000UL;
-  if (sys.menuScreen != 0 && sys.menuScreen != 6 && sys.menuScreen != 7
+  if (sys.menuScreen != 0 && sys.menuScreen != SCR_CALIB && sys.menuScreen != SCR_DIAG
       && (millis() - lastActivityTime) > AUTO_HOME_MS) {
     sys.menuScreen = 0;
     sys.needsRedraw = true;
@@ -889,9 +905,9 @@ void handle_buttons() {
   }
 
   // Визуальная подсказка во время удержания MAIN — пользователь сразу видит, когда отпускать.
-  // Показываем только на главных экранах (не 6/7, там SHORT работает иначе).
+  // Показываем только на главных экранах (не calib/diag, там SHORT работает иначе).
   static int mainHintLevel = 0;
-  if (sys.menuScreen != 6 && sys.menuScreen != 7) {
+  if (sys.menuScreen != SCR_CALIB && sys.menuScreen != SCR_DIAG) {
     unsigned long mainHeld = button_hold_ms(btnMain);
     int level = 0;
     if (mainHeld >= 6000UL) level = 2;
@@ -919,17 +935,17 @@ void handle_buttons() {
   static unsigned long tareConfirmStartMs = 0;
 
   if (actMain == SHORT_PRESS) {
-    if (sys.menuScreen == 6) {
+    if (sys.menuScreen == SCR_CALIB) {
       adjust_calibration();
       sys.needsRedraw = true;
-    } else if (sys.menuScreen == 7) {
+    } else if (sys.menuScreen == SCR_DIAG) {
       diagRunRequested = true;
       sys.needsRedraw = true;
     }
     // На остальных экранах MAIN SHORT — ничего: просто разбудили дисплей.
   }
 
-  if (actMain == MEDIUM_PRESS && sys.menuScreen != 6 && sys.menuScreen != 7) {
+  if (actMain == MEDIUM_PRESS && sys.menuScreen != SCR_CALIB && sys.menuScreen != SCR_DIAG) {
     tareConfirmPending = true;
     tareConfirmStartMs = millis();
     lcd_clear_buf(lcd);
@@ -937,7 +953,7 @@ void handle_buttons() {
     lcd_set_cursor(lcd,0, 1); lcd_print_padded(lcd, "Otmena cherez 4s");
   }
 
-  if (actMain == LONG_PRESS && sys.menuScreen != 6 && sys.menuScreen != 7) {
+  if (actMain == LONG_PRESS && sys.menuScreen != SCR_CALIB && sys.menuScreen != SCR_DIAG) {
     tareConfirmPending = false;
     perform_calibration();
     sys.needsRedraw = true;
@@ -1184,28 +1200,32 @@ void process_temperature() {
   // При ошибке CRC — сохраняем предыдущее валидное значение
 }
 
-void show_screen_num(int n);  // forward declaration
+void show_screen_num(int n);   // forward declaration
+void display_screen_ip();      // forward declaration
 
 void update_interface() {
   if (!sys.needsRedraw) return;
   if (sys.menuScreen != sys.lastMenuScreen) {
     lcd_clear_buf(lcd);
-    if (sys.lastMenuScreen == 7) diagDone = false;  // сброс диагностики при уходе
+    if (sys.lastMenuScreen == SCR_DIAG) diagDone = false;  // сброс диагностики при уходе
     sys.lastMenuScreen = sys.menuScreen;
   }
   if (sys.sensorReady) {
     switch (sys.menuScreen) {
-      case 0: display_screen_weight();     break;
-      case 1: display_screen_diff();       break;
-      case 2: display_screen_battery();    break;
-      case 3: display_screen_temp();       break;
-      case 4: display_screen_datetime();   break;
-      case 5: display_screen_status();     break;
-      case 6: display_screen_calib_menu(); break;
-      case 7: display_screen_diag();       break;
+      case 0:         display_screen_weight();     break;
+      case 1:         display_screen_diff();       break;
+      case 2:         display_screen_battery();    break;
+      case 3:         display_screen_temp();       break;
+      case 4:         display_screen_datetime();   break;
+      case 5:         display_screen_status();     break;
+      case SCR_IP:    display_screen_ip();         break;
+      case SCR_CALIB: display_screen_calib_menu(); break;
+      case SCR_DIAG:  display_screen_diag();       break;
     }
-    // Номер экрана в правом углу строки 2 (экраны 6,7 — особый формат)
-    if (sys.menuScreen < 6) {
+    // Номер экрана в правом углу строки 2.
+    // На IP-экране не показываем — строка 2 занята mDNS-именем целиком;
+    // на calib/diag — свой формат.
+    if (sys.menuScreen < SCR_IP) {
       show_screen_num(sys.menuScreen);
     }
   } else {
@@ -1298,6 +1318,29 @@ void display_screen_battery() {
     lcd_print_padded(lcd, "!LOW BATTERY!   ");
   } else {
     lcd_print_padded(lcd, "Li-Ion 1S       ");
+  }
+}
+
+// v5.0.67: экран с IP-адресом и mDNS-именем.
+// Раньше IP печатался только в Serial — чтобы зайти на сайт, приходилось искать
+// адрес в админке роутера. DHCP-аренда меняется, особенно после долгого простоя.
+void display_screen_ip() {
+  char buf[24];
+  lcd_set_cursor(lcd, 0, 0);
+  if (sys.wifiOk) {
+    // Режим определяем по факту: STA мог упасть и уйти в AP-fallback (см. loop()).
+    bool apMode = (get_wifi_mode() == 0) || (WiFi.getMode() == WIFI_AP);
+    IPAddress ip = apMode ? WiFi.softAPIP() : WiFi.localIP();
+    if (apMode) snprintf(buf, sizeof(buf), "AP %s", ip.toString().c_str());
+    else        snprintf(buf, sizeof(buf), "%s", ip.toString().c_str());
+    lcd_print_padded(lcd, buf);
+    lcd_set_cursor(lcd, 0, 1);
+    // Ровно 16 символов — потому имя хоста короткое (см. MDNS_HOSTNAME).
+    lcd_print_padded(lcd, "mDNS: " MDNS_HOSTNAME ".local");
+  } else {
+    lcd_print_padded(lcd, "WiFi: net svyazi");
+    lcd_set_cursor(lcd, 0, 1);
+    lcd_print_padded(lcd, "IP nedostupen   ");
   }
 }
 
