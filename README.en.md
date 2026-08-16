@@ -15,7 +15,7 @@
 
 Weight · Temperature · Wi-Fi · Telegram · Charts · 26+ days autonomy
 
-[📖 User Manual](manual.html) · [🔌 Wiring](pages/02_connection.html) · [📱 Telegram](pages/06_telegram.html) · [📋 CHANGELOG](CHANGELOG.md)
+[📖 User Manual](manual.html) · [📋 CHANGELOG](CHANGELOG.md)
 
 </div>
 
@@ -118,7 +118,7 @@ ESP32-WROOM-32 DevKit V1
 └─ 3V3 ─ HX711, DS3231, DS18B20
 ```
 
-Full table: [`hardware/pinout.md`](hardware/pinout.md). SVG schematic: [`pages/02_connection.html`](pages/02_connection.html).
+Full table: [`hardware/pinout.md`](hardware/pinout.md). SVG schematic — the "🔌 Подключение" tab in [`manual.html`](manual.html).
 
 ---
 
@@ -210,14 +210,7 @@ Detailed: [📖 user manual](manual.html).
 
 | Document | Description |
 |---|---|
-| [📖 manual.html](manual.html) | Full user manual — 11 tabs (components, pinout, firmware, web, schedule, Telegram, FAQ) |
-| [🔧 pages/01_components.html](pages/01_components.html) | Detailed components list |
-| [🔌 pages/02_connection.html](pages/02_connection.html) | Wiring diagram, SVG schematics |
-| [⚙ pages/03_settings.html](pages/03_settings.html) | Firmware settings, EEPROM map |
-| [🖥 pages/04_operation.html](pages/04_operation.html) | Button control, 8 LCD screens |
-| [🌐 pages/05_web.html](pages/05_web.html) | Web interface, API endpoints, PWA |
-| [📱 pages/06_telegram.html](pages/06_telegram.html) | Telegram setup via CF Worker |
-| [🩺 pages/07_troubleshooting.html](pages/07_troubleshooting.html) | Diagnostics and FAQ |
+| [📖 manual.html](manual.html) | **The single user manual** — 12 tabs: overview, components, pinout, wiring, firmware, operation, calibration, schedule, web, Telegram, troubleshooting, FAQ |
 | [📋 hardware/pinout.md](hardware/pinout.md) | Full pinout with wire colors |
 | [📋 CHANGELOG.md](CHANGELOG.md) | Version history |
 | [🎨 hardware/pcb_layout_v1.excalidraw](hardware/pcb_layout_v1.excalidraw) | PCB schematic (Excalidraw) |

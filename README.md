@@ -15,7 +15,7 @@
 
 Вес · Температура · Wi-Fi · Telegram · Графики · 26+ дней автономии
 
-[📖 Руководство пользователя](manual.html) · [🔌 Подключение](pages/02_connection.html) · [📱 Telegram](pages/06_telegram.html) · [📋 CHANGELOG](CHANGELOG.md)
+[📖 Руководство пользователя](manual.html) · [📋 CHANGELOG](CHANGELOG.md)
 
 </div>
 
@@ -118,7 +118,7 @@ ESP32-WROOM-32 DevKit V1
 └─ 3V3 ─ HX711, DS3231, DS18B20
 ```
 
-Полная таблица: [`hardware/pinout.md`](hardware/pinout.md). SVG-схема подключения: [`pages/02_connection.html`](pages/02_connection.html).
+Полная таблица: [`hardware/pinout.md`](hardware/pinout.md). SVG-схема подключения — вкладка «🔌 Подключение» в [`manual.html`](manual.html).
 
 ---
 
@@ -210,14 +210,7 @@ pio run -e esp32dev -t upload
 
 | Документ | Описание |
 |---|---|
-| [📖 manual.html](manual.html) | Полное руководство пользователя — 11 вкладок (компоненты, распиновка, прошивка, веб, расписание, Telegram, FAQ) |
-| [🔧 pages/01_components.html](pages/01_components.html) | Подробный список компонентов |
-| [🔌 pages/02_connection.html](pages/02_connection.html) | Схема подключения, SVG-диаграммы |
-| [⚙ pages/03_settings.html](pages/03_settings.html) | Настройки прошивки, EEPROM-карта |
-| [🖥 pages/04_operation.html](pages/04_operation.html) | Управление кнопками, 8 экранов LCD |
-| [🌐 pages/05_web.html](pages/05_web.html) | Веб-интерфейс, API-эндпоинты, PWA |
-| [📱 pages/06_telegram.html](pages/06_telegram.html) | Настройка Telegram через CF Worker |
-| [🩺 pages/07_troubleshooting.html](pages/07_troubleshooting.html) | Диагностика и FAQ |
+| [📖 manual.html](manual.html) | **Единственное руководство пользователя** — 12 вкладок: обзор, компоненты, распиновка, подключение, прошивка, работа, калибровка, расписание, веб, Telegram, неисправности, FAQ |
 | [📋 hardware/pinout.md](hardware/pinout.md) | Полная распиновка с цветами проводов |
 | [📋 CHANGELOG.md](CHANGELOG.md) | История изменений по версиям |
 | [🎨 hardware/pcb_layout_v1.excalidraw](hardware/pcb_layout_v1.excalidraw) | PCB-схема (Excalidraw) |

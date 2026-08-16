@@ -156,6 +156,87 @@
             .step { flex-direction: column; }
             .step::before { width: 38px; height: 38px; min-width: 38px; font-size: 1em; }
         }
+    
+        /* ─── классы, перенесённые из pages/*.html при слиянии в единый файл (v5.0.67) ─── */
+        .icon { width: 30px; height: 30px; fill: currentColor; }
+        .components-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
+        .component-card { background: var(--card-light); border-radius: 15px; padding: 20px; text-align: center; transition: all 0.3s ease; border: 1px solid var(--border); }
+        .component-card:hover { transform: scale(1.05); border-color: var(--primary); box-shadow: 0 10px 30px rgba(245, 166, 35, 0.2); }
+        .component-card svg { width: 100px; height: 100px; margin-bottom: 15px; }
+        .component-card h4 { color: var(--text); margin-bottom: 8px; font-size: 1.1em; }
+        .component-card p { font-size: 0.9em; color: var(--text-muted); }
+        .component-card .specs { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 0.85em; color: var(--primary); }
+        .connection-table { width: 100%; border-collapse: collapse; margin: 20px 0; background: var(--card-light); border-radius: 10px; overflow: hidden; }
+        .connection-table th { background: var(--card-bg); padding: 15px; text-align: left; color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .connection-table td { padding: 12px 15px; border-bottom: 1px solid var(--border); }
+        .connection-table tr:hover { background: rgba(245, 166, 35, 0.05); }
+        .connection-table .pin { font-family: 'Courier New', monospace; background: var(--primary); color: #000; padding: 3px 10px; border-radius: 5px; font-weight: bold; }
+        .warning { background: rgba(245, 166, 35, 0.1); border-left: 4px solid var(--primary); padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0; }
+        .breadcrumb { margin-bottom: 20px; padding: 10px 0; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; }
+        .breadcrumb span { color: var(--text-muted); margin: 0 10px; }
+        .components-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+        .diagram-container { background: #0a0a0a; border-radius: 15px; padding: 20px; margin: 20px 0; overflow-x: auto; border: 1px solid var(--border); }
+        .diagram-container svg { max-width: 100%; height: auto; }
+        .connection-table .wire-color { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: middle; margin-right: 6px; border: 1px solid #333; }
+        .code-block { background: #0a0a0a; border: 1px solid var(--border); border-radius: 8px; padding: 20px; overflow-x: auto; margin: 15px 0; }
+        .code-block code { font-family: 'Courier New', monospace; color: var(--primary); font-size: 0.9em; white-space: pre; display: block; }
+        .code-comment { color: #666; }
+        .code-string { color: var(--success); }
+        .code-number { color: var(--info); }
+        .code-keyword { color: var(--danger); }
+        .info-box { background: rgba(86, 204, 242, 0.1); border-left: 4px solid var(--info); padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0; }
+        .config-table { width: 100%; border-collapse: collapse; margin: 15px 0; background: var(--card-light); border-radius: 10px; overflow: hidden; }
+        .config-table th { background: var(--card-bg); padding: 12px; text-align: left; color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .config-table td { padding: 12px; border-bottom: 1px solid var(--border); }
+        .config-table tr:hover { background: rgba(245, 166, 35, 0.05); }
+        .config-table code { background: #0a0a0a; padding: 2px 6px; border-radius: 3px; color: var(--primary); }
+        .table { width: 100%; border-collapse: collapse; margin: 15px 0; background: var(--card-light); border-radius: 10px; overflow: hidden; }
+        .table th { background: var(--card-bg); padding: 12px; text-align: left; color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .table td { padding: 12px; border-bottom: 1px solid var(--border); }
+        .table tr:hover { background: rgba(245, 166, 35, 0.05); }
+        .pin { font-family: 'Courier New', monospace; background: var(--primary); color: #000; padding: 3px 10px; border-radius: 5px; font-weight: bold; }
+        .display-example { background: #0a1a3a; border: 3px solid #1a2a5a; border-radius: 8px; padding: 18px 22px; font-family: 'Courier New', monospace; display: inline-block; margin: 10px 0; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 15px rgba(80,150,255,0.15); }
+        .display-example .line1, .display-example .line2 { font-size: 1.2em; color: #e8e8ff; line-height: 1.7; letter-spacing: 2px; white-space: pre; font-weight: bold; }
+        .button-action { display: inline-block; padding: 8px 16px; border: 2px solid var(--primary); border-radius: 8px; color: var(--primary); font-weight: bold; margin: 3px; font-size: 0.9em; }
+        .screen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 15px; }
+        .screen-card { background: var(--card-light); border-radius: 12px; padding: 16px; border-left: 4px solid var(--primary); }
+        .screen-card .num { color: var(--primary); font-weight: bold; font-size: 0.85em; margin-bottom: 6px; }
+        .screen-card h4 { color: var(--text); margin-bottom: 8px; }
+        .table code { background: #0a0a0a; padding: 2px 6px; border-radius: 3px; color: var(--primary); font-size: 0.9em; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 20px 0; }
+        .feature { background: var(--card-light); padding: 20px; border-radius: 10px; border: 1px solid var(--border); text-align: center; }
+        .feature-icon { font-size: 3em; margin-bottom: 10px; }
+        .feature h4 { color: var(--primary); margin-bottom: 10px; }
+        .feature p { color: var(--text-muted); font-size: 0.95em; }
+        .api-endpoint { background: var(--card-light); border-left: 4px solid var(--primary); padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        .api-method { display: inline-block; padding: 4px 12px; border-radius: 5px; font-weight: bold; font-size: 0.85em; margin-right: 10px; }
+        .api-method.get { background: var(--info); color: #000; }
+        .api-method.post { background: var(--primary); color: #000; }
+        .api-url { font-family: 'Courier New', monospace; color: var(--text); }
+        .creds { display: inline-block; background: var(--card-light); border: 1px solid var(--primary); border-radius: 6px; padding: 4px 12px; font-family: 'Courier New', monospace; color: var(--primary); font-weight: bold; }
+        .cf-box { background: rgba(244, 129, 32, 0.1); border-left: 4px solid var(--cf); padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0; }
+        .cf-box strong { color: var(--cf); }
+        .tg-box { background: rgba(0, 136, 204, 0.1); border-left: 4px solid var(--telegram); padding: 15px; border-radius: 0 10px 10px 0; margin: 20px 0; }
+        .tg-box strong { color: var(--telegram); }
+        .tg-message { background: rgba(0, 136, 204, 0.1); border: 1px solid var(--telegram); border-radius: 10px; padding: 18px; margin: 15px 0; font-family: 'Segoe UI', sans-serif; font-size: 0.95em; line-height: 1.7; }
+        .tg-message strong { color: var(--telegram); }
+        .arch-diagram { background: #0a0a0a; border-radius: 12px; padding: 25px; margin: 20px 0; border: 1px solid var(--border); text-align: center; }
+        .arch-step { display: inline-block; background: var(--card-light); padding: 12px 18px; border-radius: 10px; margin: 10px 6px; border: 2px solid var(--border); font-size: 0.95em; }
+        .arch-step.esp { border-color: var(--primary); color: var(--primary); }
+        .arch-step.cf { border-color: var(--cf); color: var(--cf); }
+        .arch-arrow { color: var(--text-muted); font-size: 1.4em; vertical-align: middle; padding: 0 6px; }
+        .arch-step { display: block; margin: 8px 0; }
+        .problem-box { background: rgba(235, 87, 87, 0.1); border-left: 4px solid var(--danger); padding: 20px; margin: 20px 0; border-radius: 0 10px 10px 0; }
+        .problem-box h4 { color: var(--danger); margin-bottom: 10px; font-size: 1.2em; }
+        .problem-box ul { margin-left: 20px; margin-top: 10px; }
+        .problem-box li { margin-bottom: 8px; color: var(--text-muted); }
+        .display-example { background: #0a1a3a; border: 3px solid #1a2a5a; border-radius: 8px; padding: 14px 18px; font-family: 'Courier New', monospace; display: inline-block; margin: 10px 0; }
+        .display-example .line1 { color: var(--danger); font-size: 1.15em; line-height: 1.6; }
+        .display-example .line2 { color: var(--text-muted); font-size: 1em; line-height: 1.6; }
+        .led { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .led.ok { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .led.err { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
     </style>
 </head>
 <body>
@@ -177,16 +258,6 @@
         <span class="badge">📅 Архив + PWA</span>
         <span class="badge">🔎 IP на LCD + vesy.local</span>
     </div>
-    <p style="margin-top:18px;font-size:0.95em;opacity:0.85">
-        Подробные разделы отдельными страницами:
-        <a href="pages/01_components.html">📦 Компоненты</a> ·
-        <a href="pages/02_connection.html">🔌 Подключение</a> ·
-        <a href="pages/03_settings.html">⚙️ Настройка</a> ·
-        <a href="pages/04_operation.html">🖥️ Эксплуатация</a> ·
-        <a href="pages/05_web.html">🌐 Веб-интерфейс</a> ·
-        <a href="pages/06_telegram.html">📱 Telegram</a> ·
-        <a href="pages/07_troubleshooting.html">🔍 Неисправности</a>
-    </p>
 </header>
 
 <!-- NAVIGATION -->
@@ -201,6 +272,7 @@
     <div class="nav-tab" onclick="showSection('schedule',this)">⏰ Расписание</div>
     <div class="nav-tab" onclick="showSection('webui',this)">🌐 Веб</div>
     <div class="nav-tab" onclick="showSection('telegram',this)">📱 Telegram</div>
+    <div class="nav-tab" onclick="showSection('troubles',this)">🔍 Неисправности</div>
     <div class="nav-tab" onclick="showSection('faq',this)">❓ FAQ</div>
 </div>
 
@@ -640,6 +712,74 @@
         .comp-card.active { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 0 20px rgba(245,166,35,0.3); }
         .comp-card { cursor: pointer; }
     </style>
+
+<div class="card">
+            <h2>🛒 Где купить компоненты</h2>
+            <table class="connection-table">
+                <thead>
+                    <tr>
+                        <th>Компонент</th>
+                        <th>AliExpress</th>
+                        <th>Россия</th>
+                        <th>Цена (примерно)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ESP32-WROOM-32 DevKit V1</td>
+                        <td>✅ Есть (DOIT)</td>
+                        <td>✅ Чип и Дип, Амперка</td>
+                        <td>400–700 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>HX711 + тензодатчик 50 кг</td>
+                        <td>✅ Есть набор</td>
+                        <td>✅ Чип и Дип</td>
+                        <td>400–700 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>LCD 1602 I²C (PCF8574, 0x27)</td>
+                        <td>✅ Есть</td>
+                        <td>✅ Амперка</td>
+                        <td>250–400 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>RTC DS3231 + CR2032</td>
+                        <td>✅ Есть</td>
+                        <td>✅ Чип и Дип</td>
+                        <td>150–250 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>DS18B20 в гильзе (1 м кабель)</td>
+                        <td>✅ Есть</td>
+                        <td>✅ Есть</td>
+                        <td>150–250 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>AS21 V6.0 (TP4056+DW01+Boost)</td>
+                        <td>✅ Есть (искать «AS21 V6 18650»)</td>
+                        <td>⚠ Реже</td>
+                        <td>250–400 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>Li-Ion 18650 (Samsung INR/Sony VTC)</td>
+                        <td>✅ Есть</td>
+                        <td>✅ Есть</td>
+                        <td>200–500 ₽</td>
+                    </tr>
+                    <tr>
+                        <td>HT7333 SOT-89 (опционально)</td>
+                        <td>✅ Есть (10 шт ~200 ₽)</td>
+                        <td>⚠ Реже</td>
+                        <td>20–40 ₽/шт</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="tip">
+                <strong>💰 Итого «полный комплект»:</strong> 2000–3500 ₽ за все детали (без корпуса). Это разовые расходы, дальше только электричество для зарядки.
+            </div>
+        </div>
+
 </div>
 
 <!-- ===== PINOUT ===== -->
@@ -1052,18 +1192,7 @@
     </div>
 
     <!-- Buttons -->
-    <div class="card">
-        <h2>🔘 Кнопки управления</h2>
-        <div class="tip"><strong>💡 Внешние резисторы не нужны</strong>Используется INPUT_PULLUP — встроенные резисторы ESP32. Кнопки подключаются напрямую: пин → GND.</div>
-        <table class="conn-table">
-            <thead><tr><th>Кнопка</th><th>Пин 1</th><th>Пин 2</th><th>Функция</th></tr></thead>
-            <tbody>
-                <tr><td class="from">MAIN (тара / калибровка)</td><td><span class="col-gpio">D27</span> <span class="col-d">GPIO27</span></td><td>GND</td><td class="note">3 сек = ТАРА (диалог), 6 сек = КАЛИБРОВКА. RTC GPIO ⚡</td></tr>
-                <tr><td class="from">MENU (навигация / OK)</td><td><span class="col-gpio">D26</span> <span class="col-d">GPIO26</span></td><td>GND</td><td class="note">короткое = следующий экран, 2.5 сек = OK / на главную</td></tr>
-            </tbody>
-        </table>
-        <div class="tip"><strong>💡 MAIN на RTC GPIO</strong>D27 — RTC GPIO, поэтому кнопка MAIN может разбудить ESP32 из deep sleep (через <code>esp_sleep_enable_ext0_wakeup</code>).</div>
-    </div>
+    
 
     <!-- Battery -->
     <div class="card">
@@ -1108,6 +1237,110 @@
             </tbody>
         </table>
     </div>
+
+<div class="card">
+        <h2>🔋 Подключение AS21 V6.0 → ESP32</h2>
+        <p>AS21 V6.0 — модуль «всё-в-одном» (TP4056 + DW01 + Boost 5 В + holder 18650). Имеет три точки подключения к ESP32 и один microUSB для зарядки:</p>
+
+        <table class="connection-table">
+            <thead>
+                <tr>
+                    <th>Выход AS21</th>
+                    <th>→ Куда</th>
+                    <th>Назначение</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="pin">5V_OUT</span></td>
+                    <td>ESP32 <strong>VIN</strong> (+ LCD VCC)</td>
+                    <td>5 В после Boost — питает ESP32 и LCD</td>
+                </tr>
+                <tr>
+                    <td><span class="pin">GND</span></td>
+                    <td>ESP32 <strong>GND</strong></td>
+                    <td>Общая земля для всей схемы</td>
+                </tr>
+                <tr>
+                    <td><span class="pin">BAT+ (raw)</span></td>
+                    <td>Делитель R1+R2 → ESP32 <strong>D34</strong></td>
+                    <td>Прямое напряжение банки (3.0–4.2 В) для ADC батареи</td>
+                </tr>
+                <tr>
+                    <td><span class="pin">microUSB</span></td>
+                    <td>Зарядное 5 В</td>
+                    <td>Только для зарядки — не для прошивки!</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="tip">
+            <strong>💡 Два USB-разъёма на устройстве:</strong>
+            <ul style="margin-top:8px;margin-left:20px">
+                <li><strong>microUSB на AS21</strong> — зарядка батареи 18650</li>
+                <li><strong>USB-C на ESP32 DevKit V1</strong> — прошивка и Serial-консоль (115200)</li>
+            </ul>
+            Можно подключать оба одновременно.
+        </div>
+    </div>
+
+<div class="card">
+        <h2>⚡ Модуль power-cut (AO3401 + SW2) <span style="color:#6fcf97">🆕 v5.0.34</span></h2>
+        <p>Отдельная DIY-плата ~2.5×3 см, встаёт в разрыв питания между TP4056 и MT3608. Именно она даёт настоящее обесточивание между замерами — deep sleep ESP32 жрёт на порядок больше.</p>
+        <table class="connection-table">
+            <thead><tr><th>Деталь</th><th>Кол-во</th><th>Роль</th></tr></thead>
+            <tbody>
+                <tr><td><strong>AO3401</strong> P-MOSFET (SOT-23, маркировка A19T)</td><td>1</td><td>Ключ питания. Открыт = плата запитана</td></tr>
+                <tr><td><strong>1N5819</strong> Шоттки</td><td>2</td><td>Развязка двух источников управления затвором: D1 от DS3231 SQW, D2 от ESP</td></tr>
+                <tr><td><strong>100 кОм</strong></td><td>1</td><td>Подтяжка затвора к истоку — закрывает транзистор когда никто не тянет вниз</td></tr>
+                <tr><td><strong>SW2</strong> тактовая</td><td>1</td><td>Ручное включение (затвор → GND)</td></tr>
+                <tr><td><strong>SW1</strong> тумблер</td><td>1</td><td>Главный выключатель на корпусе, полное обесточивание</td></tr>
+            </tbody>
+        </table>
+        <p><strong>Как работает цикл:</strong> сработал будильник DS3231 → SQW уходит в LOW → через D1 тянет затвор вниз → транзистор открылся → плата загрузилась. Отработала (замер, Telegram, лог) → прошивка программирует следующий будильник и сбрасывает флаг → SQW отпускается → резистор 100 кОм закрывает транзистор → питание снято. Между замерами потребление определяется только «паразитками» схемы.</p>
+        <div class="danger">
+            <strong>⚠️ Без CR2032 в DS3231 весы не проснутся.</strong> Часы — единственный источник пробуждения по расписанию. Села батарейка часов — плата не включится сама, только вручную через SW2.
+        </div>
+        <p style="color:var(--text-muted);font-size:0.92em">Пошаговая сборка, распиновка AO3401 и полный netlist N1–N8 — в <code>hardware/POWER-CUT-INSTRUCTIONS.md</code> (есть и HTML-версия в той же папке).</p>
+    </div>
+
+
+<div class="card">
+        <h2>🔘 Кнопки управления</h2>
+        <div class="tip">
+            <strong>💡 Внешние резисторы не нужны</strong> — используется INPUT_PULLUP, встроенные подтяжки ESP32. Кнопка просто соединяет пин с GND.
+        </div>
+        <table class="connection-table">
+            <thead><tr><th>Кнопка</th><th>Пин 1</th><th>Пин 2</th><th>Функции</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><strong>MAIN</strong> (тара / калибровка)</td>
+                    <td><span class="pin">D27 / GPIO27</span></td>
+                    <td>GND</td>
+                    <td>3 сек = ТАРА (с диалогом MENU=OK)<br>6 сек = КАЛИБРОВКА. <strong>RTC GPIO ⚡</strong> — может разбудить из deep sleep</td>
+                </tr>
+                <tr>
+                    <td><strong>MENU</strong> (навигация / OK)</td>
+                    <td><span class="pin">D26 / GPIO26</span></td>
+                    <td>GND</td>
+                    <td>короткое = следующий экран<br>2.5 сек = OK / на главную</td>
+                </tr>
+                <tr style="background:rgba(111,207,151,0.07)">
+                    <td><strong>SW2 «WAKE»</strong> (включение)</td>
+                    <td><strong>не к ESP32!</strong><br>затвор AO3401 (Gate)</td>
+                    <td>GND</td>
+                    <td><strong>Кнопка включения питания.</strong> Прошивка её не видит — это чистое железо на плате power-cut. Нажатие замыкает затвор транзистора на землю → питание подаётся → плата грузится. Соединения N5 и N6 в netlist модуля power-cut</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="tip">
+            <strong>💡 MAIN на RTC GPIO:</strong> D27 — это RTC GPIO, поэтому кнопка MAIN способна разбудить ESP32 из deep sleep через <code>esp_sleep_enable_ext0_wakeup()</code>.
+        </div>
+        <div class="warning">
+            <strong>⚠️ Не путать три кнопки:</strong> <strong>MAIN</strong> и <strong>MENU</strong> — тактовые 6×6 на корпусе, идут на GPIO. <strong>SW2 WAKE</strong> — на плате power-cut, к процессору не подключена, только включает питание. Отдельно есть <strong>EN</strong> и <strong>BOOT</strong> на самой плате ESP32 DevKit — это сброс МК и режим прошивки, к нашей схеме отношения не имеют. Полная таблица органов управления — на странице <a href="04_operation.html">⚙️ Эксплуатация</a>.
+        </div>
+    </div>
+
 </div>
 
 <!-- ===== FIRMWARE ===== -->
@@ -1170,6 +1403,414 @@ board_build.partitions = huge_app.csv
 monitor_speed = 115200</pre>
         <p style="margin-top:10px;color:var(--text-muted)">Команда: <code>pio run -e esp32dev -t upload</code></p>
     </div>
+
+<div class="card">
+            <h2>📋 Основные файлы прошивки</h2>
+            <p>Все настройки и константы вынесены в заголовочные файлы скетча <code>BeehiveScale/</code>. Полный список:</p>
+            <table class="config-table">
+                <tr><th>Файл</th><th>За что отвечает</th></tr>
+                <tr><td><code>BeehiveScale.ino</code></td><td>Главный файл, setup() и loop()</td></tr>
+                <tr><td><code>Pins.h</code></td><td>Распиновка GPIO (DT, SCK, SDA, SCL, BTN_*, BAT_ADC...)</td></tr>
+                <tr><td><code>Settings.h</code></td><td>Тайминги, EMA, пороги, авто-сон, EEPROM-адреса</td></tr>
+                <tr><td><code>Connectivity.h</code></td><td>Дефолты Wi-Fi (AP), URL CF Worker, секреты</td></tr>
+                <tr><td><code>WebUI.cpp</code></td><td>HTTP-сервер, REST API, HTML-страницы</td></tr>
+                <tr><td><code>Telegram.cpp</code></td><td>Отправка отчёта через CF Worker</td></tr>
+                <tr><td><code>Schedule.cpp</code></td><td>Расписание, alarm DS3231, deep sleep</td></tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 Большинство настроек теперь редактируется через сайт</strong> (<code>192.168.4.1</code>) — не нужно перепрошивать. В прошивке остаются только дефолты и распиновка.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>📌 Pin defines (Pins.h)</h2>
+            <p>Распиновка ESP32-WROOM-32 для v5.0.67:</p>
+            <div class="code-block">
+                <code><span class="code-comment">// HX711 (тензодатчик)</span>
+<span class="code-keyword">#define</span> DT_PIN          <span class="code-number">16</span>     <span class="code-comment">// GPIO16 (D16) — данные</span>
+<span class="code-keyword">#define</span> SCK_PIN         <span class="code-number">17</span>     <span class="code-comment">// GPIO17 (D17) — тактирование</span>
+
+<span class="code-comment">// I²C шина (LCD + DS3231)</span>
+<span class="code-keyword">#define</span> SDA_PIN         <span class="code-number">21</span>     <span class="code-comment">// GPIO21 (D21)</span>
+<span class="code-keyword">#define</span> SCL_PIN         <span class="code-number">22</span>     <span class="code-comment">// GPIO22 (D22)</span>
+
+<span class="code-comment">// DS3231 alarm wake (RTC GPIO) — power-cut пробуждение с v5.0.47</span>
+<span class="code-keyword">#define</span> SQW_PIN         <span class="code-number">33</span>     <span class="code-comment">// GPIO33 (D33) — пин подведён, прошивка пока не использует</span>
+
+<span class="code-comment">// DS18B20 1-Wire</span>
+<span class="code-keyword">#define</span> TEMP_PIN        <span class="code-number">4</span>      <span class="code-comment">// GPIO4 (D4) + 4.7kΩ pullup → 3V3</span>
+
+<span class="code-comment">// Кнопки</span>
+<span class="code-keyword">#define</span> BTN_MAIN_PIN    <span class="code-number">27</span>     <span class="code-comment">// GPIO27 (D27, RTC GPIO ⚡) — тара/калибровка</span>
+<span class="code-keyword">#define</span> BTN_MENU_PIN    <span class="code-number">26</span>     <span class="code-comment">// GPIO26 (D26) — навигация/OK</span>
+
+<span class="code-comment">// ADC батареи</span>
+<span class="code-keyword">#define</span> BAT_ADC_PIN     <span class="code-number">34</span>     <span class="code-comment">// GPIO34 (D34, ADC1_CH6) — input only!</span>
+
+<span class="code-comment">// I²C адреса</span>
+<span class="code-keyword">#define</span> LCD_ADDR        <span class="code-number">0x27</span>   <span class="code-comment">// LCD 1602 (или 0x3F на некоторых модулях)</span>
+<span class="code-keyword">#define</span> RTC_ADDR        <span class="code-number">0x68</span>   <span class="code-comment">// DS3231 (фиксированный)</span></code>
+            </div>
+            <div class="warning">
+                <strong>⚠️ Не использовать GPIO 6–11</strong> — это внутренняя SPI flash ESP32. Плата перестанет загружаться. Также избегать 0/2/12/15 (strapping) и 1/3 (USB-Serial).
+            </div>
+        </div>
+
+<div class="card">
+            <h2>⏱️ Тайминги и фильтры (Settings.h)</h2>
+            <div class="code-block">
+                <code><span class="code-comment">// Чтение HX711</span>
+<span class="code-keyword">#define</span> SCALE_READ_INTERVAL_MS   <span class="code-number">600</span>     <span class="code-comment">// Период замера (было 1500 на ESP8266)</span>
+<span class="code-keyword">#define</span> EMA_ALPHA_DEFAULT        <span class="code-number">0.3f</span>    <span class="code-comment">// Дефолт сглаживания (было 0.2)</span>
+<span class="code-keyword">#define</span> SPIKE_FILTER_KG          <span class="code-number">5.0f</span>    <span class="code-comment">// Резкие выбросы &gt; 5 кг отбрасываются</span>
+<span class="code-keyword">#define</span> DEAD_BAND_KG             <span class="code-number">0.005f</span>  <span class="code-comment">// Зона нечувствительности возле 0</span>
+
+<span class="code-comment">// Авто-сон</span>
+<span class="code-keyword">#define</span> AUTO_SLEEP_MS            <span class="code-number">180000UL</span>  <span class="code-comment">// 180 сек = 3 мин (настраивается через сайт)</span>
+<span class="code-keyword">#define</span> SLEEP_GUARD_SEC          <span class="code-number">60</span>      <span class="code-comment">// Не уходим в сон если до alarm &lt; 60 сек</span>
+<span class="code-keyword">#define</span> KEEPALIVE_BONUS_MS       <span class="code-number">600000UL</span>  <span class="code-comment">// «☕ +10 мин» добавляет 10 минут</span>
+
+<span class="code-comment">// LCD</span>
+<span class="code-keyword">#define</span> LCD_REFRESH_MS           <span class="code-number">200</span>     <span class="code-comment">// Перерисовка экрана (с dirty-check, без мерцания)</span>
+<span class="code-keyword">#define</span> I2C_FREQ_HZ              <span class="code-number">400000</span>  <span class="code-comment">// 400 kHz fast mode (было 100 kHz)</span>
+
+<span class="code-comment">// Кнопки</span>
+<span class="code-keyword">#define</span> BTN_DEBOUNCE_MS          <span class="code-number">50</span>
+<span class="code-keyword">#define</span> BTN_MEDIUM_MS            <span class="code-number">3000</span>    <span class="code-comment">// MAIN MEDIUM = тара</span>
+<span class="code-keyword">#define</span> BTN_LONG_MS              <span class="code-number">6000</span>    <span class="code-comment">// MAIN LONG = калибровка</span>
+<span class="code-keyword">#define</span> BTN_MENU_HOLD_MS         <span class="code-number">2500</span>    <span class="code-comment">// MENU удержание = OK</span></code>
+            </div>
+            <div class="tip">
+                <strong>💡 EMA альфа:</strong> 0.05–0.2 — сильное сглаживание, плавно но запаздывает. <strong>0.3</strong> (дефолт) — баланс. 0.5–0.9 — быстрая реакция, шумно.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>📶 Wi-Fi настройки (Connectivity.h)</h2>
+            <h3>Дефолтные значения AP-режима (ESP32 создаёт свою сеть)</h3>
+            <div class="code-block">
+                <code><span class="code-comment">// Дефолтная точка доступа (можно сменить через сайт)</span>
+<span class="code-keyword">#define</span> AP_SSID_DEFAULT      <span class="code-string">"BeehiveScale"</span>
+<span class="code-keyword">#define</span> AP_PASS_DEFAULT      <span class="code-string">"12345678"</span>     <span class="code-comment">// мин. 8 символов</span>
+<span class="code-keyword">#define</span> AP_CHANNEL           <span class="code-number">1</span>
+<span class="code-keyword">#define</span> AP_MAX_CLIENTS       <span class="code-number">4</span>
+<span class="code-comment">// IP по умолчанию: 192.168.4.1 (стандарт ESP32 AP)</span></code>
+            </div>
+
+            <h3>Логин/пароль веб-панели</h3>
+            <div class="code-block">
+                <code><span class="code-keyword">#define</span> WEB_USER_DEFAULT     <span class="code-string">"admin"</span>
+<span class="code-keyword">#define</span> WEB_PASS_DEFAULT     <span class="code-string">"beehive"</span>      <span class="code-comment">// сменить после первого входа!</span>
+<span class="code-keyword">#define</span> OTA_PASS_DEFAULT     <span class="code-string">"beehive"</span>      <span class="code-comment">// для будущего OTA (если включить)</span></code>
+            </div>
+
+            <h3>STA-режим (подключение к домашнему роутеру)</h3>
+            <p>Включается через сайт «Wi-Fi» — не редактируется в коде. Хранится в EEPROM.</p>
+            <div class="info-box">
+                <strong>ℹ️ Какой режим выбрать?</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>AP режим</strong> (дефолт): улей далеко от дома. Подключаешься телефоном к сети BeehiveScale.</li>
+                    <li><strong>STA режим:</strong> улей в зоне домашнего Wi-Fi. Сайт открывается с любого устройства в сети + работает синхронизация NTP и Telegram-отчёты.</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card">
+            <h2>📱 Telegram через Cloudflare Worker</h2>
+            <p>В v5 прямой запрос на <code>api.telegram.org</code> заменён на релай через Cloudflare Worker (обходит блокировку Beeline и др.). Подробности — на странице <a href="06_telegram.html" style="color:var(--info)">«Telegram»</a>.</p>
+            <div class="code-block">
+                <code><span class="code-comment">// URL релая (фиксированный, не меняется)</span>
+<span class="code-keyword">#define</span> TG_RELAY_URL    <span class="code-string">"https://beehive-relay.darkvolg.workers.dev/sendMessage"</span>
+
+<span class="code-comment">// Общий секрет (заголовок X-Beehive-Secret) — должен совпадать с CF Worker</span>
+<span class="code-keyword">#define</span> TG_RELAY_SECRET <span class="code-string">"&lt;см. в исходнике, не публикуется&gt;"</span>
+
+<span class="code-comment">// Token и chat_id хранятся в EEPROM, вводятся через сайт «Telegram»</span></code>
+            </div>
+            <div class="tip">
+                <strong>💡 Token и Chat ID</strong> вводятся через сайт <code>192.168.4.1</code> → раздел «Telegram». В прошивку не зашиваются.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>🕐 NTP (синхронизация часов)</h2>
+            <div class="code-block">
+                <code><span class="code-comment">// Часовой пояс: Москва = +3</span>
+<span class="code-keyword">#define</span> NTP_TZ_OFFSET_SEC    <span class="code-number">10800</span>   <span class="code-comment">// 3 * 3600</span>
+<span class="code-keyword">#define</span> NTP_DST_OFFSET_SEC   <span class="code-number">0</span>       <span class="code-comment">// в РФ нет летнего времени</span>
+
+<span class="code-keyword">#define</span> NTP_SERVER_1         <span class="code-string">"pool.ntp.org"</span>
+<span class="code-keyword">#define</span> NTP_SERVER_2         <span class="code-string">"time.google.com"</span></code>
+            </div>
+            <div class="tip">
+                <strong>💡 Sync time:</strong> сайт → «Настройки» → кнопка «Sync NTP». Работает только в режиме STA (нужен интернет). Время записывается в DS3231.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>💾 Arduino IDE — настройки платы</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Установить core ESP32</h4>
+                        <p>Файл → Настройки → Дополнительные URL менеджера плат:</p>
+                        <p style="margin-top:8px"><code>https://espressif.github.io/arduino-esp32/package_esp32_index.json</code></p>
+                        <p style="margin-top:8px">Затем: Инструменты → Плата → Менеджер плат → найти «esp32» → Установить (версия <strong>2.0.x или 3.0.x</strong>).</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Выбрать плату DOIT ESP32 DEVKIT V1</h4>
+                        <p>Инструменты → Плата → ESP32 Arduino → <strong>DOIT ESP32 DEVKIT V1</strong></p>
+                        <ul>
+                            <li>CPU Frequency: <strong>240 MHz</strong></li>
+                            <li><strong>Partition Scheme: Huge APP (3MB No OTA / 1MB SPIFFS)</strong> ← обязательно!</li>
+                            <li>Flash Size: 4MB</li>
+                            <li>Upload Speed: 921600</li>
+                            <li>Core Debug Level: None</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-content">
+                        <h4>Загрузить скетч</h4>
+                        <p>Файл → Открыть → <code>BeehiveScale/BeehiveScale.ino</code><br>
+                        Инструменты → Порт → COM-порт ESP32 → нажать «Загрузить» (→).</p>
+                        <div class="tip" style="margin-top:10px"><strong>💡 Авто-прошивка:</strong> ESP32 DevKit V1 поддерживает auto-reset через DTR/RTS — никаких кнопок зажимать не надо.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="danger">
+                <strong>❌ Ошибка «Sketch too big» / «Not enough space»:</strong> ты выбрал Default Partition (1.31 МБ под код). Прошивка ~1.4 МБ. Поставь <strong>Huge APP (3MB No OTA)</strong> и пересобери.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>📦 Библиотеки Arduino</h2>
+            <p>Установить через Менеджер библиотек (Скетч → Подключить библиотеку → Управлять библиотеками):</p>
+            <table class="config-table">
+                <tr>
+                    <th>Библиотека</th>
+                    <th>Версия</th>
+                    <th>Для чего</th>
+                </tr>
+                <tr>
+                    <td><code>arduino-esp32</code> (Espressif)</td>
+                    <td>2.0.x или 3.0.x</td>
+                    <td>Основной core ESP32</td>
+                </tr>
+                <tr>
+                    <td><code>LiquidCrystal_I2C</code></td>
+                    <td>1.1.2+</td>
+                    <td>LCD 16×2 I²C</td>
+                </tr>
+                <tr>
+                    <td><code>HX711</code> by bogde</td>
+                    <td>0.7.5+</td>
+                    <td>АЦП тензодатчика</td>
+                </tr>
+                <tr>
+                    <td><code>OneWire</code></td>
+                    <td>2.3+</td>
+                    <td>Шина 1-Wire (DS18B20)</td>
+                </tr>
+                <tr>
+                    <td><code>DallasTemperature</code></td>
+                    <td>3.9+</td>
+                    <td>Драйвер DS18B20</td>
+                </tr>
+                <tr>
+                    <td><code>RTClib</code> by Adafruit</td>
+                    <td>2.1+</td>
+                    <td>DS3231 RTC + alarm</td>
+                </tr>
+                <tr>
+                    <td><code>ArduinoJson</code></td>
+                    <td><strong>6.x</strong> (НЕ 7.x!)</td>
+                    <td>Web API использует API v6 — на 7.x не соберётся</td>
+                </tr>
+            </table>
+            <div class="warning">
+                <strong>⚠️ ArduinoJson 7.x несовместима</strong> — у неё другой API (<code>JsonDocument</code> вместо <code>StaticJsonDocument</code>). Откати до 6.21.x если поставил 7.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>🛠️ PlatformIO (альтернатива)</h2>
+            <p>В корне проекта есть <code>platformio.ini</code> с готовым окружением:</p>
+            <div class="code-block">
+                <code>[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+board_build.partitions = huge_app.csv
+monitor_speed = 115200
+upload_speed = 921600
+lib_deps =
+    bogde/HX711@^0.7.5
+    marcoschwartz/LiquidCrystal_I2C@^1.1.4
+    paulstoffregen/OneWire@^2.3.7
+    milesburton/DallasTemperature@^3.11.0
+    adafruit/RTClib@^2.1.4
+    bblanchon/ArduinoJson@^6.21.5</code>
+            </div>
+            <p style="margin-top:10px;color:var(--text-muted)">Команда: <code>pio run -e esp32dev -t upload</code></p>
+        </div>
+
+<div class="card">
+            <h2>💾 EEPROM-карта v5.0.67</h2>
+            <p>В EEPROM ESP32 (эмулируется через NVS, 512 байт) хранятся постоянные настройки:</p>
+            <table class="config-table">
+                <tr><th>Адрес</th><th>Байт</th><th>Что хранится</th></tr>
+                <tr><td><code>0</code></td><td>4</td><td><code>calibrationFactor</code> (float) — коэф. калибровки HX711</td></tr>
+                <tr><td><code>4</code></td><td>4</td><td><code>offset</code> (long) — нулевое смещение тары</td></tr>
+                <tr><td><code>8</code></td><td>4</td><td><code>lastSavedWeight</code> (float)</td></tr>
+                <tr><td><code>12</code></td><td>1</td><td>magic <code>0xA5</code></td></tr>
+                <tr><td><code>13</code></td><td>4</td><td><code>alertDelta</code> (float) — порог алерта в ТГ</td></tr>
+                <tr><td><code>17</code></td><td>4</td><td><code>calibWeight</code> (float) — эталонный вес для калибровки</td></tr>
+                <tr><td><code>21</code></td><td>4</td><td><code>emaAlpha</code> (float) — сглаживание</td></tr>
+                <tr><td><code>25</code></td><td>1</td><td>magic2 <code>0xA6</code></td></tr>
+                <tr><td><code>26</code></td><td>4</td><td><code>prevOffset</code> (long) — для отмены тары</td></tr>
+                <tr><td><code>30</code></td><td>4</td><td><code>prevWeight</code> (float) — эталон Δ</td></tr>
+                <tr><td><code>40–63</code></td><td>24</td><td><code>AP_PASS</code> (Wi-Fi пароль)</td></tr>
+                <tr><td><code>64</code></td><td>1</td><td>magic3 <code>0xA7</code></td></tr>
+                <tr style="background:rgba(245,166,35,0.05)"><td><code>313</code></td><td>4</td><td><strong>NEW v5:</strong> <code>prevWeightDate</code> (uint32_t Unix ts — дата фиксации эталона)</td></tr>
+                <tr style="background:rgba(245,166,35,0.05)"><td><code>317–319</code></td><td>3</td><td><strong>NEW v5:</strong> <code>autoSleepSec</code> (uint16_t + magic <code>0xA8</code>)</td></tr>
+                <tr style="background:rgba(245,166,35,0.05)"><td><code>320–325</code></td><td>6</td><td><strong>NEW v5:</strong> <code>lastReportWeight</code> (float + magic <code>0xA9</code>) — для Δ «с прошлого замера»</td></tr>
+                <tr style="background:rgba(245,166,35,0.05)"><td><code>327–330</code></td><td>4</td><td><strong>NEW v5:</strong> <code>lastTempC</code> (float + magic <code>0xAA</code>) — fallback для TG</td></tr>
+            </table>
+            <div class="tip">
+                <strong>💡 Подсветка</strong> — оранжевые строки = новые поля v5.0.x, добавлены при портировании с ESP8266.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>⚙️ Параметры, настраиваемые через сайт (без перепрошивки)</h2>
+            <table class="config-table">
+                <tr>
+                    <th>Параметр</th>
+                    <th>Диапазон</th>
+                    <th>По умолчанию</th>
+                    <th>Описание</th>
+                </tr>
+                <tr>
+                    <td><strong>EMA сглаживание</strong></td>
+                    <td>0.05 — 0.9</td>
+                    <td>0.3</td>
+                    <td>Фильтр показаний веса</td>
+                </tr>
+                <tr>
+                    <td><strong>Эталонный груз</strong></td>
+                    <td>0.1 — 50 кг</td>
+                    <td>5.0 кг</td>
+                    <td>Для калибровки через сайт</td>
+                </tr>
+                <tr>
+                    <td><strong>Авто-сон</strong></td>
+                    <td>0 — 600 сек</td>
+                    <td>180 сек (3 мин)</td>
+                    <td>Бездействие до deep sleep. 0 = не засыпать (отладка)</td>
+                </tr>
+                <tr>
+                    <td><strong>Порог алерта Δ</strong></td>
+                    <td>0.05 — 10 кг</td>
+                    <td>1.0 кг</td>
+                    <td>Срочное TG-сообщение при резком изменении</td>
+                </tr>
+                <tr>
+                    <td><strong>Расписание</strong></td>
+                    <td>00:00 — 23:59</td>
+                    <td>09:00 / 21:00</td>
+                    <td>Время автоматического замера + отчёта в TG</td>
+                </tr>
+                <tr>
+                    <td><strong>Wi-Fi режим</strong></td>
+                    <td>AP / STA</td>
+                    <td>AP</td>
+                    <td>Точка доступа или клиент роутера</td>
+                </tr>
+                <tr>
+                    <td><strong>Telegram token + chat_id</strong></td>
+                    <td>—</td>
+                    <td>пусто</td>
+                    <td>Раздел «Telegram» на сайте</td>
+                </tr>
+            </table>
+        </div>
+
+<div class="card">
+            <h2>🚨 Алерты в Telegram (v5.0.20) <span style="color:var(--success)">📝 описано с v5.0.67</span></h2>
+            <p>Кроме отчётов по расписанию весы шлют <strong>аварийные уведомления</strong>. Настраиваются в разделе «Telegram» на сайте. Каждый алерт уходит <strong>один раз</strong>, пока условие сохраняется (анти-спам), и сбрасывается с гистерезисом.</p>
+
+            <table class="config-table">
+                <tr>
+                    <th>Алерт</th>
+                    <th>Порог</th>
+                    <th>По умолчанию</th>
+                    <th>Когда срабатывает</th>
+                </tr>
+                <tr>
+                    <td><strong>🔋 Низкая батарея</strong></td>
+                    <td>0 — 5.0 В<br>(0 = выключен)</td>
+                    <td><strong style="color:var(--success)">3.6 В</strong><br><span style="font-size:0.85em">(до v5.0.67 было 0 = выключен)</span></td>
+                    <td>Напряжение упало ниже порога. Сброс — когда поднимется на 0.1 В выше (гистерезис). 3.6 В ≈ 15% — есть 1-2 дня на зарядку.</td>
+                </tr>
+                <tr>
+                    <td><strong>❄️ Низкая температура</strong></td>
+                    <td>−55 … +85 °C<br>(0 = выключен)</td>
+                    <td>0 (выключен)</td>
+                    <td>Улей остыл ниже порога — риск подмерзания зимой. Сброс при +2 °C выше порога.</td>
+                </tr>
+                <tr>
+                    <td><strong>🔥 Высокая температура</strong></td>
+                    <td>−55 … +85 °C<br>(0 = выключен)</td>
+                    <td>0 (выключен)</td>
+                    <td>Перегрев улья. Сброс при 2 °C ниже порога.</td>
+                </tr>
+                <tr>
+                    <td><strong>🕐 Ошибка RTC</strong></td>
+                    <td>вкл / выкл</td>
+                    <td><strong>включён</strong></td>
+                    <td>Часы DS3231 не отвечают или потеряли время (села CR2032). Без RTC не работает расписание.</td>
+                </tr>
+                <tr>
+                    <td><strong>🐝 Роение (v5.0.52)</strong></td>
+                    <td>авто: 3 × порог Δ,<br>минимум 1.5 кг</td>
+                    <td>активен</td>
+                    <td>Резкое падение веса между двумя замерами — вылет роя или кража. Порог считается от «Порога алерта Δ».</td>
+                </tr>
+            </table>
+
+            <div class="danger">
+                <strong>⚠️ Важно — реальный случай:</strong> до v5.0.67 алерт батареи по умолчанию был <strong>выключен</strong>. Банка 18650 разрядилась в улье, весы молча умерли, и хозяин заметил это только через <strong>две недели</strong> — по тишине в Telegram. Данные за этот период потеряны безвозвратно. Если прошивка старая или ты когда-то сохранял настройки алертов с нулевым порогом — <strong>проверь и поставь 3.6 В вручную</strong>.
+            </div>
+            <div class="tip">
+                <strong>💡 Как это работает после обновления:</strong> если ты <em>никогда</em> не сохранял настройки алертов, весы возьмут новый дефолт 3.6 В автоматически. Если сохранял — останется твоё старое значение (в том числе 0 = выключено), и порог надо выставить руками.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>🔧 Serial команды (115200 бод)</h2>
+            <p>Для отладки можно слать команды через USB-C → Serial монитор:</p>
+            <table class="config-table">
+                <tr>
+                    <th>Команда</th>
+                    <th>Описание</th>
+                    <th>Пример</th>
+                </tr>
+                <tr><td><code>STATUS</code></td><td>Информация о системе (вес, время, батарея)</td><td><code>STATUS</code></td></tr>
+                <tr><td><code>NTP</code></td><td>Синхронизировать время с NTP (нужен STA)</td><td><code>NTP</code></td></tr>
+                <tr><td><code>TIME</code></td><td>Показать текущее время DS3231</td><td><code>TIME</code></td></tr>
+                <tr><td><code>SETTIME</code></td><td>Установить время вручную</td><td><code>SETTIME 2026 05 09 14 30 00</code></td></tr>
+                <tr><td><code>TARE</code></td><td>Сделать тарирование</td><td><code>TARE</code></td></tr>
+                <tr><td><code>WAKEUP_REASON</code></td><td>Причина последнего пробуждения из sleep</td><td><code>WAKEUP_REASON</code></td></tr>
+                <tr><td><code>SLEEP</code></td><td>Принудительно уйти в deep sleep</td><td><code>SLEEP 60</code> (на 60 сек)</td></tr>
+                <tr><td><code>DIAG</code></td><td>Самотест (HX711, DS18B20, RTC, Battery)</td><td><code>DIAG</code></td></tr>
+                <tr><td><code>REBOOT</code></td><td>Перезагрузка</td><td><code>REBOOT</code></td></tr>
+            </table>
+        </div>
+
 </div>
 
 <!-- ===== OPERATION ===== -->
@@ -1221,6 +1862,86 @@ monitor_speed = 115200</pre>
 
         <div class="tip"><strong>💡 Настройка авто-сна</strong>Через сайт «Настройки → Авто-сон» можно поставить от 0 (не засыпать, отладка) до 600 секунд. По умолчанию 180 сек (3 мин).</div>
     </div>
+
+<div class="card">
+            <h2>🔘 Управление кнопками (важно изменилось в v5!)</h2>
+            <div class="warning">
+                <strong>⚠️ Режимы кнопок переделаны:</strong> на ESP8266 v4.1 тара была «4 коротких нажатия MAIN». В v5 для защиты от случайных нажатий — <strong>3-секундное удержание MAIN</strong> + подтверждение через MENU=OK. Если ты привык к старой схеме — отвыкай.
+            </div>
+
+            <h3>Кнопка MAIN <span class="pin">D27 / GPIO27</span> (RTC GPIO ⚡)</h3>
+            <table class="table">
+                <tr>
+                    <th>Действие</th>
+                    <th>Длительность</th>
+                    <th>Результат</th>
+                </tr>
+                <tr>
+                    <td><span class="button-action">Короткое нажатие</span></td>
+                    <td>&lt; 1 сек</td>
+                    <td><strong>Ничего</strong> (защита от случайного тарирования). Только зажигает LCD после wake.</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">MEDIUM</span></td>
+                    <td>~3 сек</td>
+                    <td><strong>ТАРА</strong> — открывает диалог «Выполнить тару? MENU=OK». Если в течение 5 сек не нажать MENU — отмена.</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action danger">LONG</span></td>
+                    <td>~6 сек</td>
+                    <td><strong>КАЛИБРОВКА</strong> — мастер калибровки по эталонной гире (см. ниже).</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">В режиме CF (Экран 8)</span></td>
+                    <td>короткое</td>
+                    <td>Сменить шаг подстройки: 10 → 1 → 0.1 → 10 ...</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">В режиме CF (Экран 8)</span></td>
+                    <td>длинное</td>
+                    <td>Сохранить CF в EEPROM и выйти</td>
+                </tr>
+            </table>
+
+            <h3>Кнопка MENU <span class="pin">D26 / GPIO26</span></h3>
+            <table class="table">
+                <tr>
+                    <th>Действие</th>
+                    <th>Длительность</th>
+                    <th>Результат</th>
+                </tr>
+                <tr>
+                    <td><span class="button-action">Короткое нажатие</span></td>
+                    <td>&lt; 1 сек</td>
+                    <td>Переключение между 9 экранами LCD по кругу.</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">Удержание</span></td>
+                    <td>~2.5 сек</td>
+                    <td><strong>OK</strong> — подтверждение в диалогах (после MAIN MEDIUM = тара). Из меню — возврат на Экран 1.</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">В режиме CF (Экран 8)</span></td>
+                    <td>короткое</td>
+                    <td>CF + шаг (увеличить)</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">В режиме CF (Экран 8)</span></td>
+                    <td>длинное</td>
+                    <td>CF − шаг (уменьшить)</td>
+                </tr>
+                <tr>
+                    <td><span class="button-action">Удержание 5 сек на Экране 1</span></td>
+                    <td>~5 сек</td>
+                    <td>Сброс Wi-Fi настроек на дефолт (AP-режим, BeehiveScale / 12345678)</td>
+                </tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 Wake-press guard:</strong> сразу после пробуждения из deep sleep первое нажатие MAIN <em>не</em> открывает тару — оно только зажигает LCD. Это защита от случайного тарирования при выходе из сна.
+            </div>
+        </div>
+
 </div>
 
 <!-- ===== CALIBRATION ===== -->
@@ -1450,6 +2171,142 @@ monitor_speed = 115200</pre>
             <span style="color:#888">}</span>
         </div>
     </div>
+
+<div class="card">
+            <h2>🚀 Как зайти на сайт</h2>
+            <p>В режиме AP (по умолчанию) ESP32 поднимает свою Wi-Fi сеть. Подключайся с телефона/ноутбука и открывай браузер:</p>
+
+            <table class="table">
+                <tr><th>Параметр</th><th>Значение</th></tr>
+                <tr><td>Wi-Fi сеть (SSID)</td><td><span class="creds">BeehiveScale</span></td></tr>
+                <tr><td>Пароль Wi-Fi</td><td><span class="creds">12345678</span></td></tr>
+                <tr><td>IP адрес панели</td><td><span class="creds">http://192.168.4.1</span></td></tr>
+                <tr><td>Логин админки</td><td><span class="creds">admin</span></td></tr>
+                <tr><td>Пароль админки</td><td><span class="creds">beehive</span></td></tr>
+            </table>
+
+            <div class="warning">
+                <strong>⚠️ Сразу смени пароль!</strong> После первого входа открой раздел «Wi-Fi → Пароли и доступ» и поставь свой пароль для admin (и желательно сменить пароль AP на не-дефолтный).
+            </div>
+            <div class="tip">
+                <strong>💡 Режим STA (домашний роутер):</strong> в разделе «Wi-Fi» можно переключить ESP32 на подключение к домашнему роутеру. Тогда сайт открывается с любого устройства в твоей сети. Удобно когда улей рядом с домом — не нужно каждый раз переключать Wi-Fi.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>🔎 Как узнать IP в режиме STA <span style="color:var(--success)">🆕 v5.0.67</span></h2>
+            <p>В режиме STA адрес выдаёт роутер по DHCP, и он <strong>может меняться</strong> — особенно если весы долго были выключены и аренда истекла. Три способа попасть на сайт, от удобного к запасному:</p>
+
+            <table class="table">
+                <tr><th>Способ</th><th>Что делать</th><th>Плюсы / минусы</th></tr>
+                <tr>
+                    <td><strong>1. По имени (mDNS)</strong></td>
+                    <td>Открыть в браузере <span class="creds">http://vesy.local</span></td>
+                    <td>Адрес знать не нужно вообще, не меняется никогда. Работает на Windows 10+, iPhone, Mac, Android 12+. Может не работать при «изоляции клиентов» на роутере.</td>
+                </tr>
+                <tr>
+                    <td><strong>2. Посмотреть на весах</strong></td>
+                    <td>Кнопкой MENU долистать до <strong>Экрана 7 — IP</strong>. Адрес и mDNS-имя прямо на LCD. Он же показывается 3 секунды сразу после включения.</td>
+                    <td>Работает всегда, роутер не нужен. Надо подойти к улью.</td>
+                </tr>
+                <tr>
+                    <td><strong>3. Резервация в роутере</strong></td>
+                    <td>В админке роутера: DHCP → привязать MAC весов к постоянному IP.</td>
+                    <td>Самый надёжный. Настраивается один раз, дальше адрес не меняется никогда.</td>
+                </tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 Рекомендуется:</strong> сделать резервацию IP в роутере (способ 3) и запомнить <code>vesy.local</code> (способ 1). Экран 7 — страховка на случай смены роутера или сети.
+            </div>
+            <div class="warning">
+                <strong>⚠️ Имя изменилось в v5.0.67:</strong> раньше mDNS-имя было <code>beehivescale.local</code> (нигде не документировалось), теперь — <code>vesy.local</code>. Тем же именем весы представляются в Arduino IDE при прошивке по воздуху (OTA-порт <code>vesy</code>).
+            </div>
+        </div>
+
+<div class="card">
+            <h2>📦 Пример ответа /api/data</h2>
+            <div class="code-block">
+                <code>{
+  "weight": 4.42,                          // кг (после EMA + dead-band)
+  "prevWeight": 4.08,                      // зафиксированный эталон
+  "prevWeightDate": "2026-05-05 23:04",    // дата фиксации эталона
+  "lastReportWeight": 4.40,                // вес последнего TG-отчёта
+  "tempC": 27.5,                           // улей (DS18B20)
+  "rtcTempC": 28.0,                        // воздух (RTC DS3231)
+  "batV": 3.85,                            // напряжение батареи
+  "batPct": 78,                            // % заряда (3.0 В = 0%, 4.2 В = 100%)
+  "datetime": "2026-05-09 14:30:22",       // время DS3231
+  "wifiOk": true,                          // подключён к роутеру (STA) или AP активен
+  "keepLeftSec": 540,                      // секунд до auto-sleep
+  "uptimeSec": 1234,                       // время работы с последнего пробуждения
+  "wakeCount": 42,                         // счётчик пробуждений (Экран 6)
+  "calibrationFactor": 432167.0,           // коэффициент калибровки HX711
+  "fwVersion": "5.0.15"
+}</code>
+            </div>
+            <div class="tip">
+                <strong>💡 Интеграция в Home Assistant:</strong> можно сделать REST sensor с URL <code>http://192.168.4.X/api/data</code> — и все поля доступны как entities в HA. Подходит для дашбордов и автоматизаций.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>📊 График веса с тач-курсором</h2>
+            <p>На странице «График» (или <code>/chart</code> для полноэкранного режима) — интерактивная кривая веса по времени:</p>
+
+            <ul style="margin-left:20px;color:var(--text-muted)">
+                <li><strong>Палец / мышь по графику</strong> → курсор показывает значение в точке (вес и время)</li>
+                <li><strong>Зелёная линия</strong> = вес. <strong>Оранжевая</strong> = температура улья (DS18B20)</li>
+                <li><strong>Точки фиксации эталона</strong> отмечены вертикальной линией</li>
+                <li>Период: 1 день / 7 дней / 30 дней — переключатель сверху</li>
+                <li>Данные подгружаются с throttle 30 сек чтобы не грузить ESP32</li>
+            </ul>
+
+            <div class="tip">
+                <strong>💡 Полноэкранный график на телефоне:</strong> открой <code>http://192.168.4.1/chart</code> — это отдельная страница без меню, занимает весь экран. Удобно смотреть на телефоне в портретном режиме.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>🔄 Wi-Fi: AP vs STA</h2>
+            <h3>Режим AP (по умолчанию)</h3>
+            <ul style="margin-left:20px;color:var(--text-muted)">
+                <li>ESP32 создаёт свою Wi-Fi сеть <code>BeehiveScale / 12345678</code></li>
+                <li>IP всегда <code>192.168.4.1</code></li>
+                <li>Подходит когда улей далеко от дома (нет роутера)</li>
+                <li>Минусы: нет интернета → нет NTP-синка и нет Telegram-отчётов (Telegram нужен только когда подключаешься телефоном к ESP32 и сам активируешь?)</li>
+            </ul>
+
+            <h3>Режим STA (подключение к роутеру)</h3>
+            <ul style="margin-left:20px;color:var(--text-muted)">
+                <li>ESP32 коннектится к домашнему Wi-Fi (SSID + пароль вводишь на сайте)</li>
+                <li>IP назначает роутер (DHCP). Смотри в роутере → клиенты → BeehiveScale</li>
+                <li>Подходит когда улей рядом с домом</li>
+                <li>Плюсы: <strong>работает Telegram, NTP, доступ из любой точки сети</strong></li>
+            </ul>
+
+            <div class="info-box">
+                <strong>ℹ️ Переключение в STA:</strong> сайт → «Wi-Fi» → выбрать STA → ввести SSID + пароль роутера → Сохранить. ESP32 перезагрузится, попробует подключиться. Если не получилось за 10 сек — возвращается в AP.
+            </div>
+            <div class="warning">
+                <strong>⚠️ Сброс Wi-Fi:</strong> зажми MENU 5 сек на главном экране — настройки Wi-Fi сбросятся на дефолт (AP / BeehiveScale / 12345678). Помогает если забыл пароль или ESP32 не подключается к новому роутеру.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>🛡️ Безопасность</h2>
+            <ul style="margin-left:20px;color:var(--text-muted)">
+                <li><strong>HTTP Basic Auth</strong> на всех <code>/api/*</code> и страницах настроек (admin / beehive по умолчанию)</li>
+                <li><strong>HTTPS не поддерживается</strong> — ESP32 не тянет TLS-сервер с приличной скоростью. Это нормально для локальной сети</li>
+                <li>Telegram-token хранится в EEPROM в открытом виде — но EEPROM недоступен снаружи (только через USB-консоль с физическим доступом)</li>
+                <li>В CF Worker есть проверка <code>X-Beehive-Secret</code> — посторонний не сможет дёргать релай от твоего имени</li>
+            </ul>
+
+            <div class="warning">
+                <strong>⚠️ Если выставляешь весы в STA-режим в публичную сеть</strong> (например офисный Wi-Fi гостевой) — обязательно смени пароли admin и AP на не-дефолтные. Иначе любой в той же сети сможет открыть твою панель.
+            </div>
+        </div>
+
 </div>
 
 <!-- ===== TELEGRAM ===== -->
@@ -1507,34 +2364,189 @@ monitor_speed = 115200</pre>
         </div>
     </div>
 
-    <div class="card">
-        <h2>📨 Что приходит в отчёте</h2>
-        <p style="color:var(--text-muted);margin-bottom:15px">Пример отчёта (сообщение в Telegram):</p>
-        <div style="background:#0a0f1e;border-radius:10px;padding:16px;font-family:'Segoe UI',sans-serif;line-height:1.7;border:1px solid var(--border);color:#e8e8e8">
-            <strong style="color:#f5a623">📊 Отчёт: улей</strong><br>
-            🕐 <strong>Время:</strong> 08.05.2026 21:00:10<br>
-            ⚖️ <strong>Вес:</strong> 4.42 кг<br>
-            🎯 <strong>Эталон:</strong> 4.08 кг (зафикс. 05.05, 3 дн назад)<br>
-            🎯 <strong>От зафикс. точки:</strong> +0.34 кг<br>
-            📈 <strong>С прошлого замера:</strong> +0.02 кг<br>
-            🌡 <strong>Температура:</strong> 27.5 °C<br>
-            🔋 <strong>Батарея:</strong> 3.85 В (78 %)
-        </div>
-    </div>
+    
 
-    <div class="card">
-        <h2>🛠️ Cloudflare Worker (для разработчика)</h2>
-        <p style="color:var(--text-muted)">Релай развёрнут на бесплатном плане Cloudflare Workers. URL: <code>beehive-relay.darkvolg.workers.dev</code>. Исходник в репо: <code>cloudflare-worker/src/index.js</code>.</p>
-        <table class="conn-table">
-            <thead><tr><th>Заголовок / параметр</th><th>Значение</th></tr></thead>
-            <tbody>
-                <tr><td class="from">Endpoint</td><td class="to">POST <code>https://beehive-relay.darkvolg.workers.dev/sendMessage</code></td></tr>
-                <tr><td class="from">X-Beehive-Secret</td><td class="to">общий секрет, проверяется Worker'ом</td></tr>
-                <tr><td class="from">Body</td><td class="to">JSON: <code>{ token, chat_id, text, parse_mode: "HTML" }</code></td></tr>
-            </tbody>
-        </table>
-        <div class="info-tg"><strong>Бесплатный лимит CF Workers</strong>100 000 запросов в день — для пасеки на 100 ульев с отчётами каждый час всё равно остаётся огромный запас.</div>
-    </div>
+    
+
+<div class="card">
+            <h2>💡 Зачем Cloudflare Worker?</h2>
+            <p>На прошивке v4.1 (ESP8266) ESP отправлял запрос напрямую на <code>api.telegram.org</code>. У провайдера <strong>Beeline</strong> (и некоторых других в РФ) этот домен заблокирован — отчёты не приходили, в Serial были ошибки <code>CONNECTION_REFUSED</code>.</p>
+
+            <p style="margin-top:10px">В v5 ESP32 шлёт запрос на <strong>наш Cloudflare Worker</strong> (<code>beehive-relay.darkvolg.workers.dev</code>), а Worker уже форвардит его в <code>api.telegram.org</code>. Cloudflare провайдеры не блокируют — они нужны для половины интернета.</p>
+
+            <div class="arch-diagram">
+                <div class="arch-step esp">🐝 ESP32 (улей)</div>
+                <span class="arch-arrow">→ HTTPS →</span>
+                <div class="arch-step cf">☁️ Cloudflare Worker</div>
+                <span class="arch-arrow">→ HTTPS →</span>
+                <div class="arch-step tg">💬 api.telegram.org</div>
+                <span class="arch-arrow">→</span>
+                <div class="arch-step tg">📱 Твой телефон</div>
+            </div>
+
+            <div class="cf-box">
+                <strong>☁️ Что делает Worker:</strong> принимает POST с заголовком <code>X-Beehive-Secret</code> + JSON body <code>{token, chat_id, text, parse_mode}</code>. Проверяет секрет (защита от чужих запросов). Если ОК — форвардит в <code>https://api.telegram.org/bot&lt;TOKEN&gt;/sendMessage</code> и возвращает результат обратно.
+            </div>
+            <div class="tip">
+                <strong>💡 CF Worker уже развёрнут</strong> на нашем общем endpoint <code>beehive-relay.darkvolg.workers.dev</code>. Тебе ничего не надо делать — просто в скетче зашит этот URL и общий секрет. Бесплатный план CF: 100k запросов в день — для 100 ульев с почасовыми отчётами всё равно остаётся огромный запас.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>📨 Что приходит в отчёте</h2>
+            <p>Отчёт шлётся в Telegram <strong>каждый раз когда срабатывает расписание</strong> (например, в 09:00 и 21:00). Пример сообщения:</p>
+
+            <div class="tg-message">
+                <strong>📊 Отчёт: улей</strong><br>
+                🕐 <strong>Время:</strong> 09.05.2026 21:00:10<br>
+                ⚖️ <strong>Вес:</strong> 4.42 кг<br>
+                🎯 <strong>Эталон:</strong> 4.08 кг (зафикс. 05.05, 4 дн назад)<br>
+                🎯 <strong>От зафикс. точки:</strong> +0.34 кг<br>
+                📈 <strong>С прошлого замера:</strong> +0.02 кг<br>
+                🌡 <strong>Температура:</strong> 27.5 °C<br>
+                🔋 <strong>Батарея:</strong> 3.85 В (78 %)
+            </div>
+
+            <h3>Поля отчёта</h3>
+            <table class="table">
+                <tr><th>Поле</th><th>Источник</th></tr>
+                <tr><td>⚖️ <strong>Вес</strong></td><td>Текущий замер с HX711 (после EMA + dead-band)</td></tr>
+                <tr><td>🎯 <strong>Эталон</strong> (+ дата)</td><td><code>prevWeight</code> + <code>prevWeightDate</code> (дата фиксации) из EEPROM</td></tr>
+                <tr><td>🎯 <strong>От зафикс. точки</strong></td><td>Текущий вес − эталон. Δ за весь сезон / неделю</td></tr>
+                <tr><td>📈 <strong>С прошлого замера</strong></td><td>Текущий вес − <code>lastReportWeight</code> (вес последнего TG-отчёта). Δ за день/часы</td></tr>
+                <tr><td>🌡 <strong>Температура</strong></td><td>DS18B20 в улье (если датчик подключён). Иначе DS3231</td></tr>
+                <tr><td>🔋 <strong>Батарея</strong></td><td>ADC GPIO34 → пересчёт через делитель 2:1</td></tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 HTML-форматирование:</strong> отчёт использует <code>parse_mode: "HTML"</code> — теги <code>&lt;b&gt;</code> отображаются жирным шрифтом. Если приходят теги в виде текста — обнови прошивку до v5.0.1+.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>⏰ Привязка отчётов к расписанию</h2>
+            <p>В v4.1 отчёты слались по интервалу (например, каждые 6 часов). В v5 отчёт привязан к <strong>расписанию</strong> — конкретное время суток.</p>
+
+            <div class="tg-box">
+                <strong>📅 Как это работает:</strong> на сайте «Расписание» ты задаёшь время (например, 09:00 + 21:00). ESP32 пишет alarm в DS3231, уходит в deep sleep, просыпается ровно в это время → делает замер → шлёт отчёт через CF Worker → возвращается в сон. Расход батареи минимальный.
+            </div>
+
+            <h3>Сценарии расписания</h3>
+            <table class="table">
+                <tr><th>Сценарий</th><th>Время в расписании</th><th>Цель</th></tr>
+                <tr><td>Минимальный</td><td>21:00</td><td>1 отчёт в день — итог за сутки. Батарея живёт максимально долго (~14 дней с AMS1117, ~40 дней с HT7333)</td></tr>
+                <tr><td>Стандартный</td><td>09:00 + 21:00</td><td>Утром «что осталось», вечером «что прибавили». ~12 дней автономии с AMS1117, ~30 дней с HT7333</td></tr>
+                <tr><td>Подробный</td><td>06:00 + 12:00 + 18:00 + 22:00</td><td>4 отчёта в день. Видно динамику взятка по часам. ~20 дней</td></tr>
+                <tr><td>Отладка</td><td>каждый час</td><td>Проверка работы прошивки. Жрёт батарею за неделю</td></tr>
+            </table>
+
+            <div class="warning">
+                <strong>⚠️ Если время в DS3231 неправильное</strong> — расписание не сработает. Сначала синхронизируй: сайт → «Настройки → Часы → Sync NTP» (нужен интернет, режим STA). Без интернета — установи время вручную через сайт или Serial-команду <code>SETTIME</code>.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>🛠️ Cloudflare Worker (для разработчика)</h2>
+            <p>Если хочешь развернуть свой собственный CF Worker (например, со своим секретом) — исходник в репозитории: <code>cloudflare-worker/src/index.js</code>. Деплой через <code>wrangler deploy</code>.</p>
+
+            <h3>Endpoint и формат запроса</h3>
+            <table class="table">
+                <tr><th>Параметр</th><th>Значение</th></tr>
+                <tr><td>URL</td><td><code>POST https://beehive-relay.darkvolg.workers.dev/sendMessage</code></td></tr>
+                <tr><td>Заголовок аутентификации</td><td><code>X-Beehive-Secret: &lt;общий секрет&gt;</code></td></tr>
+                <tr><td>Content-Type</td><td><code>application/json</code></td></tr>
+                <tr>
+                    <td>Body</td>
+                    <td>
+                        <code>{ "token": "&lt;TG_BOT_TOKEN&gt;", "chat_id": &lt;ID&gt;, "text": "&lt;HTML&gt;", "parse_mode": "HTML" }</code>
+                    </td>
+                </tr>
+            </table>
+
+            <h3>Ответы Worker</h3>
+            <table class="table">
+                <tr><th>HTTP код</th><th>Что значит</th></tr>
+                <tr><td>200</td><td>OK, сообщение доставлено в Telegram</td></tr>
+                <tr><td>401</td><td>Неверный <code>X-Beehive-Secret</code></td></tr>
+                <tr><td>400</td><td>Неверный JSON body, отсутствуют обязательные поля</td></tr>
+                <tr><td>403 / 404 от Telegram</td><td>Возвращается как есть. Обычно — неверный <code>token</code> или <code>chat_id</code></td></tr>
+                <tr><td>500</td><td>Внутренняя ошибка Worker (редко)</td></tr>
+            </table>
+
+            <h3>Пример curl-запроса</h3>
+            <div class="code-block">
+                <code>curl -X POST https://beehive-relay.darkvolg.workers.dev/sendMessage \
+  -H "Content-Type: application/json" \
+  -H "X-Beehive-Secret: &lt;секрет&gt;" \
+  -d '{
+    "token": "1234567890:AAFxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "chat_id": 123456789,
+    "text": "&lt;b&gt;Тест&lt;/b&gt; от консоли",
+    "parse_mode": "HTML"
+  }'</code>
+            </div>
+
+            <div class="cf-box">
+                <strong>☁️ Лимит CF Workers (бесплатный план):</strong> 100 000 запросов в день. Для пасеки на 100 ульев с отчётами каждый час: 100 × 24 = 2400 запросов в день. Запас в ~40 раз.
+            </div>
+        </div>
+
+<div class="card">
+            <h2>❌ Что может пойти не так</h2>
+
+            <h3>«Тестовое сообщение» не приходит</h3>
+            <table class="table">
+                <tr><th>Симптом</th><th>Причина</th><th>Решение</th></tr>
+                <tr>
+                    <td>Ошибка <code>401 Unauthorized</code></td>
+                    <td>Неправильный Token бота</td>
+                    <td>Перепроверь Token. Без пробелов, без кавычек. Можно перевыдать через @BotFather → /token</td>
+                </tr>
+                <tr>
+                    <td>Ошибка <code>400 Bad Request</code> или <code>chat not found</code></td>
+                    <td>Неправильный Chat ID или ты не нажал /start в боте</td>
+                    <td>Перепроверь Chat ID через @userinfobot. Открой бота и нажми /start</td>
+                </tr>
+                <tr>
+                    <td><code>CONNECTION_REFUSED</code> / <code>CONNECTION_LOST</code></td>
+                    <td>Нет интернета или Wi-Fi не подключился к роутеру</td>
+                    <td>Проверь Экран 6 LCD: должно быть W:OK. Перевключи STA-режим. Проверь что роутер раздаёт интернет</td>
+                </tr>
+                <tr>
+                    <td>Ошибка от Worker <code>X-Beehive-Secret invalid</code></td>
+                    <td>В прошивке зашит неверный секрет</td>
+                    <td>Сверь <code>TG_RELAY_SECRET</code> в <code>Connectivity.h</code> с тем что в CF Worker. Перепрошей</td>
+                </tr>
+                <tr>
+                    <td>Сообщение пришло, но <code>&lt;b&gt;</code> видны как текст</td>
+                    <td>Старая прошивка без <code>parse_mode: HTML</code></td>
+                    <td>Обнови прошивку до v5.0.1+ (в v5.0.21 это уже работает)</td>
+                </tr>
+                <tr>
+                    <td>Тест работает, но по расписанию ничего не приходит</td>
+                    <td>Расписание не настроено или RTC ERROR</td>
+                    <td>Сайт → Расписание (поставь время). Проверь Экран 5 (время) и Экран 6 (счётчик пробуждений N)</td>
+                </tr>
+            </table>
+
+            <h3>Telegram приходит, но в неправильное время</h3>
+            <p>Время DS3231 не синхронизировано с реальным. Зайди на сайт → «Настройки → Часы → Sync NTP». Это работает только в режиме STA с интернетом. Без интернета — установи вручную.</p>
+        </div>
+
+<div class="card">
+            <h2>🔒 Безопасность Telegram-данных</h2>
+            <ul style="margin-left:20px;color:var(--text-muted)">
+                <li><strong>Token бота</strong> хранится в EEPROM ESP32 в открытом виде. Доступен только при физическом доступе к плате через USB-консоль или dump прошивки</li>
+                <li><strong>Worker не логирует</strong> tokens и chat_id (только метрики количества запросов)</li>
+                <li>Между ESP32 ↔ Worker и Worker ↔ Telegram — <strong>HTTPS (TLS)</strong>. Прослушать в локальной сети нельзя</li>
+                <li>Если Token утёк — перевыдать в BotFather: <code>/token</code> → выбрать бота → новый токен. Старый сразу инвалидируется</li>
+            </ul>
+
+            <div class="info-box">
+                <strong>ℹ️ Можно ли использовать одного бота на нескольких ульях?</strong> Да. Создай группу в Telegram, добавь бота, узнай chat_id группы (через @userinfobot — пересланное из группы). Поставь этот chat_id во всех ульях. Все отчёты будут падать в одну группу — удобно для пасеки на N ульев.
+            </div>
+        </div>
+
 </div>
 
 <!-- ===== FAQ ===== -->
@@ -1697,6 +2709,334 @@ monitor_speed = 115200</pre>
         </div>
 
     </div>
+</div>
+
+
+<!-- ===== TROUBLESHOOTING ===== -->
+<div id="troubles" class="section">
+<div class="card green">
+            <h2>🩺 Сначала — Экран 9 «Диагностика»</h2>
+            <p>В v5 добавлен <strong>встроенный самотест</strong>. Кнопкой MENU прокрути до <strong>Экрана 8</strong> — ESP32 проверит все компоненты по очереди и покажет OK / FAIL для каждого:</p>
+
+            <table class="table">
+                <tr><th>Компонент</th><th>Что проверяется</th><th>Если FAIL</th></tr>
+                <tr>
+                    <td><span class="led ok"></span>HX711</td>
+                    <td>Отклик на запрос данных</td>
+                    <td>Проверь DT (D16), SCK (D17), питание 3V3, целостность шлейфа</td>
+                </tr>
+                <tr>
+                    <td><span class="led ok"></span>DS18B20</td>
+                    <td>1-Wire ответ, температура ≠ −127</td>
+                    <td>Проверь резистор 4.7 кОм между DATA и 3V3, целостность кабеля</td>
+                </tr>
+                <tr>
+                    <td><span class="led ok"></span>RTC DS3231</td>
+                    <td>I²C 0x68 + чтение времени</td>
+                    <td>Проверь SDA/SCL, питание 3V3, батарейку CR2032</td>
+                </tr>
+                <tr>
+                    <td><span class="led ok"></span>Battery</td>
+                    <td>Напряжение на ADC (D34) в диапазоне</td>
+                    <td>Проверь делитель R1/R2, контакт BAT+ от AS21</td>
+                </tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 Если все OK</strong> — железо в порядке, ищи проблему в Wi-Fi / Telegram / расписании.
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>📺 LCD не работает</h2>
+
+            <div class="problem-box">
+                <h4>LCD не отображает ничего или показывает квадраты ▮▮▮▮</h4>
+                <ul>
+                    <li><strong>Питание:</strong> LCD требует 5 В на VCC. Подключи к <code>VIN</code> (от AS21), а не к 3V3</li>
+                    <li><strong>Контрастность:</strong> отрегулируй синий подстроечный резистор на обратной стороне I²C-адаптера LCD (тонкой отвёрткой)</li>
+                    <li><strong>I²C адрес:</strong> в коде <code>LCD_ADDR = 0x27</code>. На некоторых модулях — 0x3F. Загрузи I²C-сканер и проверь</li>
+                    <li><strong>Распиновка:</strong> SDA → D21 (GPIO21), SCL → D22 (GPIO22)</li>
+                    <li><strong>Подсветка не горит совсем</strong> — выпаянная или сгоревшая. Проверь джампер на адаптере (BL — backlight)</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>⚖️ Вес неправильный или 0.00</h2>
+
+            <div class="problem-box">
+                <h4>Вес показывает 0.00, мигает «*** OSHIBKA! ***» или Экран 9 пишет HX711 FAIL</h4>
+                <ul>
+                    <li><strong>Распиновка:</strong> DT → D16 (GPIO16), SCK → D17 (GPIO17), VCC → 3V3, GND → GND</li>
+                    <li><strong>Экран 9 (Диагностика):</strong> посмотри HX711 OK или FAIL</li>
+                    <li><strong>Полярность:</strong> попробуй поменять местами A+ и A− тензодатчика — если вес уезжает в минус</li>
+                    <li><strong>Тарирование:</strong> зажми MAIN на 3 сек → MENU=OK</li>
+                    <li><strong>Если HX711 = FAIL</strong> — отключи питание, прозвони мультиметром все 4 провода (VCC, GND, DT, SCK). Чаще всего отвалился DT</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>Вес «прыгает» на ±0.5 кг</h4>
+                <ul>
+                    <li><strong>Платформа кривая:</strong> поставь весы на ровную поверхность. Все 4 опоры должны нести нагрузку</li>
+                    <li><strong>Помехи:</strong> HX711 чувствителен к электромагнитным наводкам. Не клади провода рядом с силовыми кабелями</li>
+                    <li><strong>EMA-сглаживание:</strong> сайт → Настройки → EMA альфа = 0.1 (вместо 0.3) — сильнее сгладит, но медленнее реакция</li>
+                    <li><strong>Питание HX711:</strong> подключи к 3V3, а не к 5В — на 3V3 шум меньше</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>Вес меняется на 0.5–1 кг при изменении температуры на улице</h4>
+                <ul>
+                    <li>Это особенность тензодатчика — он чувствителен к температуре. Калибруй при средней температуре сезона</li>
+                    <li>Используй компенсированные тензодатчики (класс C3, маркировка «temperature compensated»)</li>
+                    <li>Δ от эталона показывает <em>относительное</em> изменение — это не критично если фиксируешь эталон при той же температуре</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>🌡️ Температура DS18B20 неправильная</h2>
+
+            <div class="problem-box">
+                <h4>−127 °C или ошибка</h4>
+                <ul>
+                    <li><strong>Резистор 4.7 кОм</strong> между DATA и VCC (3.3 В) обязателен. Без него датчик не отвечает — это самая частая причина</li>
+                    <li><strong>Распиновка:</strong> DATA → D4 (GPIO4), VCC → 3V3, GND → GND</li>
+                    <li><strong>Перепутаны GND и VCC:</strong> датчик греется и долго не работает (но обычно не сгорает за секунды)</li>
+                    <li><strong>Длинный кабель в улей</strong> (&gt;1 м) — pullup 4.7 кОм поставь ближе к датчику, не к ESP32</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>Температура не меняется (застряла на одном значении)</h4>
+                <ul>
+                    <li>Перезагрузи ESP32 (RST). Возможно завис драйвер OneWire</li>
+                    <li>Запусти Экран 9 (Диагностика) — он сделает свежий запрос</li>
+                    <li>Проверь что в улье действительно та температура — поставь рядом контрольный термометр</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>🕐 RTC DS3231 — RTC ERROR на Экране 5</h2>
+
+            <div class="problem-box">
+                <h4>«RTC ERROR» или время постоянно сбрасывается</h4>
+                <ul>
+                    <li><strong>Села CR2032</strong> — замени батарейку. Хватает на 5–10 лет, но могла прийти севшей</li>
+                    <li><strong>Power LED + R5 на модуле</strong> — выпаяй их (см. <a href="02_connection.html" style="color:var(--info)">«Подключение → DS3231»</a>). Иначе батарея проживёт месяцы вместо лет</li>
+                    <li><strong>I²C не отвечает:</strong> Экран 9 → RTC FAIL. Проверь SDA/SCL и питание 3V3</li>
+                    <li><strong>После замены батарейки</strong> — синхронизируй время: сайт → Настройки → Sync NTP (или Serial команда <code>SETTIME</code>)</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>Время правильное, но расписание не срабатывает</h4>
+                <ul>
+                    <li>С v5.0.47 расписание работает через <b>DS3231 Alarm2 + power-cut</b>: SQW → D33 обязателен. Если SQW не припаян или CR2032 села — весы не проснутся по расписанию вообще</li>
+                    <li>Sleep guard 60 сек: если до следующего срабатывания меньше минуты, ESP32 не уходит в сон. Это нормально</li>
+                    <li>На Экране 6 счётчик пробуждений N должен расти после каждого срабатывания. Если N=0 после нескольких срабатываний — расписание не настроено или сохранено некорректно</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>📶 Wi-Fi не работает</h2>
+
+            <div class="problem-box">
+                <h4>Сеть BeehiveScale не видна</h4>
+                <ul>
+                    <li>ESP32 инициализируется 5–10 секунд после включения — подожди</li>
+                    <li>На Экране 6 LCD должно показывать <strong>W:OK</strong></li>
+                    <li>Если включён режим STA (подключение к роутеру) — сети BeehiveScale не будет, ищи весы по IP в роутере</li>
+                    <li><strong>Сброс Wi-Fi на дефолт:</strong> зажми MENU 5 сек на главном экране — Wi-Fi настройки сбросятся (AP / BeehiveScale / 12345678)</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>STA-режим: ESP32 не подключается к роутеру</h4>
+                <ul>
+                    <li>ESP32 поддерживает <strong>только 2.4 ГГц</strong> Wi-Fi. Если роутер двухдиапазонный — выдели отдельную SSID для 2.4 ГГц</li>
+                    <li>Проверь пароль (без опечаток, регистр учитывается)</li>
+                    <li>Если STA таймаут (10 сек) — ESP32 откатывается обратно в AP. Подключайся к BeehiveScale, проверяй настройки</li>
+                    <li>WPA3-only сети не поддерживаются — нужен WPA2 или WPA2/WPA3 mixed</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>📱 Telegram не приходит</h2>
+
+            <div class="problem-box">
+                <h4>Тестовое сообщение не приходит</h4>
+                <ul>
+                    <li><strong>401 Unauthorized:</strong> неправильный Token — перепроверь, без пробелов, без кавычек</li>
+                    <li><strong>400 Bad Request</strong> или <strong>chat not found:</strong> неправильный Chat ID, или ты не нажал /start в боте</li>
+                    <li><strong>CONNECTION_REFUSED</strong> / <strong>CONNECTION_LOST:</strong> нет интернета или Wi-Fi не подключился — нужен режим STA</li>
+                    <li>Если приходят сообщения <em>без</em> жирного шрифта (теги <code>&lt;b&gt;</code> видны как текст) — обнови прошивку до v5.0.1+</li>
+                </ul>
+                <p style="margin-top:10px">Подробности — на странице <a href="06_telegram.html" style="color:var(--info)">«Telegram → Что может пойти не так»</a>.</p>
+            </div>
+
+            <div class="problem-box">
+                <h4>Тест работает, но по расписанию ничего не приходит</h4>
+                <ul>
+                    <li>Сайт → Расписание — проверь что время задано</li>
+                    <li>Экран 5 LCD: время правильное?</li>
+                    <li>Экран 6: счётчик пробуждений N растёт после срабатывания расписания?</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>💤 ESP32 не просыпается из Deep Sleep</h2>
+
+            <div class="info-box">
+                <strong>ℹ️ В v5 на ESP32 deep sleep работает железно</strong> (в отличие от ESP8266 v4.1, где была проблема с D0 = HX711 и нужна была перемычка GPIO16 → RST). Это была одна из главных причин миграции на ESP32.
+            </div>
+
+            <div class="problem-box">
+                <h4>ESP32 ушёл в сон и не возвращается</h4>
+                <ul>
+                    <li><strong>Батарея &lt; 3.0 В</strong> — защита DW01 на AS21 могла отключить банку. Подзаряди через microUSB AS21</li>
+                    <li><strong>Кнопка RST</strong> на плате ESP32 — полная перезагрузка</li>
+                    <li><strong>Экран 5:</strong> время на DS3231 правильное? Если RTC ERROR — расписание не работает</li>
+                    <li><strong>Экран 6:</strong> N (счётчик пробуждений) растёт? Если нет — расписание не настроено или таймер сна некорректен. С v5.0.47 wake идёт по DS3231 Alarm2 (power-cut), а не по внутреннему таймеру ESP32</li>
+                    <li><strong>USB-C в ESP32 подключён?</strong> При активном USB-сериал ESP32 не уходит в полный сон — отключи USB</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>💾 Прошивка не влезает в ESP32</h2>
+
+            <div class="problem-box">
+                <h4>Ошибка «Sketch too big» / «Not enough space» при загрузке</h4>
+                <ul>
+                    <li>В Arduino IDE → Инструменты → <strong>Partition Scheme: Huge APP (3MB No OTA / 1MB SPIFFS)</strong></li>
+                    <li>По умолчанию выбрана Default Partition (1.31 МБ под код), а прошивка ~1.4 МБ — не влезает</li>
+                    <li>В PlatformIO добавь в <code>platformio.ini</code>: <code>board_build.partitions = huge_app.csv</code></li>
+                </ul>
+                <div class="warning" style="margin-top:10px">
+                    <strong>⚠️ Цена Huge APP:</strong> нет места под OTA — прошивка обновляется только через USB-C кабель. Для OTA нужен <code>min_spiffs.csv</code> partition (1.9 МБ кода / 1.9 МБ OTA / 190 КБ SPIFFS) и пересборка.
+                </div>
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>🔋 Батарея показывает неправильный заряд</h2>
+
+            <div class="problem-box">
+                <h4>Сайт показывает 0% при 100% батарее</h4>
+                <ul>
+                    <li>Проверь делитель R1+R2 (по 100 кОм). Прозвони мультиметром</li>
+                    <li>Проверь что BAT+ берётся с банки 18650 (3.0–4.2 В), а не с 5V_OUT AS21</li>
+                    <li>На D34 ESP32 должно быть ~2.1 В при полной батарее (4.2 / 2)</li>
+                    <li>На Экране 8 (Диагностика) → Battery должно быть OK</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>Ошибка ADC после обновления Arduino ESP32 Core 3.0+</h4>
+                <ul>
+                    <li>В Core 3.0 переименованы константы аттенюации: <code>ADC_ATTEN_DB_11</code> → <code>ADC_11db</code></li>
+                    <li>Если собираешь с Core 3.0 — обнови прошивку (или замени константу в <code>Battery.cpp</code>)</li>
+                    <li>Альтернатива — откатиться на Core 2.0.x в Менеджере плат</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>Батарея слишком быстро разряжается</h4>
+                <ul>
+                    <li>Auto-sleep работает? Сайт → Настройки → Авто-сон должен быть 180 сек, не 0</li>
+                    <li>Wi-Fi STA активен 24/7? Это жрёт ~80 мА — отключай после отчёта (в v5 это автоматически)</li>
+                    <li>Power LED на DS3231 не выпаян? Жжёт 200 мкА постоянно</li>
+                    <li>R5 на DS3231 не выпаян? Жрёт ток через CR2032</li>
+                    <li>Замени AMS1117 на HT7333 — спячка с 7 мА упадёт до 3 мА</li>
+                    <li>USB-C в ESP32 подключён? — мешает уходу в полный сон</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>📊 Нет данных в логе / графике</h2>
+
+            <div class="problem-box">
+                <h4>Лог пустой / график не строится</h4>
+                <ul>
+                    <li>В v5 лог хранится в <strong>LittleFS</strong> (внутренний flash ESP32), а не на SD-карте. SD-карты больше нет вообще</li>
+                    <li>Замеры пишутся <em>по расписанию</em> и <em>перед уходом в deep sleep</em>. Если расписание не настроено и ESP32 всё время активна — лог не пополняется</li>
+                    <li>Проверь: <code>http://192.168.4.1/api/log</code> — должен скачаться CSV. Если файл 0 байт — лог пуст</li>
+                    <li>Очистка лога: <code>POST /api/log/clear</code> — может ты случайно его очистил</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>График долго грузится / не обновляется</h4>
+                <ul>
+                    <li><code>/api/log/json</code> имеет throttle 30 сек на сервере — чаще обновлять не получится (защита ESP32 от нагрузки)</li>
+                    <li>Если файл лога большой (&gt;500 КБ) — ESP32 долго парсит. Очисти лог раз в сезон</li>
+                    <li>Открой полноэкранный график: <code>/chart</code> — на нём меньше JS</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card red">
+            <h2>🛠️ Отвалилась кнопка / случайно сделал тарирование</h2>
+
+            <div class="problem-box">
+                <h4>Кнопка MAIN не реагирует</h4>
+                <ul>
+                    <li>Распиновка: D27 (GPIO27) ↔ GND. INPUT_PULLUP, без внешних резисторов</li>
+                    <li>Если кнопка работает только удержанием очень долго — возможно дребезг. В <code>Settings.h</code> увеличь <code>BTN_DEBOUNCE_MS</code></li>
+                    <li>В v5 короткое нажатие MAIN <em>ничего не делает</em> (защита). Для тары нужно держать 3 сек + MENU=OK</li>
+                </ul>
+            </div>
+
+            <div class="problem-box">
+                <h4>Случайно сделал тарирование — как откатить</h4>
+                <ul>
+                    <li>Сайт → главная → кнопка <strong>«Отменить тару»</strong> — восстанавливает предыдущее значение из <code>prevOffset</code> в EEPROM</li>
+                    <li>Если кнопки нет (старая прошивка) — просто заново протарируй с правильной нагрузкой</li>
+                </ul>
+            </div>
+        </div>
+
+<div class="card yellow">
+            <h2>📋 Контрольный список перед обращением за помощью</h2>
+            <p>Прежде чем писать в issues — пройди по этому списку:</p>
+
+            <table class="table">
+                <tr><th>Шаг</th><th>Что проверить</th></tr>
+                <tr><td>1</td><td>Версия прошивки = <strong>v5.0.67</strong>? (Serial команда <code>STATUS</code> или шапка сайта)</td></tr>
+                <tr><td>2</td><td>Экран 9 «Диагностика» — все компоненты OK?</td></tr>
+                <tr><td>3</td><td>Партиция = <strong>Huge APP (3MB No OTA / 1MB SPIFFS)</strong>?</td></tr>
+                <tr><td>4</td><td>Библиотеки актуальные? Особенно <strong>ArduinoJson 6.x</strong> (НЕ 7.x!)</td></tr>
+                <tr><td>5</td><td>Распиновка совпадает с <a href="02_connection.html" style="color:var(--info)">схемой</a>? (D16/D17 для HX711, D21/D22 для I²C, D27/D26 кнопки, D4 для DS18B20, D34 для батареи. D33 для SQW — задел на P3, в коде не используется)</td></tr>
+                <tr><td>6</td><td>Питание стабильное? Проверь напряжение на VIN (должно быть ~5 В от AS21)</td></tr>
+                <tr><td>7</td><td>Открой Serial монитор (115200) — есть подсказки в логе?</td></tr>
+                <tr><td>8</td><td>Сделай <code>STATUS</code> и <code>DIAG</code> через Serial и приложи вывод к issue</td></tr>
+            </table>
+
+            <div class="tip">
+                <strong>💡 GitHub Issues:</strong> в репозитории есть <code>.github/ISSUE_TEMPLATE/</code> — шаблоны для багов. Заполни как минимум: версия прошивки, что произошло, что ожидалось, вывод Serial.
+            </div>
+        </div>
+
+<div class="card green">
+            <h2>📚 Полезные ссылки в документации</h2>
+            <ul style="margin-left:20px;color:var(--text-muted);line-height:2">
+                <li><a href="01_components.html" style="color:var(--info)">Компоненты</a> — список + где купить</li>
+                <li><a href="02_connection.html" style="color:var(--info)">Подключение</a> — схемы и таблица распиновки</li>
+                <li><a href="03_settings.html" style="color:var(--info)">Настройка</a> — pin defines, EEPROM-карта, partition</li>
+                <li><a href="04_operation.html" style="color:var(--info)">Эксплуатация</a> — кнопки, экраны, авто-сон</li>
+                <li><a href="05_web.html" style="color:var(--info)">Веб-интерфейс</a> — REST API, разделы сайта</li>
+                <li><a href="06_telegram.html" style="color:var(--info)">Telegram</a> — настройка через CF Worker</li>
+                <li><a href="../manual.html" style="color:var(--info)">Полное руководство (manual.html)</a> — всё в одном файле</li>
+            </ul>
+        </div>
 </div>
 
 </div>
