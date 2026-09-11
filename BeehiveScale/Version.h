@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 69
-#define FW_VERSION_SUFFIX ""  // 5.0.69 — FEATURE: кнопка «Excel с подсветкой» в Архиве. Весы сами отдают раскрашенную таблицу (/api/log/xls): вес, температура и батарея с заливкой, изменение веса зелёным/красным. Раскраска на устройстве — файл открывается готовым на любом компьютере, без скриптов.
+#define FW_VERSION_PATCH 70
+#define FW_VERSION_SUFFIX ""  // 5.0.70 — FIX: кнопка «Весь лог CSV» всегда отдавала 500 «Cannot open log». Веб-слой открывал файл через макрос LOG_FS = SPIFFS, а лог пишется в LittleFS. Выгрузка переведена на Logger, макрос убран.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

@@ -24,11 +24,11 @@ using WebServerCompat = WebServer;
 #include <LittleFS.h>
 #elif defined(ESP8266)
 #include <LittleFS.h>
-#define LOG_FS LittleFS
 #elif defined(ESP32)
-#include <SPIFFS.h>
-#define LOG_FS SPIFFS
+#include <LittleFS.h>
 #endif
+// Макрос LOG_FS убран в v5.0.70: он указывал на SPIFFS, хотя лог живёт в LittleFS.
+// Веб-слой больше не лезет в файловую систему сам — все выгрузки идут через Logger.
 
 static WebServerCompat _srv(WEB_SERVER_PORT);
 static WebData    _wd;
@@ -2671,21 +2671,17 @@ static void _handleLog() {
     return;
   }
   if (date.length() == 0) {
-    // Без фильтра — стримим весь файл напрямую
-    File f;
-#ifdef USE_SD_CARD
-    if (log_using_fallback()) {
-      f = LittleFS.open(LOG_FILE, "r");
-    } else {
-      f = SD.open(LOG_FILE, FILE_READ);
-    }
-#else
-    f = LOG_FS.open(LOG_FILE, "r");
-#endif
-    if (!f) { _srv.send(500, "text/plain", "Cannot open log"); return; }
+    // v5.0.70 FIX: раньше файл открывался здесь напрямую через LOG_FS — а на ESP32
+    // этот макрос указывает на SPIFFS, тогда как лог пишется в LittleFS
+    // (Logger.cpp: _fs_open_read). Открытие всегда падало → кнопка «Весь лог CSV»
+    // отдавала 500 «Cannot open log». Выгрузки за период работали, потому что идут
+    // через Logger. Теперь и этот путь тоже: одна файловая система, один код.
     _srv.sendHeader("Content-Disposition", "attachment; filename=\"beehive_log.csv\"");
-    _srv.streamFile(f, "text/csv");
-    f.close();
+    _srv.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    _srv.send(200, "text/csv; charset=utf-8", "");
+    _WebChunkStream cs(_srv);
+    log_stream_csv_range(cs, String(""), String(""));   // пустой диапазон = весь лог
+    cs.flush();
   } else {
     // С фильтром по дате — стримим чанками (chunked transfer) для экономии heap
     String fname = "beehive_" + date + ".csv";
