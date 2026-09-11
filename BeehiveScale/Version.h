@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 68
-#define FW_VERSION_SUFFIX ""  // 5.0.68 — FIX: дубли TG-отчётов при boot-loop (анти-дубль через EEPROM, механизм v5.0.44 наконец задействован) + диагностика: причина последнего сброса (POWERON/PANIC/BROWNOUT/WDT) в /api/data и в карточке «Статус системы».
+#define FW_VERSION_PATCH 69
+#define FW_VERSION_SUFFIX ""  // 5.0.69 — FEATURE: кнопка «Excel с подсветкой» в Архиве. Весы сами отдают раскрашенную таблицу (/api/log/xls): вес, температура и батарея с заливкой, изменение веса зелёным/красным. Раскраска на устройстве — файл открывается готовым на любом компьютере, без скриптов.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

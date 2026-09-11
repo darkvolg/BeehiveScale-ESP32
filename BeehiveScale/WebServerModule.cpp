@@ -861,6 +861,7 @@ input[type=checkbox]{width:auto}
       <div class="api-item"><div class="api-method get">GET /api/data</div><div class="api-desc">Все показания (вес/темп/бат/статус)</div></div>
       <div class="api-item"><div class="api-method get">GET /api/config</div><div class="api-desc">Конфигурация (alertDelta, ema, sleep…)</div></div>
       <div class="api-item"><div class="api-method get">GET /api/log</div><div class="api-desc">Скачать лог CSV (опц. ?date=YYYY-MM-DD)</div></div>
+      <div class="api-item"><div class="api-method get">GET /api/log/xls</div><div class="api-desc">Excel-таблица с подсветкой (опц. ?from=&amp;to=)</div></div>
       <div class="api-item"><div class="api-method get">GET /api/log/json</div><div class="api-desc">Лог в JSON (для Grafana/Home Assistant)</div></div>
       <div class="api-item"><div class="api-method get">GET /api/daystat</div><div class="api-desc">Суточная статистика (опц. ?date=)</div></div>
       <div class="api-item"><div class="api-method post">POST /api/tare</div><div class="api-desc">Тарировка весов</div></div>
@@ -922,7 +923,8 @@ input[type=checkbox]{width:auto}
     <div class="card-title">⬇ Скачать</div>
     <button class="btn btn-blue" style="width:100%;margin-bottom:6px" onclick="archDownloadRange()">📥 CSV за выбранный период</button>
     <button class="btn btn-green" style="width:100%" onclick="dlOpen('/api/log')">📥 Весь лог CSV</button>
-    <div style="font-size:12px;color:var(--text3);margin-top:8px">Файлы откроются в Excel / LibreOffice. Разделитель «;», десятичная запятая.</div>
+    <button class="btn btn-amber" style="width:100%;margin-top:6px" onclick="archDlXls()">📊 Excel с подсветкой (за период)</button>
+    <div style="font-size:12px;color:var(--text3);margin-top:8px">CSV — голые цифры для расчётов. <b>Excel с подсветкой</b> — тот же период, но вес, температура и батарея раскрашены, изменение веса зелёным/красным. При открытии Excel спросит про формат файла — нажми «Да».</div>
   </div>
 </div>
 
@@ -1491,6 +1493,12 @@ function dlSdDate(){const d=document.getElementById('exp-date-sd').value;if(!d){
 // v5.0.68: любое скачивание — через dlOpen: глушит поллинг на 30 сек, иначе
 // параллельный /api/data обрывает передачу файла.
 function dlOpen(url){ ioBusy(30000); toast('Готовлю файл…'); window.open(url,'_blank'); }
+// v5.0.69: тот же период, что выбран в Архиве, но раскрашенной Excel-таблицей
+function archDlXls(){
+  const f=document.getElementById('arch-from').value, t=document.getElementById('arch-to').value;
+  const qs=[]; if(f)qs.push('from='+f); if(t)qs.push('to='+t);
+  dlOpen('/api/log/xls'+(qs.length?'?'+qs.join('&'):''));
+}
 
 // ── Backup ─────────────────────────────────────────────────────────────
 function downloadBackup(){window.open('/api/backup','_blank');}
@@ -2723,6 +2731,45 @@ static void _handlePeriod() {
   cs.flush();
 }
 
+// ─── /api/log/xls  GET — выгрузка за диапазон, которую Excel открывает С ЦВЕТАМИ
+// (v5.0.69). Раньше единственным экспортом был голый CSV: колонка цифр, в которой
+// ничего не разглядеть. Раскраску делает сама прошивка — значит файл приходит
+// готовым на любой компьютер, без скриптов и без конкретной машины.
+static void _handleLogXls() {
+  if (!_auth()) return;
+  static unsigned long _lastXlsReq = 0;
+  if (!_rate_limit(_lastXlsReq, 1000UL)) return;
+  _activity();
+  if (!log_exists()) {
+    _srv.send(404, "text/plain", "Log not found");
+    return;
+  }
+  String dFrom = _srv.arg("from");
+  String dTo   = _srv.arg("to");
+  auto sanitizeDate = [](String &d) -> bool {
+    if (d.length() == 0) return true;
+    if (d.length() > 10) d = d.substring(0, 10);
+    for (unsigned int i = 0; i < d.length(); i++) {
+      char ch = d[i];
+      if (!isdigit(ch) && ch != '-' && ch != '.') return false;
+    }
+    return true;
+  };
+  if (!sanitizeDate(dFrom) || !sanitizeDate(dTo)) {
+    _srv.send(400, "text/plain", "Bad date");
+    return;
+  }
+  String fname = "beehive_" +
+                 (dFrom.length() ? dFrom : String("start")) + "_" +
+                 (dTo.length()   ? dTo   : String("end"))   + ".xls";
+  _srv.sendHeader("Content-Disposition", "attachment; filename=\"" + fname + "\"");
+  _srv.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  _srv.send(200, "application/vnd.ms-excel; charset=utf-8", "");
+  _WebChunkStream cs(_srv);
+  log_stream_xls_range(cs, dFrom, dTo);
+  cs.flush();
+}
+
 // ─── /manifest.json  GET — PWA-манифест ──────────────────────────────────
 static void _handleManifest() {
   _activity();
@@ -3312,6 +3359,7 @@ void webserver_init(WebData &data, WebActions &actions) {
     _srv.on("/chart",            HTTP_GET,  _handleChart);
     _srv.on("/archive",          HTTP_GET,  _handleArchive);
     _srv.on("/api/period",       HTTP_GET,  _handlePeriod);
+    _srv.on("/api/log/xls",      HTTP_GET,  _handleLogXls);   // v5.0.69: Excel с подсветкой
     _srv.on("/api/last-visit",   HTTP_GET,  _handleLastVisit);
     _srv.on("/api/battery/calib",HTTP_GET,  _handleBatteryCalib);
     _srv.on("/api/battery/calib",HTTP_POST, _handleBatteryCalib);

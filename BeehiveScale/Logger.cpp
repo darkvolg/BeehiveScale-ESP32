@@ -1216,3 +1216,132 @@ size_t log_stream_backup(Stream &out) {
   f.close();
   return total;
 }
+
+// ─── Стрим Excel-таблицы за диапазон (v5.0.69) ───────────────────────────
+// Голый CSV — колонка цифр, в которой ничего не видно. Здесь весы сами красят:
+// вес жёлтой заливкой, температура сине-жёлто-красной шкалой, батарея зелёной
+// полосой с красной отсечкой на пороге алерта, изменение веса зелёным/красным.
+// Excel показывает предупреждение «формат не совпадает с расширением» — это
+// нормально для HTML-таблицы под именем .xls, надо нажать «Да».
+
+static const char XLS_HEAD[] PROGMEM =
+  "<html xmlns:x=\"urn:schemas-microsoft-com:office:excel\"><head>"
+  "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
+  "<style>"
+  "table{border-collapse:collapse;font-family:Calibri,Arial;font-size:11pt}"
+  "td,th{border:1px solid #C8C8C0;padding:3px 8px;text-align:center;mso-number-format:General}"
+  "th{background:#1F3A2E;color:#F5A623;font-weight:bold}"
+  ".dt{text-align:left;mso-number-format:'\@'}"
+  ".w{background:#FFF3CD;font-weight:bold}"
+  ".up{color:#1E7B34;font-weight:bold}.dn{color:#C0392B;font-weight:bold}"
+  ".t0{background:#9DC3E6}.t1{background:#DEEAF6}.t2{background:#FFF2CC}"
+  ".t3{background:#F8CBAD}.t4{background:#E06666;color:#fff}"
+  ".b0{background:#FFC7CE;color:#9C0006;font-weight:bold}"
+  ".b1{background:#FFEB9C}.b2{background:#E2EFDA}.b3{background:#C6E0B4}"
+  "</style></head><body>"
+  "<table><tr>"
+  "<th>&#1044;&#1072;&#1090;&#1072; &#1080; &#1074;&#1088;&#1077;&#1084;&#1103;</th>"
+  "<th>&#1042;&#1077;&#1089;, &#1082;&#1075;</th>"
+  "<th>&#1048;&#1079;&#1084;., &#1082;&#1075;</th>"
+  "<th>&#1058;&#1077;&#1084;&#1087;., &#176;C</th>"
+  "<th>&#1041;&#1072;&#1090;&#1072;&#1088;&#1077;&#1103;, &#1042;</th>"
+  "<th>&#1047;&#1072;&#1088;&#1103;&#1076;, %</th></tr>\n";
+
+struct _XlsCtx { Stream *out; float prevW; bool hasPrev; };
+
+// Кривая LiPo — та же что в Battery.cpp:53-59, иначе проценты в файле
+// разойдутся с тем, что показывают весы на экране и в Telegram.
+static int _xls_bat_pct(float v) {
+  float pct;
+  if      (v >= 4.10f) pct = 95 + (v - 4.10f) / (4.20f - 4.10f) * 5.0f;
+  else if (v >= 3.90f) pct = 75 + (v - 3.90f) / (4.10f - 3.90f) * 20.0f;
+  else if (v >= 3.75f) pct = 45 + (v - 3.75f) / (3.90f - 3.75f) * 30.0f;
+  else if (v >= 3.60f) pct = 15 + (v - 3.60f) / (3.75f - 3.60f) * 30.0f;
+  else if (v >= 3.40f) pct =  5 + (v - 3.40f) / (3.60f - 3.40f) * 10.0f;
+  else if (v >= 3.00f) pct = (v - 3.00f) / (3.40f - 3.00f) * 5.0f;
+  else pct = 0.0f;
+  if (pct < 0) pct = 0; if (pct > 100) pct = 100;
+  return (int)pct;
+}
+
+static void _emit_xls_row(const char *buf, int pos, void *ctxv) {
+  _XlsCtx *c = (_XlsCtx*)ctxv;
+  Stream *o = c->out;
+
+  // Разбор строки лога: datetime;weight;temp;humidity;bat
+  int s1=-1,s2=-1,s3=-1,s4=-1;
+  for (int i = 0; i < pos; i++) {
+    if (buf[i] == ';') {
+      if      (s1 < 0) s1 = i;
+      else if (s2 < 0) s2 = i;
+      else if (s3 < 0) s3 = i;
+      else if (s4 < 0) { s4 = i; break; }
+    }
+  }
+  if (s1 < 0 || s2 < 0 || s3 < 0 || s4 < 0) return;
+
+  auto fieldF = [&](int a, int b) -> float {
+    char tmp[16]; int n = b - a - 1;
+    if (n <= 0) return NAN;
+    if (n >= (int)sizeof(tmp)) n = (int)sizeof(tmp) - 1;
+    for (int i = 0; i < n; i++) tmp[i] = (buf[a+1+i] == ',') ? '.' : buf[a+1+i];
+    tmp[n] = '\0';
+    return atof(tmp);
+  };
+  float w = fieldF(s1, s2);
+  float t = fieldF(s2, s3);
+  float b = fieldF(s4, pos + 1);
+  if (isnan(w) || w < -5.0f || w > 500.0f) return;
+
+  // Дата — текстом, иначе Excel в русской локали жуёт DD.MM.YYYY по-своему
+  o->print(F("<tr><td class=\"dt\">"));
+  o->write((const uint8_t*)buf, s1);
+  o->print(F("</td><td class=\"w\">"));
+  o->write((const uint8_t*)(buf + s1 + 1), s2 - s1 - 1);   // вес как есть, с запятой
+  o->print(F("</td>"));
+
+  // Изменение к предыдущему замеру
+  if (c->hasPrev) {
+    float d = w - c->prevW;
+    const char *cls = (d > 0.05f) ? "up" : (d < -0.05f ? "dn" : "");
+    o->print(F("<td class=\"")); o->print(cls); o->print(F("\">"));
+    char db[16];
+    snprintf(db, sizeof(db), "%+.2f", d);
+    for (char *p = db; *p; p++) if (*p == '.') *p = ',';
+    o->print(db);
+    o->print(F("</td>"));
+  } else {
+    o->print(F("<td></td>"));
+  }
+  c->prevW = w; c->hasPrev = true;
+
+  // Температура — 5 ступеней от синего к красному
+  const char *tc = "t2";
+  if (!isnan(t)) {
+    if      (t < 10.0f) tc = "t0";
+    else if (t < 20.0f) tc = "t1";
+    else if (t < 28.0f) tc = "t2";
+    else if (t < 35.0f) tc = "t3";
+    else                tc = "t4";
+  }
+  o->print(F("<td class=\"")); o->print(tc); o->print(F("\">"));
+  o->write((const uint8_t*)(buf + s2 + 1), s3 - s2 - 1);
+  o->print(F("</td>"));
+
+  // Батарея: ниже 3.6 В (порог алерта) — красным
+  int pct = isnan(b) ? 0 : _xls_bat_pct(b);
+  const char *bc = (b < 3.6f) ? "b0" : (pct < 50 ? "b1" : (pct < 80 ? "b2" : "b3"));
+  o->print(F("<td class=\"")); o->print(bc); o->print(F("\">"));
+  o->write((const uint8_t*)(buf + s4 + 1), pos - s4 - 1);
+  o->print(F("</td><td class=\"")); o->print(bc); o->print(F("\">"));
+  o->print(pct);
+  o->print(F("</td></tr>\n"));
+}
+
+size_t log_stream_xls_range(Stream &out, const String &from, const String &to) {
+  out.print((const __FlashStringHelper*)XLS_HEAD);
+  _XlsCtx ctx; ctx.out = &out; ctx.prevW = 0.0f; ctx.hasPrev = false;
+  size_t n = _stream_filter_range(from, to, _emit_xls_row, &ctx);
+  out.print(F("</table></body></html>"));
+  return n;
+}
