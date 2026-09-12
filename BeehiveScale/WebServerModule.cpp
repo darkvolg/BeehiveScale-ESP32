@@ -861,7 +861,7 @@ input[type=checkbox]{width:auto}
       <div class="api-item"><div class="api-method get">GET /api/data</div><div class="api-desc">Все показания (вес/темп/бат/статус)</div></div>
       <div class="api-item"><div class="api-method get">GET /api/config</div><div class="api-desc">Конфигурация (alertDelta, ema, sleep…)</div></div>
       <div class="api-item"><div class="api-method get">GET /api/log</div><div class="api-desc">Скачать лог CSV (опц. ?date=YYYY-MM-DD)</div></div>
-      <div class="api-item"><div class="api-method get">GET /api/log/xls</div><div class="api-desc">Excel-таблица с подсветкой (опц. ?from=&amp;to=)</div></div>
+      <div class="api-item"><div class="api-method get">GET /api/log/xls</div><div class="api-desc">Excel-книга с подсветкой: листы Сводка / Замеры / По дням (опц. ?from=&amp;to=)</div></div>
       <div class="api-item"><div class="api-method get">GET /api/log/json</div><div class="api-desc">Лог в JSON (для Grafana/Home Assistant)</div></div>
       <div class="api-item"><div class="api-method get">GET /api/daystat</div><div class="api-desc">Суточная статистика (опц. ?date=)</div></div>
       <div class="api-item"><div class="api-method post">POST /api/tare</div><div class="api-desc">Тарировка весов</div></div>
@@ -924,7 +924,7 @@ input[type=checkbox]{width:auto}
     <button class="btn btn-blue" style="width:100%;margin-bottom:6px" onclick="archDownloadRange()">📥 CSV за выбранный период</button>
     <button class="btn btn-green" style="width:100%" onclick="dlOpen('/api/log')">📥 Весь лог CSV</button>
     <button class="btn btn-amber" style="width:100%;margin-top:6px" onclick="archDlXls()">📊 Excel с подсветкой (за период)</button>
-    <div style="font-size:12px;color:var(--text3);margin-top:8px">CSV — голые цифры для расчётов. <b>Excel с подсветкой</b> — тот же период, но вес, температура и батарея раскрашены, изменение веса зелёным/красным. При открытии Excel спросит про формат файла — нажми «Да».</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:8px">CSV — голые цифры для расчётов. <b>Excel с подсветкой</b> — книга из трёх листов: «Сводка» (итоги и остаток дней работы от батареи), «Замеры» (всё раскрашено, шапка закреплена) и «По дням» (привес за сутки). При открытии Excel спросит про формат файла — нажми «Да».</div>
   </div>
 </div>
 
@@ -2762,7 +2762,7 @@ static void _handleLogXls() {
   _srv.setContentLength(CONTENT_LENGTH_UNKNOWN);
   _srv.send(200, "application/vnd.ms-excel; charset=utf-8", "");
   _WebChunkStream cs(_srv);
-  log_stream_xls_range(cs, dFrom, dTo);
+  log_stream_xlsxml_range(cs, dFrom, dTo);   // v5.0.71: три листа вместо одного
   cs.flush();
 }
 

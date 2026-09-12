@@ -3,8 +3,8 @@
 
 #define FW_VERSION_MAJOR 5
 #define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 70
-#define FW_VERSION_SUFFIX ""  // 5.0.70 — FIX: кнопка «Весь лог CSV» всегда отдавала 500 «Cannot open log». Веб-слой открывал файл через макрос LOG_FS = SPIFFS, а лог пишется в LittleFS. Выгрузка переведена на Logger, макрос убран.
+#define FW_VERSION_PATCH 71
+#define FW_VERSION_SUFFIX ""  // 5.0.71 — Excel-выгрузка стала книгой из трёх листов: «Сводка» (итоги + остаток дней работы от батареи), «Замеры», «По дням». Формат сменён с HTML-таблицы на SpreadsheetML 2003 — единственный, который держит несколько листов в одном файле и собирается на ESP32 обычной печатью в поток.
 
 #define _FW_STR_HELPER(x) #x
 #define _FW_STR(x) _FW_STR_HELPER(x)

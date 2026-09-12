@@ -69,6 +69,10 @@ bool     log_fs_ok();
 // на устройстве: юзеру не нужен ни скрипт, ни этот компьютер — файл приходит
 // готовым на любой ноутбук или телефон.
 size_t   log_stream_xls_range(Stream &out, const String &from, const String &to);
+// v5.0.71: то же, но три листа — «Сводка», «Замеры», «По дням».
+// Формат SpreadsheetML 2003 (XML): единственный, который держит несколько листов
+// в ОДНОМ файле и при этом собирается на ESP32 обычной печатью в поток.
+size_t   log_stream_xlsxml_range(Stream &out, const String &from, const String &to);
 
 // ─── Бэкап настроек на SD/LittleFS ─────────────────────────────────────
 #define BACKUP_FILE "/backup.json"

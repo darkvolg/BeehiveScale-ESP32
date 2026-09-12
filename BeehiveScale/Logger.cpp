@@ -1345,3 +1345,360 @@ size_t log_stream_xls_range(Stream &out, const String &from, const String &to) {
   out.print(F("</table></body></html>"));
   return n;
 }
+
+// ═══ Выгрузка в Excel: три листа (v5.0.71) ════════════════════════════════
+// v5.0.69 отдавал HTML-таблицу — она даёт ровно один лист, потому что Excel в
+// HTML-формате хранит каждый лист отдельным файлом. SpreadsheetML 2003 (XML)
+// умеет несколько листов в одном файле и поддерживает заливки, цвет шрифта и
+// числовые форматы. Графиков этот формат не умеет — они остаются за
+// tools/csv_to_xlsx.py.
+//
+// Файл собирается за три прохода по логу (он маленький, чтение дешёвое):
+//   1) статистика для листа «Сводка» — её надо знать ДО того, как писать первый лист;
+//   2) построчные «Замеры»;
+//   3) «По дням» — группировка на лету: строки в логе идут по возрастанию даты,
+//      поэтому достаточно отследить смену первых 10 символов (DD.MM.YYYY).
+
+struct _StatCtx {
+  uint32_t rows;
+  char  dtFirst[20], dtLast[20];
+  char  dayPrev[11];
+  uint16_t days;
+  float wFirst, wLast, wMin, wMax;
+  float tMin, tMax;
+  float bFirst, bLast;
+  bool  first;
+};
+
+// Разбор строки лога на поля. Возвращает false если строка битая.
+static bool _parse_row(const char *buf, int pos, float &w, float &t, float &b,
+                       int &dtLen) {
+  int s1=-1,s2=-1,s3=-1,s4=-1;
+  for (int i = 0; i < pos; i++) {
+    if (buf[i] == ';') {
+      if      (s1 < 0) s1 = i;
+      else if (s2 < 0) s2 = i;
+      else if (s3 < 0) s3 = i;
+      else if (s4 < 0) { s4 = i; break; }
+    }
+  }
+  if (s1 < 0 || s2 < 0 || s3 < 0 || s4 < 0) return false;
+  dtLen = s1;
+  char tmp[16];
+  auto grab = [&](int a, int bEnd) -> float {
+    int n = bEnd - a - 1;
+    if (n <= 0) return NAN;
+    if (n >= (int)sizeof(tmp)) n = (int)sizeof(tmp) - 1;
+    for (int i = 0; i < n; i++) tmp[i] = (buf[a+1+i] == ',') ? '.' : buf[a+1+i];
+    tmp[n] = 0;
+    return atof(tmp);
+  };
+  w = grab(s1, s2);
+  t = grab(s2, s3);
+  b = grab(s4, pos + 1);
+  if (isnan(w) || w < -5.0f || w > 500.0f) return false;
+  return true;
+}
+
+static void _stat_row(const char *buf, int pos, void *ctxv) {
+  _StatCtx *s = (_StatCtx*)ctxv;
+  float w, t, b; int dtLen;
+  if (!_parse_row(buf, pos, w, t, b, dtLen)) return;
+
+  if (dtLen > 19) dtLen = 19;
+  if (s->first) {
+    memcpy(s->dtFirst, buf, dtLen); s->dtFirst[dtLen] = 0;
+    s->wFirst = w; s->bFirst = b;
+    s->wMin = s->wMax = w;
+    s->tMin = s->tMax = t;
+    s->first = false;
+  }
+  memcpy(s->dtLast, buf, dtLen); s->dtLast[dtLen] = 0;
+  s->wLast = w; s->bLast = b;
+  if (w < s->wMin) s->wMin = w;
+  if (w > s->wMax) s->wMax = w;
+  if (!isnan(t)) {
+    if (isnan(s->tMin) || t < s->tMin) s->tMin = t;
+    if (isnan(s->tMax) || t > s->tMax) s->tMax = t;
+  }
+  if (memcmp(s->dayPrev, buf, 10) != 0) {
+    memcpy(s->dayPrev, buf, 10); s->dayPrev[10] = 0;
+    s->days++;
+  }
+  s->rows++;
+}
+
+// ─── Лист «Замеры» ────────────────────────────────────────────────────────
+struct _RowsCtx { Stream *out; float prevW; bool hasPrev; };
+
+static void _xml_cell_str(Stream *o, const char *p, int n, const char *style) {
+  o->print(F("<Cell ss:StyleID=\"")); o->print(style);
+  o->print(F("\"><Data ss:Type=\"String\">"));
+  o->write((const uint8_t*)p, n);
+  o->print(F("</Data></Cell>"));
+}
+
+static void _xml_cell_num(Stream *o, float v, const char *style, int dec) {
+  char nb[16];
+  if (isnan(v)) { o->print(F("<Cell ss:StyleID=\"")); o->print(style); o->print(F("\"/>")); return; }
+  dtostrf(v, 0, dec, nb);
+  o->print(F("<Cell ss:StyleID=\"")); o->print(style);
+  o->print(F("\"><Data ss:Type=\"Number\">")); o->print(nb);
+  o->print(F("</Data></Cell>"));
+}
+
+static const char* _temp_style(float t) {
+  if (isnan(t))   return "t2";
+  if (t < 10.0f)  return "t0";
+  if (t < 20.0f)  return "t1";
+  if (t < 28.0f)  return "t2";
+  if (t < 35.0f)  return "t3";
+  return "t4";
+}
+
+static const char* _bat_style(float b, int pct) {
+  if (isnan(b))   return "b2";
+  if (b < 3.6f)   return "b0";
+  if (pct < 50)   return "b1";
+  if (pct < 80)   return "b2";
+  return "b3";
+}
+
+static void _emit_xml_row(const char *buf, int pos, void *ctxv) {
+  _RowsCtx *c = (_RowsCtx*)ctxv;
+  Stream *o = c->out;
+  float w, t, b; int dtLen;
+  if (!_parse_row(buf, pos, w, t, b, dtLen)) return;
+
+  o->print(F("<Row>"));
+  _xml_cell_str(o, buf, dtLen, "dt");
+  _xml_cell_num(o, w, "w", 2);
+  if (c->hasPrev) {
+    float d = w - c->prevW;
+    _xml_cell_num(o, d, (d > 0.05f) ? "up" : (d < -0.05f ? "dn" : "num"), 2);
+  } else {
+    o->print(F("<Cell ss:StyleID=\"num\"/>"));
+  }
+  c->prevW = w; c->hasPrev = true;
+  _xml_cell_num(o, t, _temp_style(t), 1);
+  int pct = isnan(b) ? 0 : _xls_bat_pct(b);
+  _xml_cell_num(o, b, _bat_style(b, pct), 2);
+  _xml_cell_num(o, (float)pct, _bat_style(b, pct), 0);
+  o->print(F("</Row>"));
+}
+
+// ─── Лист «По дням» ───────────────────────────────────────────────────────
+struct _DayCtx {
+  Stream *out;
+  char day[11];
+  bool has;
+  uint16_t n;
+  float wLast, wMin, wMax, tMin, tMax, bLast;
+  float prevDayLast;
+  bool  hasPrevDay;
+};
+
+static void _day_flush(_DayCtx *d) {
+  if (!d->has) return;
+  Stream *o = d->out;
+  o->print(F("<Row>"));
+  _xml_cell_str(o, d->day, 10, "dt");
+  _xml_cell_num(o, (float)d->n, "num", 0);
+  _xml_cell_num(o, d->wLast, "w", 2);
+  if (d->hasPrevDay) {
+    float g = d->wLast - d->prevDayLast;
+    _xml_cell_num(o, g, (g > 0.05f) ? "up" : (g < -0.05f ? "dn" : "num"), 2);
+  } else {
+    o->print(F("<Cell ss:StyleID=\"num\"/>"));
+  }
+  _xml_cell_num(o, d->wMin, "num", 2);
+  _xml_cell_num(o, d->wMax, "num", 2);
+  _xml_cell_num(o, d->tMin, "num", 1);
+  _xml_cell_num(o, d->tMax, "num", 1);
+  int pct = isnan(d->bLast) ? 0 : _xls_bat_pct(d->bLast);
+  _xml_cell_num(o, d->bLast, _bat_style(d->bLast, pct), 2);
+  o->print(F("</Row>"));
+  d->prevDayLast = d->wLast;
+  d->hasPrevDay = true;
+}
+
+static void _emit_day_row(const char *buf, int pos, void *ctxv) {
+  _DayCtx *d = (_DayCtx*)ctxv;
+  float w, t, b; int dtLen;
+  if (!_parse_row(buf, pos, w, t, b, dtLen)) return;
+
+  if (!d->has || memcmp(d->day, buf, 10) != 0) {
+    _day_flush(d);
+    memcpy(d->day, buf, 10); d->day[10] = 0;
+    d->has = true; d->n = 0;
+    d->wMin = d->wMax = w;
+    d->tMin = d->tMax = t;
+  }
+  d->n++;
+  d->wLast = w; d->bLast = b;
+  if (w < d->wMin) d->wMin = w;
+  if (w > d->wMax) d->wMax = w;
+  if (!isnan(t)) {
+    if (isnan(d->tMin) || t < d->tMin) d->tMin = t;
+    if (isnan(d->tMax) || t > d->tMax) d->tMax = t;
+  }
+}
+
+// ─── Шапка книги: стили ───────────────────────────────────────────────────
+static void _xml_head(Stream &o) {
+  o.print(F("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            "<?mso-application progid=\"Excel.Sheet\"?>\n"
+            "<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\""
+            " xmlns:o=\"urn:schemas-microsoft-com:office:office\""
+            " xmlns:x=\"urn:schemas-microsoft-com:office:excel\""
+            " xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\">\n"
+            "<Styles>"
+            "<Style ss:ID=\"Default\" ss:Name=\"Normal\"><Alignment ss:Vertical=\"Center\"/>"
+            "<Font ss:FontName=\"Calibri\" ss:Size=\"11\"/></Style>"
+            "<Style ss:ID=\"hdr\"><Font ss:Bold=\"1\" ss:Color=\"#F5A623\"/>"
+            "<Interior ss:Color=\"#1F3A2E\" ss:Pattern=\"Solid\"/>"
+            "<Alignment ss:Horizontal=\"Center\" ss:Vertical=\"Center\" ss:WrapText=\"1\"/></Style>"
+            "<Style ss:ID=\"ttl\"><Font ss:Bold=\"1\" ss:Size=\"14\" ss:Color=\"#1F3A2E\"/></Style>"
+            "<Style ss:ID=\"key\"><Font ss:Bold=\"1\" ss:Color=\"#3C4A32\"/></Style>"
+            "<Style ss:ID=\"dt\"><Alignment ss:Horizontal=\"Left\"/></Style>"
+            "<Style ss:ID=\"num\"><Alignment ss:Horizontal=\"Center\"/></Style>"
+            "<Style ss:ID=\"w\"><Font ss:Bold=\"1\"/><Interior ss:Color=\"#FFF3CD\" ss:Pattern=\"Solid\"/>"
+            "<Alignment ss:Horizontal=\"Center\"/><NumberFormat ss:Format=\"0.00\"/></Style>"
+            "<Style ss:ID=\"up\"><Font ss:Bold=\"1\" ss:Color=\"#1E7B34\"/>"
+            "<Alignment ss:Horizontal=\"Center\"/><NumberFormat ss:Format=\"+0.00;-0.00;0.00\"/></Style>"
+            "<Style ss:ID=\"dn\"><Font ss:Bold=\"1\" ss:Color=\"#C0392B\"/>"
+            "<Alignment ss:Horizontal=\"Center\"/><NumberFormat ss:Format=\"+0.00;-0.00;0.00\"/></Style>"
+            "<Style ss:ID=\"t0\"><Interior ss:Color=\"#9DC3E6\" ss:Pattern=\"Solid\"/><Alignment ss:Horizontal=\"Center\"/></Style>"
+            "<Style ss:ID=\"t1\"><Interior ss:Color=\"#DEEAF6\" ss:Pattern=\"Solid\"/><Alignment ss:Horizontal=\"Center\"/></Style>"
+            "<Style ss:ID=\"t2\"><Interior ss:Color=\"#FFF2CC\" ss:Pattern=\"Solid\"/><Alignment ss:Horizontal=\"Center\"/></Style>"
+            "<Style ss:ID=\"t3\"><Interior ss:Color=\"#F8CBAD\" ss:Pattern=\"Solid\"/><Alignment ss:Horizontal=\"Center\"/></Style>"
+            "<Style ss:ID=\"t4\"><Interior ss:Color=\"#E06666\" ss:Pattern=\"Solid\"/><Font ss:Color=\"#FFFFFF\"/><Alignment ss:Horizontal=\"Center\"/></Style>"
+            "<Style ss:ID=\"b0\"><Interior ss:Color=\"#FFC7CE\" ss:Pattern=\"Solid\"/><Font ss:Bold=\"1\" ss:Color=\"#9C0006\"/><Alignment ss:Horizontal=\"Center\"/></Style>"
+            "<Style ss:ID=\"b1\"><Interior ss:Color=\"#FFEB9C\" ss:Pattern=\"Solid\"/><Alignment ss:Horizontal=\"Center\"/></Style>"
+            "<Style ss:ID=\"b2\"><Interior ss:Color=\"#E2EFDA\" ss:Pattern=\"Solid\"/><Alignment ss:Horizontal=\"Center\"/></Style>"
+            "<Style ss:ID=\"b3\"><Interior ss:Color=\"#C6E0B4\" ss:Pattern=\"Solid\"/><Alignment ss:Horizontal=\"Center\"/></Style>"
+            "</Styles>\n"));
+}
+
+// Значения сводки — строки, локаль Excel к ним не применяется: dtostrf даёт
+// точку, а в соседних «Замерах» числа настоящие и рисуются с запятой. Приводим
+// к одному виду.
+static void _ru_dec(char *s) {
+  for (char *p = s; *p; p++) if (*p == '.') *p = ',';
+}
+
+static void _xml_kv(Stream &o, const __FlashStringHelper *k, const char *v) {
+  o.print(F("<Row><Cell ss:StyleID=\"key\"><Data ss:Type=\"String\">"));
+  o.print(k);
+  o.print(F("</Data></Cell><Cell><Data ss:Type=\"String\">"));
+  o.print(v);
+  o.print(F("</Data></Cell></Row>"));
+}
+
+size_t log_stream_xlsxml_range(Stream &out, const String &from, const String &to) {
+  // Проход 1 — статистика для «Сводки»
+  _StatCtx st;
+  memset(&st, 0, sizeof(st));
+  st.first = true;
+  st.tMin = st.tMax = NAN;
+  _stream_filter_range(from, to, _stat_row, &st);
+
+  _xml_head(out);
+
+  // ─── Лист «Сводка» ───
+  out.print(F("<Worksheet ss:Name=\"Сводка\"><Table>"
+              "<Column ss:Width=\"210\"/><Column ss:Width=\"260\"/>"
+              "<Row><Cell ss:StyleID=\"ttl\"><Data ss:Type=\"String\">"
+              "BeehiveScale — сводка по выгрузке</Data></Cell></Row><Row/>"));
+  char b1[48];
+  snprintf(b1, sizeof(b1), "%s — %s", st.dtFirst, st.dtLast);
+  _xml_kv(out, F("Период"), b1);
+  snprintf(b1, sizeof(b1), "%u", (unsigned)st.days);
+  _xml_kv(out, F("Дней с замерами"), b1);
+  snprintf(b1, sizeof(b1), "%lu", (unsigned long)st.rows);
+  _xml_kv(out, F("Замеров"), b1);
+  out.print(F("<Row/>"));
+  {
+    char w1[12], w2[12];
+    dtostrf(st.wFirst, 0, 2, w1); dtostrf(st.wLast, 0, 2, w2);
+    snprintf(b1, sizeof(b1), "%s → %s кг", w1, w2);
+    _ru_dec(b1);
+    _xml_kv(out, F("Вес: начало → конец"), b1);
+    dtostrf(st.wLast - st.wFirst, 0, 2, w1);
+    snprintf(b1, sizeof(b1), "%s%s кг", (st.wLast >= st.wFirst ? "+" : ""), w1);
+    _ru_dec(b1);
+    _xml_kv(out, F("Изменение за период"), b1);
+    dtostrf(st.wMin, 0, 2, w1); dtostrf(st.wMax, 0, 2, w2);
+    snprintf(b1, sizeof(b1), "%s / %s кг", w1, w2);
+    _ru_dec(b1);
+    _xml_kv(out, F("Вес мин / макс"), b1);
+    out.print(F("<Row/>"));
+    dtostrf(st.tMin, 0, 1, w1); dtostrf(st.tMax, 0, 1, w2);
+    snprintf(b1, sizeof(b1), "%s / %s °C", w1, w2);
+    _ru_dec(b1);
+    _xml_kv(out, F("Температура мин / макс"), b1);
+    out.print(F("<Row/>"));
+    int p1 = _xls_bat_pct(st.bFirst), p2 = _xls_bat_pct(st.bLast);
+    dtostrf(st.bFirst, 0, 2, w1); dtostrf(st.bLast, 0, 2, w2);
+    snprintf(b1, sizeof(b1), "%s В (%d%%) → %s В (%d%%)", w1, p1, w2, p2);
+    _ru_dec(b1);
+    _xml_kv(out, F("Батарея: начало → конец"), b1);
+    // Расход считаем в процентах: кривая LiPo нелинейна, вольты тут врут
+    uint16_t spanDays = st.days > 1 ? (st.days - 1) : 1;
+    float perDay = (float)(p1 - p2) / (float)spanDays;
+    if (perDay > 0.01f) {
+      dtostrf(perDay, 0, 2, w1);
+      snprintf(b1, sizeof(b1), "%d%% за %u дн = %s%% в сутки", p1 - p2, (unsigned)spanDays, w1);
+      _ru_dec(b1);
+      _xml_kv(out, F("Расход заряда"), b1);
+      snprintf(b1, sizeof(b1), "≈ %d дней", (int)(p2 / perDay));
+      _xml_kv(out, F("Осталось при таком темпе"), b1);
+      snprintf(b1, sizeof(b1), "≈ %d дней", (int)(100.0f / perDay));
+      _xml_kv(out, F("Полный цикл от 100%"), b1);
+    } else {
+      _xml_kv(out, F("Расход заряда"), "данных мало или батарея заряжалась");
+    }
+  }
+  out.print(F("</Table></Worksheet>\n"));
+
+  // ─── Лист «Замеры» ───
+  out.print(F("<Worksheet ss:Name=\"Замеры\"><Table>"
+              "<Column ss:Width=\"120\"/><Column ss:Width=\"60\"/><Column ss:Width=\"80\"/>"
+              "<Column ss:Width=\"60\"/><Column ss:Width=\"70\"/><Column ss:Width=\"60\"/>"
+              "<Row ss:Height=\"30\">"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Дата и время</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Вес, кг</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Изм., кг</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Темп., °C</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Батарея, В</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Заряд, %</Data></Cell></Row>"));
+  _RowsCtx rc; rc.out = &out; rc.prevW = 0; rc.hasPrev = false;
+  size_t n = _stream_filter_range(from, to, _emit_xml_row, &rc);
+  out.print(F("</Table><WorksheetOptions xmlns=\"urn:schemas-microsoft-com:office:excel\">"
+              "<FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal>"
+              "<TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane>"
+              "</WorksheetOptions></Worksheet>\n"));
+
+  // ─── Лист «По дням» ───
+  out.print(F("<Worksheet ss:Name=\"По дням\"><Table>"
+              "<Column ss:Width=\"80\"/><Column ss:Width=\"60\"/><Column ss:Width=\"90\"/>"
+              "<Column ss:Width=\"100\"/><Column ss:Width=\"70\"/><Column ss:Width=\"70\"/>"
+              "<Column ss:Width=\"70\"/><Column ss:Width=\"70\"/><Column ss:Width=\"90\"/>"
+              "<Row ss:Height=\"30\">"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Дата</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Замеров</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Вес на конец</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Привес за сутки</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Вес мин</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Вес макс</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Темп. мин</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Темп. макс</Data></Cell>"
+              "<Cell ss:StyleID=\"hdr\"><Data ss:Type=\"String\">Батарея на конец</Data></Cell></Row>"));
+  _DayCtx dc;
+  memset(&dc, 0, sizeof(dc));
+  dc.out = &out;
+  _stream_filter_range(from, to, _emit_day_row, &dc);
+  _day_flush(&dc);
+  out.print(F("</Table></Worksheet>\n</Workbook>"));
+  return n;
+}
